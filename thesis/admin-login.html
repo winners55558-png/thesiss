@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - JobNble</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body class="login-page">
+
+    <div class="login-box">
+        <h2>🛡️ JobNble Admin</h2>
+        <p>กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบหลังบ้าน</p>
+        
+        <div class="login-input-group">
+            <label>Username</label>
+            <input type="text" id="adminUser" placeholder="Enter Username">
+        </div>
+        <div class="login-input-group">
+            <label>Password</label>
+            <input type="password" id="adminPass" placeholder="Enter Password">
+        </div>
+        <div class="login-input-group">
+            <label>Secret Key</label>
+            <input type="password" id="adminKey" placeholder="Enter Secret Key">
+        </div>
+        
+        <button class="login-btn" onclick="loginAdmin()">Login</button>
+        <div class="login-error-msg" id="errorMsg">❌ ข้อมูลไม่ถูกต้อง! กรุณาลองใหม่</div>
+    </div>
+
+    <script>
+        async function loginAdmin() {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            const k = document.getElementById('adminKey').value;
+            
+            try {
+                // ส่งข้อมูลไปตรวจสอบที่ server.js (อ่านจากไฟล์ .env)
+                const response = await fetch('http://localhost:3000/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: u,
+                        password: p,
+                        secret_key: k
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // ถ้าระบบตอบว่าผ่าน ค่อยอนุญาตให้เข้า Dashboard
+                    sessionStorage.setItem('isAdmin', 'true');
+                    window.location.href = 'admin.html';
+                } else {
+                    document.getElementById('errorMsg').style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Error connecting to server:", error);
+                document.getElementById('errorMsg').textContent = "❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้";
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

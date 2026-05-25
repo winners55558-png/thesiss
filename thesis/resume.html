@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="asset/Logbook.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobNble</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <a href="#main-content" class="sr-only sr-only-focusable" aria-label="ข้ามไปยังเนื้อหาหลัก">ข้ามไปยังเนื้อหาหลัก</a>
+
+    <header class="site-header" role="banner">
+        
+        <nav class="navbar" aria-label="เมนูนำทางหลัก" role="navigation">
+            
+            <div class="logo-container">
+                <a href="Inde.html" aria-label="กลับสู่หน้าแรก JobNble">
+                    <img src="asset/Logo-JobNble.png" alt="โลโก้แพลตฟอร์ม JobNble">
+                </a>
+            </div>
+
+            <ul class="main-nav" role="menubar">
+                
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="employer-menu" aria-label="เมนูสำหรับนายจ้าง">
+                        นายจ้าง
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
+                        ผู้หางาน
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="jobseeker-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-jobseeker.html">หน้าหลักผู้หางาน</a></li>
+                        <li role="none"><a role="menuitem" href="resume.html">สร้างเรซูเม่</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="about-menu" aria-label="เมนูเกี่ยวกับเรา">
+                        เกี่ยวกับเรา
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="about-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item user-profile-item" role="none">
+                    <button class="nav-link-btn user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" aria-label="เมนูโปรไฟล์ของ มาวิน">
+                        <div class="user-avatar" aria-hidden="true">ม</div> 
+                    </button>
+                    <ul class="dropdown-menu user-dropdown" id="user-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="Index.html">ออกจากระบบ</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="resume-page-main" id="main-content" role="main" aria-labelledby="resume-page-title">
+        <div class="resume-wrapper">
+            <h1 class="resume-page-title" id="resume-page-title">สร้างเรซูเม่ของคุณ</h1>
+            
+            <form id="resume-builder-form" aria-label="ฟอร์มกรอกข้อมูลสร้างเรซูเม่">
+                
+                <div class="resume-card">
+                    <h2 class="resume-card-title">1. ข้อมูลส่วนตัว</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="first-name">ชื่อ</label>
+                            <input type="text" id="first-name" class="form-input" placeholder="ชื่อจริง" required aria-required="true" autocomplete="given-name">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="last-name">นามสกุล</label>
+                            <input type="text" id="last-name" class="form-input" placeholder="นามสกุล" required aria-required="true">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">วัน/เดือน/ปีเกิด (พิมพ์ตัวเลข)</label>
+                            <div class="dob-group" style="display: flex; gap: 10px;">
+                                <input type="text" id="dob-day" class="form-input dob-select" placeholder="วว" maxlength="2" pattern="[0-9]{1,2}" aria-label="วันเกิด (2 หลัก)" required>
+                                <input type="text" id="dob-month" class="form-input dob-select" placeholder="ดด" maxlength="2" pattern="[0-9]{1,2}" aria-label="เดือนเกิด (2 หลัก)" required>
+                                <input type="text" id="dob-year" class="form-input dob-select" placeholder="ปปปป" maxlength="4" pattern="[0-9]{4}" aria-label="ปีเกิด (ค.ศ. หรือ พ.ศ.)" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="phone-number">เบอร์โทรศัพท์</label>
+                            <input type="tel" id="phone-number" class="form-input" placeholder="08X-XXX-XXXX" required aria-required="true">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="email-address">อีเมล</label>
+                            <input type="email" id="email-address" class="form-input" placeholder="example@email.com" required aria-required="true">
+                        </div>
+                        <div class="form-col">
+                            <span class="form-label" id="profile-pic-label">อัปโหลดรูปถ่าย</span>
+                            <label class="file-upload-wrapper" for="profile-pic">
+                                <input type="file" id="profile-pic" class="file-input-hidden" accept="image/*" aria-labelledby="profile-pic-label" aria-describedby="profile-pic-hint">
+                                <div class="file-upload-display">
+                                    <span class="file-name-text" id="profile-pic-hint">แนบรูปถ่าย...</span>
+                                    <svg class="upload-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col full-width">
+                            <label class="form-label" for="address-street">ที่อยู่ (พิมพ์เฉพาะบ้านเลขที่, หมู่, หมู่บ้าน, ซอย, ถนน)</label>
+                            <input type="text" id="address-street" class="form-input" placeholder="เช่น 99/9 หมู่บ้านสุขสันต์ ซอย 5 ถนนพระราม 2">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="addr-province">จังหวัด</label>
+                            <input type="text" id="addr-province" class="form-input" list="province-list" placeholder="พิมพ์หรือเลือกจังหวัด..." autocomplete="off" required>
+                            <datalist id="province-list"></datalist>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="addr-district">เขต/อำเภอ</label>
+                            <input type="text" id="addr-district" class="form-input" list="district-list" placeholder="พิมพ์หรือเลือกเขต/อำเภอ..." autocomplete="off" required disabled>
+                            <datalist id="district-list"></datalist>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label" for="addr-subdistrict">แขวง/ตำบล</label>
+                            <input type="text" id="addr-subdistrict" class="form-input" list="subdistrict-list" placeholder="พิมพ์หรือเลือกแขวง/ตำบล..." autocomplete="off" required disabled>
+                            <datalist id="subdistrict-list"></datalist>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="addr-zipcode">รหัสไปรษณีย์</label>
+                            <input type="text" id="addr-zipcode" class="form-input readonly-input" placeholder="อัตโนมัติ" readonly>
+                        </div>
+                    </div>
+
+                    <hr class="card-divider">
+
+                    <h3 class="resume-sub-title">ข้อมูลความพิการ</h3>
+                    <p class="card-hint">เลือกประเภทความพิการที่มี (เลือกได้มากกว่า 1 ประเภท)</p>
+
+                    <div class="disability-cards-wrapper" role="group" aria-label="เลือกประเภทความพิการ">
+
+                        <!-- ทางการเห็น -->
+                        <div class="disability-card" id="dis-card-visual">
+                            <button type="button" class="disability-card-header"
+                                    role="checkbox"
+                                    aria-checked="false"
+                                    aria-expanded="false"
+                                    aria-controls="level-visual"
+                                    aria-label="เลือกความพิการทางการมองเห็น"
+                                    data-type="visual">
+                                <span class="disability-name">ทางการมองเห็น</span>
+                                <span class="disability-check-indicator" aria-hidden="true"></span>
+                            </button>
+                            <input type="checkbox" class="disability-main-check sr-only" id="dis-visual" value="visual" tabindex="-1">
+                            <div class="disability-level-section" id="level-visual" style="display:none;">
+                                <label class="form-label" for="level-select-visual">ระดับความพิการทางการมองเห็น</label>
+                                <select id="level-select-visual" class="form-input custom-select disability-level-select">
+                                    <option value="" disabled selected hidden>เลือกระดับ</option>
+                                    <option value="visual_1">ระดับ 1 — สายตาเลือนราง (ลานสายตาแคบกว่า 30 องศา)</option>
+                                    <option value="visual_2">ระดับ 2 — สายตาพิการ (ลานสายตาแคบกว่า 10 องศา)</option>
+                                    <option value="visual_3">ระดับ 3 — ตาบอดข้างหนึ่ง (ลานสายตาแคบกว่า 10 องศา จนถึง 5 องศา)</option>
+                                    <option value="visual_4">ระดับ 4 — ตาบอดสองข้าง (ลานสายตาแคบกว่า 5 องศา)</option>
+                                    <option value="visual_5">ระดับ 5 — ตาบอดสามข้าง (มองไม่เห็นแม้แต่แสงสว่าง)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ทางการได้ยิน -->
+                        <div class="disability-card" id="dis-card-hearing">
+                            <button type="button" class="disability-card-header"
+                                    role="checkbox"
+                                    aria-checked="false"
+                                    aria-expanded="false"
+                                    aria-controls="level-hearing"
+                                    aria-label="เลือกความพิการทางการได้ยินหรือสื่อความหมาย"
+                                    data-type="hearing">
+                                <span class="disability-name">ทางการได้ยินหรือสื่อความหมาย</span>
+                                <span class="disability-check-indicator" aria-hidden="true"></span>
+                            </button>
+                            <input type="checkbox" class="disability-main-check sr-only" id="dis-hearing" value="hearing" tabindex="-1">
+                            <div class="disability-level-section" id="level-hearing" style="display:none;">
+                                <label class="form-label" for="level-select-hearing">ระดับความพิการทางการได้ยิน</label>
+                                <select id="level-select-hearing" class="form-input custom-select disability-level-select">
+                                    <option value="" disabled selected hidden>เลือกระดับ</option>
+                                    <option value="hearing_1">ระดับ 1 — หูตึงน้อย (26–40 เดซิเบล)</option>
+                                    <option value="hearing_2">ระดับ 2 — หูตึงปานกลาง (41–55 เดซิเบล)</option>
+                                    <option value="hearing_3">ระดับ 3 — หูตึงมาก (56–70 เดซิเบล)</option>
+                                    <option value="hearing_4">ระดับ 4 — หูตึงรุนแรง (71–90 เดซิเบล)</option>
+                                    <option value="hearing_5">ระดับ 5 — หูหนวก (มากกว่า 90 เดซิเบล)</option>
+                                    <option value="hearing_comm_1">ระดับ 3 (สื่อความหมาย) — สื่อสารได้เฉพาะกิจวัตรประจำวันหลัก รู้เรื่องบ้าง</option>
+                                    <option value="hearing_comm_2">ระดับ 4 (สื่อความหมาย) — สื่อสารได้เฉพาะกิจวัตรประจำวันหลัก</option>
+                                    <option value="hearing_comm_3">ระดับ 5 (สื่อความหมาย) — สื่อสารไม่ได้เลย</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ทางร่างกาย -->
+                        <div class="disability-card" id="dis-card-physical">
+                            <button type="button" class="disability-card-header"
+                                    role="checkbox"
+                                    aria-checked="false"
+                                    aria-expanded="false"
+                                    aria-controls="level-physical"
+                                    aria-label="เลือกความพิการทางกายหรือการเคลื่อนไหว"
+                                    data-type="physical">
+                                <span class="disability-name">ทางกายหรือการเคลื่อนไหว</span>
+                                <span class="disability-check-indicator" aria-hidden="true"></span>
+                            </button>
+                            <input type="checkbox" class="disability-main-check sr-only" id="dis-physical" value="physical" tabindex="-1">
+                            <div class="disability-level-section" id="level-physical" style="display:none;">
+                                <label class="form-label" for="level-select-physical">ระดับความพิการทางกายหรือการเคลื่อนไหว</label>
+                                <select id="level-select-physical" class="form-input custom-select disability-level-select">
+                                    <option value="" disabled selected hidden>เลือกระดับ</option>
+                                    <option value="physical_1">ระดับ 1 — ความพิการที่ปรากฏให้เห็นชัดแต่ยังประกอบกิจวัตรหลักได้ (ความพิการที่ศีรษะ/ใบหน้า คอ หลัง ลำตัว มือ ขา เท้า)</option>
+                                    <option value="physical_2">ระดับ 2 — ยังสามารถประกอบกิจวัตรหลักในชีวิตได้ (แขนขาขาด เหนือศอก/ใต้ศอก เหนือเข่า/ใต้เข่า)</option>
+                                    <option value="physical_3">ระดับ 3 — สูญเสียความสามารถในการเคลื่อนไหว มือ แขน ลำตัว แต่ยังใช้กิจวัตรหลักได้ น้อยกว่า 2 ข้าง (ขาขาด มือวกาด บิ้ว)</option>
+                                    <option value="physical_4">ระดับ 4 — สูญเสียการเคลื่อนไหว มือ แขน ลำตัว ครึ่งตัว หรือแขน ขา เพียง 2 ข้าง (อัมพาต-อ่อนแรง อัมพาตทั้งตัว อัมพาตครึ่งท่อนล่าง อัมพาตครึ่งซีก)</option>
+                                    <option value="physical_5">ระดับ 5 — สูญเสียการเคลื่อนไหว มือ แขน ลำตัว มากกว่าครึ่งตัว หรือแขน ขา มากกว่า 2 ข้าง (อัมพาตของแขนและขา โรคเรื้อรัง เช่น กลุ่มอาการปวด/โรคผิว/โรคหัวใจ/โรคปอด)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="resume-card">
+                    <h2 class="resume-card-title" id="inspiration-title">2. แรงบันดาลใจและสิ่งที่อยากบอกองค์กร</h2>
+                    <p class="card-hint" id="inspiration-hint">เล่าถึงความมุ่งมั่น ทัศนคติในการทำงาน หรือเป้าหมายของคุณ เพื่อให้องค์กรได้รู้จักตัวตนของคุณมากขึ้น</p>
+                    <textarea id="inspiration-text" class="resume-textarea" rows="4" aria-labelledby="inspiration-title inspiration-hint" placeholder="ฉันมีความมุ่งมั่นที่จะนำทักษะด้าน... มาช่วยพัฒนาองค์กร และเชื่อว่าความหลากหลายจะช่วยสร้างสรรค์สิ่งใหม่ๆ ได้..."></textarea>
+                </div>
+
+                <div class="resume-card">
+                    <h2 class="resume-card-title">3. ประวัติการศึกษา</h2>
+                    <div id="education-container">
+                        <div class="dynamic-item">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label" for="edu-level-1">ระดับการศึกษา</label>
+                                    <select id="edu-level-1" class="form-input custom-select">
+                                        <option>มัธยมศึกษาตอนปลาย / ปวช.</option>
+                                        <option>ปวส.</option>
+                                        <option selected>ปริญญาตรี</option>
+                                        <option>ปริญญาโท</option>
+                                    </select>
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label" for="edu-inst-1">ชื่อสถาบันการศึกษา</label>
+                                    <input type="text" id="edu-inst-1" class="form-input" placeholder="เช่น มหาวิทยาลัย...">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <label class="form-label" for="edu-major-1">คณะ / สาขาวิชา</label>
+                                    <input type="text" id="edu-major-1" class="form-input" placeholder="เช่น บริหารธุรกิจ">
+                                </div>
+                                <div class="form-col">
+                                    <label class="form-label" for="edu-gpa-1">เกรดเฉลี่ย (GPA)</label>
+                                    <input type="text" id="edu-gpa-1" class="form-input" placeholder="เช่น 3.50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-more" id="add-edu-btn" aria-label="เพิ่มช่องกรอกประวัติการศึกษาใหม่">+ เพิ่มประวัติการศึกษา</button>
+                </div>
+
+                <div class="resume-card">
+                    <h2 class="resume-card-title">4. ประสบการณ์และกิจกรรม</h2>
+                    
+                    <h3 class="resume-sub-title">ประสบการณ์ทำงาน (ถ้ามี)</h3>
+                    <div id="work-container"></div>
+                    <button type="button" class="btn-add-more" id="add-work-btn" aria-label="เพิ่มช่องกรอกประสบการณ์ทำงานใหม่">+ เพิ่มประสบการณ์ทำงาน</button>
+
+                    <hr class="card-divider">
+
+                    <h3 class="resume-sub-title">ประสบการณ์ฝึกงาน (ถ้ามี)</h3>
+                    <div id="intern-container"></div>
+                    <button type="button" class="btn-add-more" id="add-intern-btn" aria-label="เพิ่มช่องกรอกประสบการณ์ฝึกงานใหม่">+ เพิ่มประสบการณ์ฝึกงาน</button>
+
+                    <hr class="card-divider">
+
+                    <h3 class="resume-sub-title">กิจกรรม และ การแข่งขัน (ถ้ามี)</h3>
+                    <div id="activity-container"></div>
+                    <button type="button" class="btn-add-more" id="add-activity-btn" aria-label="เพิ่มช่องกรอกกิจกรรมใหม่">+ เพิ่มกิจกรรม</button>
+                </div>
+
+                <div class="resume-card">
+                    <h2 class="resume-card-title" id="skills-title">5. ทักษะความสามารถ (Skills)</h2>
+                    <p class="card-hint" id="skills-hint">คลิกเลือกทักษะที่คุณถนัด (เลือกได้มากกว่า 1 ข้อ)</p>
+
+                    <h3 class="resume-sub-title small-title" id="office-skills-title">Office & คอมพิวเตอร์ทั่วไป</h3>
+                    <div class="skills-group" role="group" aria-labelledby="office-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Microsoft Word"><span class="skill-tag">Microsoft Word</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Microsoft Excel"><span class="skill-tag">Microsoft Excel</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="PowerPoint"><span class="skill-tag">PowerPoint</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Google Workspace"><span class="skill-tag">Google Workspace</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="พิมพ์ดีด"><span class="skill-tag">พิมพ์ดีด</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Data Entry"><span class="skill-tag">Data Entry</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="design-skills-title" style="margin-top: 20px;">ออกแบบ & มัลติมีเดีย</h3>
+                    <div class="skills-group" role="group" aria-labelledby="design-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Adobe Photoshop"><span class="skill-tag">Adobe Photoshop</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Adobe Illustrator"><span class="skill-tag">Adobe Illustrator</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Canva"><span class="skill-tag">Canva</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ตัดต่อวิดีโอ"><span class="skill-tag">ตัดต่อวิดีโอ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ถ่ายภาพ"><span class="skill-tag">ถ่ายภาพ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Figma / UI Design"><span class="skill-tag">Figma / UI Design</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="it-skills-title" style="margin-top: 20px;">IT & การเขียนโปรแกรม</h3>
+                    <div class="skills-group" role="group" aria-labelledby="it-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="HTML / CSS"><span class="skill-tag">HTML / CSS</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="JavaScript"><span class="skill-tag">JavaScript</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Python"><span class="skill-tag">Python</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="SQL / Database"><span class="skill-tag">SQL / Database</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ซ่อมคอมพิวเตอร์"><span class="skill-tag">ซ่อมคอมพิวเตอร์</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="Network / IT Support"><span class="skill-tag">Network / IT Support</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="biz-skills-title" style="margin-top: 20px;">ธุรกิจ & การบริการ</h3>
+                    <div class="skills-group" role="group" aria-labelledby="biz-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="บัญชี / การเงิน"><span class="skill-tag">บัญชี / การเงิน</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="การตลาด / Marketing"><span class="skill-tag">การตลาด / Marketing</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="การขาย / Sales"><span class="skill-tag">การขาย / Sales</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="บริการลูกค้า"><span class="skill-tag">บริการลูกค้า</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="การเจรจาต่อรอง"><span class="skill-tag">การเจรจาต่อรอง</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="โซเชียลมีเดีย"><span class="skill-tag">โซเชียลมีเดีย</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งานเอกสาร / ธุรการ"><span class="skill-tag">งานเอกสาร / ธุรการ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="คลังสินค้า / โลจิสติกส์"><span class="skill-tag">คลังสินค้า / โลจิสติกส์</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="craft-skills-title" style="margin-top: 20px;">ช่างฝีมือ & แรงงาน</h3>
+                    <div class="skills-group" role="group" aria-labelledby="craft-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ช่างไฟฟ้า"><span class="skill-tag">ช่างไฟฟ้า</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ช่างเชื่อม"><span class="skill-tag">ช่างเชื่อม</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ช่างซ่อมบำรุง"><span class="skill-tag">ช่างซ่อมบำรุง</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ช่างตัดเย็บ"><span class="skill-tag">ช่างตัดเย็บ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งานครัว / ทำอาหาร"><span class="skill-tag">งานครัว / ทำอาหาร</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="เกษตรกรรม"><span class="skill-tag">เกษตรกรรม</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="lang-skills-title" style="margin-top: 20px;">ทักษะทางภาษา</h3>
+                    <div class="skills-group" role="group" aria-labelledby="lang-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษาอังกฤษ (สื่อสารได้)"><span class="skill-tag">ภาษาอังกฤษ (สื่อสารได้)</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษาอังกฤษ (ดีเยี่ยม)"><span class="skill-tag">ภาษาอังกฤษ (ดีเยี่ยม)</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษาจีน"><span class="skill-tag">ภาษาจีน</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษาญี่ปุ่น"><span class="skill-tag">ภาษาญี่ปุ่น</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษาเกาหลี"><span class="skill-tag">ภาษาเกาหลี</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ภาษามือ (ไทย)"><span class="skill-tag">ภาษามือ (ไทย)</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ล่ามภาษามือ"><span class="skill-tag">ล่ามภาษามือ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งานแปลภาษา"><span class="skill-tag">งานแปลภาษา</span></label>
+                    </div>
+
+                    <h3 class="resume-sub-title small-title" id="special-skills-title" style="margin-top: 20px;">งานบริการ & อาชีพเฉพาะทาง</h3>
+                    <div class="skills-group" role="group" aria-labelledby="special-skills-title">
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="นวดแผนไทย / นวดสปา"><span class="skill-tag">นวดแผนไทย / นวดสปา</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งานโทรศัพท์ / Call Center"><span class="skill-tag">งานโทรศัพท์ / Call Center</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="สอนพิเศษ / ติวเตอร์"><span class="skill-tag">สอนพิเศษ / ติวเตอร์</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="สอนดนตรี"><span class="skill-tag">สอนดนตรี</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="ดูแลผู้สูงอายุ / ผู้ช่วยพยาบาล"><span class="skill-tag">ดูแลผู้สูงอายุ / ผู้ช่วยพยาบาล</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งาน Remote / Freelance"><span class="skill-tag">งาน Remote / Freelance</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="งานหัตถกรรม / งานฝีมือ"><span class="skill-tag">งานหัตถกรรม / งานฝีมือ</span></label>
+                        <label class="skill-tag-wrapper"><input type="checkbox" class="skill-checkbox" value="พนักงานคีย์ข้อมูล (ออนไลน์)"><span class="skill-tag">พนักงานคีย์ข้อมูล (ออนไลน์)</span></label>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 24px;">
+                        <div class="form-col full-width">
+                            <label class="form-label" for="other-skills">ทักษะอื่นๆ (พิมพ์เพิ่มเติม)</label>
+                            <input type="text" id="other-skills" class="form-input" placeholder="เช่น ขับรถได้ มีใบขับขี่, สอนพิเศษ, ดูแลผู้สูงอายุ...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resume-card">
+                    <h2 class="resume-card-title">7. ตำแหน่งงานที่ต้องการ</h2>
+                    <div class="form-row">
+                        <div class="form-col full-width">
+                            <label class="form-label" for="job-position">ตำแหน่งงานที่ต้องการสมัคร</label>
+                            <input type="text" id="job-position" class="form-input" placeholder="เช่น พนักงานบัญชี, ช่างตัดเย็บ, พนักงานธุรการ">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 16px;">
+                        <div class="form-col">
+                            <label class="form-label" for="job-type">ประเภทงานที่ต้องการ</label>
+                            <select id="job-type" class="form-input custom-select">
+                                <option value="" disabled selected hidden>เลือกประเภทงาน</option>
+                                <option value="full_time">งานประจำ (Full-Time)</option>
+                                <option value="part_time">งานนอกเวลา (Part-Time)</option>
+                                <option value="both">ได้ทั้งคู่</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label" for="expected-salary">เงินเดือนที่ต้องการ (บาท/เดือน)</label>
+                            <select id="expected-salary" class="form-input custom-select">
+                                <option value="" disabled selected hidden>เลือกช่วงเงินเดือน</option>
+                                <option value="under_10000">ต่ำกว่า 10,000 บาท</option>
+                                <option value="10000_15000">10,000 – 15,000 บาท</option>
+                                <option value="15001_20000">15,001 – 20,000 บาท</option>
+                                <option value="20001_30000">20,001 – 30,000 บาท</option>
+                                <option value="30001_50000">30,001 – 50,000 บาท</option>
+                                <option value="over_50000">มากกว่า 50,000 บาท</option>
+                                <option value="negotiable">ยินดีเจรจา (Negotiable)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 20px;">
+                        <div class="form-col full-width">
+                            <label class="form-label">รูปแบบการทำงานที่ต้องการ</label>
+                            <p class="card-hint" style="margin-bottom:12px;">ข้อมูลนี้ช่วยให้จับคู่งานที่เหมาะกับสภาพร่างกายและการเดินทางของคุณได้แม่นยำยิ่งขึ้น</p>
+                            <div class="work-mode-group" role="group" aria-label="รูปแบบการทำงานที่ต้องการ">
+                                <label class="work-mode-option">
+                                    <input type="radio" name="seeker-work-mode" id="seeker-work-mode-onsite" value="ทำงานที่ออฟฟิศ" checked>
+                                    <span class="work-mode-label"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span class="sr-only">ทำงานที่ออฟฟิศ</span> ทำงานที่ออฟฟิศ</span>
+                                </label>
+                                <label class="work-mode-option">
+                                    <input type="radio" name="seeker-work-mode" id="seeker-work-mode-hybrid" value="ทำที่ออฟฟิศสลับทำที่บ้าน">
+                                    <span class="work-mode-label"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg><span class="sr-only">ทำที่ออฟฟิศสลับทำที่บ้าน</span> ทำที่ออฟฟิศสลับทำที่บ้าน</span>
+                                </label>
+                                <label class="work-mode-option">
+                                    <input type="radio" name="seeker-work-mode" id="seeker-work-mode-remote" value="ทำงานที่บ้าน">
+                                    <span class="work-mode-label"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sr-only">ทำงานที่บ้าน</span> ทำงานที่บ้าน</span>
+                                </label>
+                                <label class="work-mode-option">
+                                    <input type="radio" name="seeker-work-mode" id="seeker-work-mode-any" value="ตามตกลง">
+                                    <span class="work-mode-label"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="sr-only">ตามตกลง</span> ตามตกลง</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-submit-wrapper">
+                    <button type="submit" class="btn-submit-resume">เลือกเทมเพลตเลย!</button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- <div class="modal-overlay" id="resume-success-modal" role="alertdialog" aria-modal="true" aria-labelledby="resume-success-title" aria-describedby="resume-success-desc">
+            <div class="modal-content">
+                <svg class="success-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#013c58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3 class="modal-text" id="resume-success-title">สร้างเรซูเม่สำเร็จ!</h3>
+                <p id="resume-success-desc" style="margin-top: 10px; color: #333;">ระบบกำลังวิเคราะห์ข้อมูลเพื่อจับคู่งานที่ใช่สำหรับคุณ</p>
+            </div>
+        </div> -->
+
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-content">
+            
+            <div class="footer-socials">
+                <a href="#" aria-label="ติดตาม JobNble บน TikTok">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M22.84 10.5V26.26C22.84 27.94 21.48 29.3 19.8 29.3C18.12 29.3 16.76 27.94 16.76 26.26C16.76 24.58 18.12 23.22 19.8 23.22C20.1 23.22 20.38 23.27 20.64 23.36V19.79C20.37 19.74 20.09 19.71 19.8 19.71C16.18 19.71 13.25 22.64 13.25 26.26C13.25 29.88 16.18 32.81 19.8 32.81C23.42 32.81 26.35 29.88 26.35 26.26V16.3C27.56 17.27 29.11 17.86 30.79 17.86V14.35C28.53 14.35 26.62 12.72 26.2 10.5H22.84Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Facebook">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M25.75 22H22.5V34H17.5V22H15V17.5H17.5V14.25C17.5 11.16 19.16 9.5 22.5 9.5H26.25V14H23.75C22.37 14 22.5 14.81 22.5 15.62V17.5H26.25L25.75 22Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Instagram">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M16 10H28C31.3137 10 34 12.6863 34 16V28C34 31.3137 31.3137 34 28 34H16C12.6863 34 10 31.3137 10 28V16C10 12.6863 12.6863 10 16 10ZM16 12.5C14.067 12.5 12.5 14.067 12.5 16V28C12.5 29.933 14.067 31.5 16 31.5H28C29.933 31.5 31.5 29.933 31.5 28V16C31.5 14.067 29.933 12.5 28 12.5H16ZM22 17C19.2386 17 17 19.2386 17 22C17 24.7614 19.2386 27 22 27C24.7614 27 27 24.7614 27 22C27 19.2386 24.7614 17 22 17ZM19.5 22C19.5 20.6193 20.6193 19.5 22 19.5C23.3807 19.5 24.5 20.6193 24.5 22C24.5 23.3807 23.3807 24.5 22 24.5C20.6193 24.5 19.5 23.3807 19.5 22ZM28.5 16.5C28.5 17.0523 28.0523 17.5 27.5 17.5C26.9477 17.5 26.5 17.0523 26.5 16.5C26.5 15.9477 26.9477 15.5 27.5 15.5C28.0523 15.5 28.5 15.9477 28.5 16.5Z" fill="white"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-feedback">
+                <label for="feedback-input" class="sr-only">แสดงความคิดเห็นของคุณ</label>
+                <input type="text" id="feedback-input" placeholder="แสดงความคิดเห็น" class="feedback-input">
+                <button class="feedback-btn" aria-label="ส่งความคิดเห็น">ส่ง</button>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            © 2026 JobNble — Digital Platform for Inclusive Employment Opportunities. Accessibility Statement • Terms & Conditions • Privacy Policy • Contact Support
+        </div>
+    </footer>
+
+
+    <!-- disability card styles moved to style.css | toggleDisabilityLevel moved to script.js -->
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="asset/Logbook.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobNble</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.omise.co/omise.js"></script>
+
+    <style>
+        /* ── Payment page layout ── */
+        .payment-page-main {
+            max-width: 720px;
+            margin: 48px auto 80px;
+            padding: 0 24px;
+        }
+        .payment-page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #013c58;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .payment-page-subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.92rem;
+            margin-bottom: 36px;
+        }
+
+        /* ── Plan selection cards ── */
+        .plan-cards-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .plan-card {
+            border: 2.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px 24px 24px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+            position: relative;
+            user-select: none;
+        }
+        .plan-card.selected {
+            border-color: #013c58;
+            box-shadow: 0 0 0 4px rgba(1, 60, 88, 0.08);
+        }
+        .plan-card-badge {
+            position: absolute;
+            top: -13px;
+            right: 18px;
+            background: #f59e0b;
+            color: #fff;
+            font-size: 0.71rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.01em;
+        }
+        .plan-radio { display: none; }
+        .plan-card-radio-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+        .plan-card.selected .plan-card-radio-indicator {
+            border-color: #013c58;
+            background: #013c58;
+        }
+        .plan-card.selected .plan-card-radio-indicator::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+        }
+        .plan-card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #013c58;
+            margin-bottom: 8px;
+        }
+        .plan-card-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #013c58;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+        .plan-card-price .price-unit {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+        .plan-card-desc {
+            font-size: 0.83rem;
+            color: #64748b;
+            margin-top: 10px;
+            line-height: 1.55;
+        }
+
+        /* ── Summary box ── */
+        .payment-summary-box {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+        .payment-summary-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        .payment-summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.87rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        .payment-summary-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #013c58;
+            border-top: 1.5px solid #e2e8f0;
+            padding-top: 12px;
+            margin-top: 10px;
+        }
+
+        /* ── Card form box ── */
+        .payment-form-box {
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .payment-form-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+        .payment-test-hint {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            color: #166534;
+            margin-bottom: 24px;
+            line-height: 1.55;
+        }
+        .payment-test-hint strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ── Submit button ── */
+        .payment-submit-btn {
+            display: block;
+            width: 100%;
+            background: #013c58;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .payment-submit-btn:hover:not(:disabled) { background: #025a80; }
+        .payment-submit-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* ── Error / success messages ── */
+        .payment-error-msg {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            display: none;
+        }
+        .payment-secure-note {
+            text-align: center;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-top: 16px;
+        }
+
+        /* ── Back button ── */
+        .payment-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #013c58;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 20px;
+            padding: 6px 2px;
+            border-radius: 6px;
+            transition: opacity 0.18s ease;
+        }
+        .payment-back-btn:hover {
+            opacity: 0.65;
+        }
+        .payment-back-btn svg {
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 560px) {
+            .plan-cards-row { grid-template-columns: 1fr; }
+            .form-row-2 { grid-template-columns: 1fr; }
+            .payment-form-box { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="site-header" role="banner">
+        <nav class="navbar" aria-label="เมนูนำทางหลัก" role="navigation">
+            <div class="logo-container">
+                <a href="Index.html" aria-label="กลับสู่หน้าแรก JobNble">
+                    <img src="asset/Logo-JobNble.png" alt="โลโก้แพลตฟอร์ม JobNble">
+                </a>
+            </div>
+            <ul class="main-nav" role="menubar">
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="employer-menu" aria-label="เมนูสำหรับนายจ้าง">
+                        นายจ้าง
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="employer-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-employer.html">หน้าหลักนายจ้าง</a></li>
+                        <li role="none"><a role="menuitem" href="post-employer.html">โพสต์ประกาศงาน</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item user-profile-item last-item" role="none"></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="payment-page-main">
+
+        <a href="home-employer.html" class="payment-back-btn" aria-label="กลับไปหน้าหลักนายจ้าง">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            กลับหน้าหลักนายจ้าง
+        </a>
+
+        <h1 class="payment-page-title">เลือกแพ็คเกจสำหรับนายจ้าง</h1>
+        <p class="payment-page-subtitle">ชำระเงินเพื่อปลดล็อกการโพสต์ประกาศงานและดึงดูดผู้สมัครที่มีศักยภาพ</p>
+
+        <!-- ── Plan selection ── -->
+        <div class="plan-cards-row" role="radiogroup" aria-label="เลือกแพ็คเกจ">
+
+            <!-- Pay Per Post 15 วัน -->
+            <label class="plan-card selected" id="plan-ppp15-card" for="plan-radio-ppp15">
+                <input type="radio" id="plan-radio-ppp15" name="plan" value="pay_per_post_15" class="plan-radio" checked>
+                <div class="plan-card-radio-indicator"></div>
+                <div class="plan-card-title">Pay Per Post</div>
+                <div class="plan-card-price">฿199 <span class="price-unit">/ 15 วัน</span></div>
+                <div class="plan-card-desc">โพสต์ประกาศงาน <strong>1 ตำแหน่ง</strong> นาน <strong>15 วัน</strong> เหมาะสำหรับการรับสมัครงานเร่งด่วนระยะสั้น</div>
+            </label>
+
+            <!-- Pay Per Post 30 วัน -->
+            <label class="plan-card" id="plan-ppp30-card" for="plan-radio-ppp30">
+                <input type="radio" id="plan-radio-ppp30" name="plan" value="pay_per_post_30" class="plan-radio">
+                <div class="plan-card-radio-indicator"></div>
+                <div class="plan-card-title">Pay Per Post</div>
+                <div class="plan-card-price">฿349 <span class="price-unit">/ 30 วัน</span></div>
+                <div class="plan-card-desc">โพสต์ประกาศงาน <strong>1 ตำแหน่ง</strong> นาน <strong>30 วัน</strong> ราคาคุ้มค่าสำหรับการรับสมัครงานระยะกลาง</div>
+            </label>
+
+            <!-- รายเดือน -->
+            <label class="plan-card" id="plan-monthly-card" for="plan-radio-monthly">
+                <input type="radio" id="plan-radio-monthly" name="plan" value="monthly" class="plan-radio">
+                <div class="plan-card-radio-indicator"></div>
+                <div class="plan-card-title">รายเดือน</div>
+                <div class="plan-card-price">฿599 <span class="price-unit">/ เดือน</span></div>
+                <div class="plan-card-desc">โพสต์งานได้ไม่จำกัดตลอด <strong>30 วัน</strong> พร้อม badge <em>Inclusive Employer</em> บนโปรไฟล์นายจ้าง</div>
+            </label>
+
+            <!-- รายปี -->
+            <label class="plan-card" id="plan-yearly-card" for="plan-radio-yearly">
+                <div class="plan-card-badge">ประหยัดกว่ารายเดือน</div>
+                <input type="radio" id="plan-radio-yearly" name="plan" value="yearly" class="plan-radio">
+                <div class="plan-card-radio-indicator"></div>
+                <div class="plan-card-title">รายปี</div>
+                <div class="plan-card-price">฿4,990 <span class="price-unit">/ ปี</span></div>
+                <div class="plan-card-desc">โพสต์งานได้ไม่จำกัดตลอด <strong>365 วัน</strong> เทียบเท่าเกือบ 4 เดือนฟรี พร้อม badge <em>Verified Inclusive Employer</em></div>
+            </label>
+
+        </div>
+
+        <!-- ── Order summary ── -->
+        <div class="payment-summary-box">
+            <div class="payment-summary-title">สรุปคำสั่งซื้อ</div>
+            <div class="payment-summary-row">
+                <span id="summary-plan-name">แพ็คเกจรายเดือน</span>
+                <span id="summary-plan-duration">โพสต์ได้ 30 วัน</span>
+            </div>
+            <div class="payment-summary-total">
+                <span>ยอดชำระทั้งหมด (รวม VAT)</span>
+                <span id="summary-total">฿500</span>
+            </div>
+        </div>
+
+        <!-- ── Credit card form ── -->
+        <div class="payment-form-box">
+            <div class="payment-form-title">ข้อมูลบัตรเครดิต / เดบิต</div>
+
+            <div class="payment-test-hint">
+                <strong>🧪 Demo Mode — ใช้บัตรทดสอบ Omise</strong>
+                หมายเลขบัตร: <b>4242 4242 4242 4242</b> &nbsp;·&nbsp; วันหมดอายุ: วันใดก็ได้ในอนาคต &nbsp;·&nbsp; CVV: ตัวเลข 3 หลักใดก็ได้
+            </div>
+
+            <form id="payment-form" novalidate>
+
+                <div class="form-group">
+                    <label class="form-label" for="card-name">ชื่อผู้ถือบัตร</label>
+                    <input type="text" id="card-name" class="form-input" placeholder="ชื่อตามหน้าบัตร เช่น SOMCHAI JAIDEE" autocomplete="cc-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="card-number">หมายเลขบัตร</label>
+                    <input type="text" id="card-number" class="form-input" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number" inputmode="numeric" required>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label" for="card-expiry">วันหมดอายุ (MM/YY)</label>
+                        <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="card-cvv">CVV</label>
+                        <input type="text" id="card-cvv" class="form-input" placeholder="•••" maxlength="4" autocomplete="cc-csc" inputmode="numeric" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="payment-submit-btn" id="pay-btn">
+                    ชำระเงิน ฿500
+                </button>
+
+                <div class="payment-error-msg" id="payment-error" role="alert" aria-live="assertive"></div>
+            </form>
+
+            <p class="payment-secure-note">🔒 ชำระเงินผ่าน Omise — ข้อมูลบัตรของคุณได้รับการเข้ารหัสอย่างปลอดภัย</p>
+        </div>
+
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-content">
+            
+            <div class="footer-socials">
+                <a href="#" aria-label="ติดตาม JobNble บน TikTok">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M22.84 10.5V26.26C22.84 27.94 21.48 29.3 19.8 29.3C18.12 29.3 16.76 27.94 16.76 26.26C16.76 24.58 18.12 23.22 19.8 23.22C20.1 23.22 20.38 23.27 20.64 23.36V19.79C20.37 19.74 20.09 19.71 19.8 19.71C16.18 19.71 13.25 22.64 13.25 26.26C13.25 29.88 16.18 32.81 19.8 32.81C23.42 32.81 26.35 29.88 26.35 26.26V16.3C27.56 17.27 29.11 17.86 30.79 17.86V14.35C28.53 14.35 26.62 12.72 26.2 10.5H22.84Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Facebook">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M25.75 22H22.5V34H17.5V22H15V17.5H17.5V14.25C17.5 11.16 19.16 9.5 22.5 9.5H26.25V14H23.75C22.37 14 22.5 14.81 22.5 15.62V17.5H26.25L25.75 22Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Instagram">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M16 10H28C31.3137 10 34 12.6863 34 16V28C34 31.3137 31.3137 34 28 34H16C12.6863 34 10 31.3137 10 28V16C10 12.6863 12.6863 10 16 10ZM16 12.5C14.067 12.5 12.5 14.067 12.5 16V28C12.5 29.933 14.067 31.5 16 31.5H28C29.933 31.5 31.5 29.933 31.5 28V16C31.5 14.067 29.933 12.5 28 12.5H16ZM22 17C19.2386 17 17 19.2386 17 22C17 24.7614 19.2386 27 22 27C24.7614 27 27 24.7614 27 22C27 19.2386 24.7614 17 22 17ZM19.5 22C19.5 20.6193 20.6193 19.5 22 19.5C23.3807 19.5 24.5 20.6193 24.5 22C24.5 23.3807 23.3807 24.5 22 24.5C20.6193 24.5 19.5 23.3807 19.5 22ZM28.5 16.5C28.5 17.0523 28.0523 17.5 27.5 17.5C26.9477 17.5 26.5 17.0523 26.5 16.5C26.5 15.9477 26.9477 15.5 27.5 15.5C28.0523 15.5 28.5 15.9477 28.5 16.5Z" fill="white"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-feedback">
+                <label for="feedback-input" class="sr-only">แสดงความคิดเห็นของคุณ</label>
+                <input type="text" id="feedback-input" placeholder="แสดงความคิดเห็น" class="feedback-input">
+                <button class="feedback-btn" aria-label="ส่งความคิดเห็น">ส่ง</button>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            © 2026 JobNble — Digital Platform for Inclusive Employment Opportunities. Accessibility Statement • Terms & Conditions • Privacy Policy • Contact Support
+        </div>
+    </footer>
+
+    <script src="script.js" defer></script>
+
+    <script>
+    // ==========================================
+    // 💳 Omise Payment Page Logic
+    // ==========================================
+    (function () {
+        const OMISE_PUBLIC_KEY = 'pkey_test_67kn2l21j45v4tb7jb7';
+
+        const PLANS = {
+            pay_per_post_15: { name: 'Pay Per Post 15 วัน', price: 199,  days: 15,  label: '฿199',   satang: 19900  },
+            pay_per_post_30: { name: 'Pay Per Post 30 วัน', price: 349,  days: 30,  label: '฿349',   satang: 34900  },
+            monthly:         { name: 'แพ็คเกจรายเดือน',    price: 599,  days: 30,  label: '฿599',   satang: 59900  },
+            yearly:          { name: 'แพ็คเกจรายปี',        price: 4990, days: 365, label: '฿4,990', satang: 499000 }
+        };
+
+        let selectedPlan = 'pay_per_post_15';
+
+        // ── Pre-select plan from URL param ──
+        const urlParams = new URLSearchParams(window.location.search);
+        const initPlan  = urlParams.get('plan');
+        if (initPlan && PLANS[initPlan]) {
+            selectedPlan = initPlan;
+            document.querySelectorAll('.plan-card').forEach(function (c) { c.classList.remove('selected'); });
+            var initRadio = document.querySelector('input[value="' + initPlan + '"]');
+            if (initRadio) {
+                initRadio.checked = true;
+                var initCard = initRadio.closest ? initRadio.closest('.plan-card') : null;
+                if (initCard) initCard.classList.add('selected');
+            }
+        }
+
+        // ── Plan card click ──
+        document.querySelectorAll('.plan-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                const radio = card.querySelector('input[type="radio"]');
+                if (!radio) return;
+                radio.checked = true;
+                selectedPlan  = radio.value;
+                document.querySelectorAll('.plan-card').forEach(function (c) { c.classList.remove('selected'); });
+                card.classList.add('selected');
+                updateSummary();
+            });
+        });
+
+        function updateSummary() {
+            const plan = PLANS[selectedPlan];
+            document.getElementById('summary-plan-name').textContent     = plan.name;
+            document.getElementById('summary-plan-duration').textContent = 'โพสต์ได้ ' + plan.days + ' วัน';
+            document.getElementById('summary-total').textContent         = plan.label;
+            document.getElementById('pay-btn').textContent               = 'ชำระเงิน ' + plan.label;
+        }
+        updateSummary(); // run on load
+
+        // ── Card number: auto-space every 4 digits ──
+        document.getElementById('card-number').addEventListener('input', function () {
+            var v = this.value.replace(/\D/g, '').substring(0, 16);
+            this.value = v.replace(/(.{4})/g, '$1 ').trim();
+        });
+
+        // ── Expiry: MM/YY auto-format ──
+        document.getElementById('card-expiry').addEventListener('input', function () {
+            var v = this.value.replace(/\D/g, '').substring(0, 4);
+            if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
+            this.value = v;
+        });
+
+        // ── CVV: numbers only ──
+        document.getElementById('card-cvv').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').substring(0, 4);
+        });
+
+        // ── Form submit ──
+        document.getElementById('payment-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var payBtn   = document.getElementById('pay-btn');
+            var errorDiv = document.getElementById('payment-error');
+            errorDiv.style.display = 'none';
+
+            var cardName     = document.getElementById('card-name').value.trim();
+            var cardNumberRaw = document.getElementById('card-number').value.replace(/\s/g, '');
+            var expiryRaw    = document.getElementById('card-expiry').value;
+            var cvv          = document.getElementById('card-cvv').value.trim();
+
+            // Basic validation
+            if (!cardName) { return showError('กรุณากรอกชื่อผู้ถือบัตร'); }
+            if (cardNumberRaw.length < 13) { return showError('หมายเลขบัตรไม่ถูกต้อง'); }
+            if (!expiryRaw.includes('/') || expiryRaw.length < 5) { return showError('กรุณากรอกวันหมดอายุบัตรในรูปแบบ MM/YY'); }
+            if (cvv.length < 3) { return showError('กรุณากรอก CVV ให้ครบ'); }
+
+            var parts    = expiryRaw.split('/');
+            var expMonth = parseInt(parts[0], 10);
+            var expYear  = 2000 + parseInt(parts[1] || '0', 10);
+            if (expMonth < 1 || expMonth > 12) { return showError('เดือนหมดอายุไม่ถูกต้อง (01–12)'); }
+
+            var employerId = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
+            if (!employerId) { return showError('ไม่พบข้อมูลบัญชีนายจ้าง กรุณาเข้าสู่ระบบใหม่อีกครั้ง'); }
+
+            payBtn.disabled    = true;
+            payBtn.textContent = '⏳ กำลังดำเนินการ...';
+
+            // ── Create Omise token ──
+            if (typeof Omise === 'undefined') {
+                // Omise.js ยังไม่โหลด — ใช้ Demo Mode โดยข้าม token
+                sendToBackend(null, employerId, payBtn, errorDiv);
+                return;
+            }
+
+            try { Omise.setPublicKey(OMISE_PUBLIC_KEY); } catch (err) { /* ignore */ }
+
+            Omise.createToken('card', {
+                name:              cardName,
+                number:            cardNumberRaw,
+                expiration_month:  expMonth,
+                expiration_year:   expYear,
+                security_code:     cvv
+            }, function (statusCode, response) {
+                if (statusCode !== 200) {
+                    showError('ข้อมูลบัตรไม่ถูกต้อง: ' + (response.message || 'กรุณาตรวจสอบแล้วลองใหม่'));
+                    restoreBtn();
+                    return;
+                }
+                sendToBackend(response.id, employerId, payBtn, errorDiv);
+            });
+
+            function sendToBackend(token, empId, btn, errDiv) {
+                fetch('http://localhost:3000/api/payment/omise', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token:       token,
+                        plan:        selectedPlan,
+                        employer_id: empId
+                    })
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        window.location.href = 'post-employer.html?payment=success&plan=' + selectedPlan;
+                    } else {
+                        showError(data.error || 'การชำระเงินไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+                        restoreBtn();
+                    }
+                })
+                .catch(function () {
+                    showError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาตรวจสอบเซิร์ฟเวอร์แล้วลองใหม่');
+                    restoreBtn();
+                });
+            }
+
+            function showError(msg) {
+                errorDiv.textContent   = msg;
+                errorDiv.style.display = 'block';
+            }
+            function restoreBtn() {
+                payBtn.disabled    = false;
+                payBtn.textContent = 'ชำระเงิน ' + PLANS[selectedPlan].label;
+            }
+        });
+    })();
+    </script>
+
+</body>
+</html>

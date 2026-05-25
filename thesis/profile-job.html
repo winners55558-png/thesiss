@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="asset/Logbook.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobNble</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <a href="#profile-content-area" class="sr-only sr-only-focusable" aria-label="ข้ามไปยังเนื้อหาหลัก">ข้ามไปยังเนื้อหาหลัก</a>
+
+    <header class="site-header" role="banner">
+        
+        <nav class="navbar" aria-label="เมนูนำทางหลัก" role="navigation">
+            
+            <div class="logo-container">
+                <a href="Index.html" aria-label="กลับสู่หน้าแรก JobNble">
+                    <img src="asset/Logo-JobNble.png" alt="โลโก้แพลตฟอร์ม JobNble">
+                </a>
+            </div>
+
+            <ul class="main-nav" role="menubar">
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
+                        ผู้หางาน
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="jobseeker-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-jobseeker.html">หน้าหลักผู้หางาน</a></li>
+                        <li role="none"><a role="menuitem" href="resume.html">สร้างเรซูเม่</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="about-menu" aria-label="เมนูเกี่ยวกับเรา">
+                        เกี่ยวกับเรา
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="about-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item user-profile-item last-item" role="none">
+                    </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="profile-content-area" class="profile-page-main">
+
+        <!-- ===== สถานะการสมัครงาน (แสดงเฉพาะ seeker) ===== -->
+        <section id="application-status-section" class="app-status-section" aria-label="สถานะการสมัครงาน" style="display:none;">
+            <div class="app-status-container">
+                <h2 class="app-status-title">สถานะการสมัครงาน</h2>
+                <div id="application-status-list" class="app-status-list" aria-live="polite" aria-atomic="true">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <h1 class="profile-page-title">โปรไฟล์</h1>
+        
+        <div class="profile-container">
+            <div class="profile-box">
+                <div class="profile-info-grid">
+                    <div class="info-label">ชื่อ-นามสกุล</div>
+                    <div class="info-value" id="prof-name" style="font-weight: 600;">กำลังโหลด...</div>
+                    
+                    <div class="info-label">อีเมล</div>
+                    <div class="info-value" id="prof-email">กำลังโหลด...</div>
+                    
+                    <div class="info-label">เบอร์โทรศัพท์</div>
+                    <div class="info-value" id="prof-phone">กำลังโหลด...</div>
+
+                    <div class="info-label">ที่อยู่</div>
+                    <div class="info-value" id="prof-address">กำลังโหลด...</div>
+                </div>
+            </div>
+
+            <div class="profile-box files-box" id="seeker-resume-section" style="display: none;">
+                <div class="files-header">
+                    <h2>ไฟล์เรซูเม่ของฉัน</h2>
+                </div>
+                
+                <div class="files-list">
+                    <div class="file-item employer-item" id="resume-file-box">
+                        <a href="profile-job2.html" class="file-name" id="resume-file-name" style="color: #013c58; font-weight: 600; text-decoration: underline;">กำลังโหลด...</a>
+                        
+                        <div class="file-date" id="resume-file-date" style="color: #4B5563;">กำลังโหลด...</div>
+                        
+                        <div class="action-menu-container">
+                            <button class="file-menu-btn" aria-label="ตัวเลือกจัดการไฟล์" aria-haspopup="true" aria-expanded="false">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="1.5"></circle>
+                                    <circle cx="19" cy="12" r="1.5"></circle>
+                                    <circle cx="5" cy="12" r="1.5"></circle>
+                                </svg>
+                            </button>
+                            
+                            <ul class="action-dropdown" role="menu">
+                                <li role="none"><button type="button" role="menuitem" id="btn-download-pdf" class="edit-action" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; cursor: pointer; color: #334155;">Export PDF</button></li>
+                                <li role="none"><button type="button" role="menuitem" id="btn-delete-resume" class="delete-action" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; cursor: pointer; color: #ef4444;">ลบเรซูเม่</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ── Print Area สำหรับ Export PDF เท่านั้น ── -->
+    <div id="resume-print-area" style="display:none;"></div>
+
+    <!-- ── Delete Resume Confirmation Modal ── -->
+    <div class="delete-confirm-modal" id="delete-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-modal-msg" style="display:none;">
+        <div class="delete-confirm-box">
+            <p id="delete-modal-msg" class="delete-confirm-text">ต้องการลบเรซูเม่หรือไม่?<br>การลบจะไม่สามารถกู้คืนได้</p>
+            <div class="delete-confirm-btns">
+                <button type="button" id="btn-confirm-delete" class="delete-confirm-yes">ใช่ ลบเรซูเม่</button>
+                <button type="button" id="btn-cancel-delete" class="delete-confirm-no">ไม่ใช่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Hidden Resume Templates (used by PDF export) ── -->
+    <div id="pdf-tpl-container" aria-hidden="true" hidden>
+
+        <div class="resume-theme-content" id="tpl-minimal">
+            <div class="tpl1-left">
+                <div class="tpl1-photo" role="img" aria-label="รูปโปรไฟล์ของผู้ใช้"></div>
+                <h1 class="tpl1-name render-name">กำลังโหลด<br>ข้อมูล...</h1>
+                <h2 class="tpl1-job">ผู้สมัครงาน</h2>
+                <h3 class="tpl1-title" style="margin-top:50px;">ข้อมูลติดต่อ</h3>
+                <p class="tpl1-text"><strong>โทร:</strong><br><span class="render-phone">-</span></p>
+                <p class="tpl1-text"><strong>อีเมล:</strong><br><span class="render-email">-</span></p>
+                <p class="tpl1-text"><strong>ที่อยู่:</strong><br><span class="render-address">-</span></p>
+                <h3 class="tpl1-title" style="margin-top:auto;">ทักษะ / ภาษา</h3>
+                <div role="list" class="render-skills"></div>
+            </div>
+            <div class="tpl1-right">
+                <div><h3 class="tpl1-title-dark">ประวัติโดยย่อ / แรงบันดาลใจ</h3><p class="tpl1-text-dark render-summary">-</p></div>
+                <div><h3 class="tpl1-title-dark">ประสบการณ์การทำงาน</h3><div class="render-work-list"></div></div>
+                <div><h3 class="tpl1-title-dark" style="margin-top:15px;">ประสบการณ์ฝึกงาน</h3><div class="render-intern-list"></div></div>
+                <div><h3 class="tpl1-title-dark" style="margin-top:15px;">กิจกรรมและการแข่งขัน</h3><div class="render-activity-list"></div></div>
+                <div><h3 class="tpl1-title-dark" style="margin-top:15px;">การศึกษา</h3><div class="render-edu-list"></div></div>
+                <div><h3 class="tpl1-title-dark" style="margin-top:15px;">ข้อมูลความพิการ</h3><p class="tpl1-text-dark render-disability">-</p></div>
+            </div>
+        </div>
+
+        <div class="resume-theme-content" id="tpl-modern">
+            <div class="tpl2-left">
+                <div class="tpl2-arch-photo" role="img" aria-label="รูปโปรไฟล์ของผู้ใช้"></div>
+                <div style="width:100%;"><h3 class="tpl2-title">ช่องทางติดต่อ</h3><p class="tpl2-text">📞 <span class="render-phone">-</span><br>📧 <span class="render-email">-</span><br>📍 <span class="render-address">-</span></p></div>
+                <div class="tpl2-arch-box"><h3 class="tpl2-title-white">การศึกษา</h3><div class="render-edu-list"></div></div>
+            </div>
+            <div class="tpl2-right">
+                <div><h1 class="tpl2-name render-name">กำลังโหลดข้อมูล...</h1><h2 class="tpl2-job">ผู้สมัครงาน</h2></div>
+                <div><h3 class="tpl2-title">แรงบันดาลใจและสิ่งที่อยากบอก</h3><p class="tpl2-text render-summary">-</p></div>
+                <div><h3 class="tpl2-title">ประสบการณ์การทำงาน</h3><div class="render-work-list"></div></div>
+                <div><h3 class="tpl2-title" style="margin-top:15px;">ประสบการณ์ฝึกงาน</h3><div class="render-intern-list"></div></div>
+                <div><h3 class="tpl2-title" style="margin-top:15px;">กิจกรรมและการแข่งขัน</h3><div class="render-activity-list"></div></div>
+                <div><h3 class="tpl2-title" style="margin-top:15px;">ทักษะความสามารถ</h3><div class="tpl2-skills render-skills" role="list"></div></div>
+                <div><h3 class="tpl2-title" style="margin-top:15px;">ข้อมูลความพิการ</h3><p class="tpl2-text render-disability">-</p></div>
+            </div>
+        </div>
+
+        <div class="resume-theme-content" id="tpl-vintage">
+            <div class="tpl3-header-top">
+                <h1 class="tpl3-name render-name">กำลังโหลดข้อมูล...</h1>
+                <div class="tpl3-contact-box">
+                    <p><span aria-hidden="true">📧</span> <span class="render-email">-</span></p>
+                    <p><span aria-hidden="true">📞</span> <span class="render-phone">-</span></p>
+                    <p><span aria-hidden="true">📍</span> <span class="render-address">-</span></p>
+                </div>
+            </div>
+            <div class="tpl3-profile-section">
+                <div class="tpl3-photo" role="img" aria-label="รูปโปรไฟล์ของผู้ใช้"></div>
+                <div class="tpl3-summary"><h3 class="tpl3-subtitle-inline">ประวัติโดยย่อ / แรงบันดาลใจ:</h3><p class="render-summary">-</p></div>
+            </div>
+            <h2 class="tpl3-box-header">WORK EXPERIENCE</h2><div class="render-work-list"></div>
+            <h2 class="tpl3-box-header">INTERNSHIP EXPERIENCE</h2><div class="render-intern-list"></div>
+            <h2 class="tpl3-box-header">ACTIVITIES &amp; AWARDS</h2><div class="render-activity-list"></div>
+            <h2 class="tpl3-box-header">EDUCATION</h2><div class="render-edu-list"></div>
+            <h2 class="tpl3-box-header" style="margin-top:auto;">SKILLS &amp; DISABILITY</h2>
+            <div class="tpl3-exp-grid" style="border:none;">
+                <div class="tpl3-exp-left render-disability">-</div>
+                <div class="tpl3-exp-right render-skills">-</div>
+            </div>
+        </div>
+
+        <div class="resume-theme-content" id="tpl-bright">
+            <div class="tpl4-top-card">
+                <div class="tpl4-photo-circle" role="img" aria-label="รูปโปรไฟล์ของผู้ใช้"></div>
+                <div class="tpl4-top-info">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <h1 class="tpl4-name render-name">กำลังโหลดข้อมูล...</h1>
+                        <span class="tpl4-job">ผู้สมัครงาน</span>
+                    </div>
+                    <div class="tpl4-contact">
+                        <p><span aria-hidden="true">📞</span> <span class="render-phone">-</span> &nbsp;&nbsp;|&nbsp;&nbsp; <span aria-hidden="true">📧</span> <span class="render-email">-</span></p>
+                        <p class="render-summary" style="margin-top:15px;line-height:1.6;">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="tpl4-bottom-card">
+                <div class="tpl4-col">
+                    <h3 class="tpl4-title">EXPERIENCE</h3><div class="tpl4-timeline render-work-list"></div>
+                    <h3 class="tpl4-title" style="margin-top:20px;">INTERNSHIP</h3><div class="tpl4-timeline render-intern-list"></div>
+                    <h3 class="tpl4-title" style="margin-top:20px;">ACTIVITIES &amp; AWARDS</h3><div class="tpl4-timeline render-activity-list"></div>
+                </div>
+                <div class="tpl4-col">
+                    <div>
+                        <h3 class="tpl4-title">SKILLS &amp; DISABILITY</h3>
+                        <div class="render-disability" style="font-weight:600;color:#3B82F6;margin-bottom:8px;">-</div>
+                        <div class="render-skills" style="color:#555;line-height:1.6;">-</div>
+                    </div>
+                    <div><h3 class="tpl4-title" style="margin-top:20px;">EDUCATION</h3><div class="render-edu-list"></div></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-content">
+            
+            <div class="footer-socials">
+                <a href="#" aria-label="ติดตาม JobNble บน TikTok">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M22.84 10.5V26.26C22.84 27.94 21.48 29.3 19.8 29.3C18.12 29.3 16.76 27.94 16.76 26.26C16.76 24.58 18.12 23.22 19.8 23.22C20.1 23.22 20.38 23.27 20.64 23.36V19.79C20.37 19.74 20.09 19.71 19.8 19.71C16.18 19.71 13.25 22.64 13.25 26.26C13.25 29.88 16.18 32.81 19.8 32.81C23.42 32.81 26.35 29.88 26.35 26.26V16.3C27.56 17.27 29.11 17.86 30.79 17.86V14.35C28.53 14.35 26.62 12.72 26.2 10.5H22.84Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Facebook">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M25.75 22H22.5V34H17.5V22H15V17.5H17.5V14.25C17.5 11.16 19.16 9.5 22.5 9.5H26.25V14H23.75C22.37 14 22.5 14.81 22.5 15.62V17.5H26.25L25.75 22Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Instagram">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M16 10H28C31.3137 10 34 12.6863 34 16V28C34 31.3137 31.3137 34 28 34H16C12.6863 34 10 31.3137 10 28V16C10 12.6863 12.6863 10 16 10ZM16 12.5C14.067 12.5 12.5 14.067 12.5 16V28C12.5 29.933 14.067 31.5 16 31.5H28C29.933 31.5 31.5 29.933 31.5 28V16C31.5 14.067 29.933 12.5 28 12.5H16ZM22 17C19.2386 17 17 19.2386 17 22C17 24.7614 19.2386 27 22 27C24.7614 27 27 24.7614 27 22C27 19.2386 24.7614 17 22 17ZM19.5 22C19.5 20.6193 20.6193 19.5 22 19.5C23.3807 19.5 24.5 20.6193 24.5 22C24.5 23.3807 23.3807 24.5 22 24.5C20.6193 24.5 19.5 23.3807 19.5 22ZM28.5 16.5C28.5 17.0523 28.0523 17.5 27.5 17.5C26.9477 17.5 26.5 17.0523 26.5 16.5C26.5 15.9477 26.9477 15.5 27.5 15.5C28.0523 15.5 28.5 15.9477 28.5 16.5Z" fill="white"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-feedback">
+                <label for="feedback-input" class="sr-only">แสดงความคิดเห็นของคุณ</label>
+                <input type="text" id="feedback-input" placeholder="แสดงความคิดเห็น" class="feedback-input">
+                <button class="feedback-btn" aria-label="ส่งความคิดเห็น">ส่ง</button>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            © 2026 JobNble — Digital Platform for Inclusive Employment Opportunities. Accessibility Statement • Terms & Conditions • Privacy Policy • Contact Support
+        </div>
+    </footer>
+
+</body>
+</html>

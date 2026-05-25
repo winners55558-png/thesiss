@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="asset/Logbook.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobNble</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+
+    <header class="site-header" role="banner">
+
+        <nav class="navbar" aria-label="เมนูนำทางหลัก" role="navigation">
+
+            <div class="logo-container">
+                <a href="Index.html" aria-label="กลับสู่หน้าแรก JobNble">
+                    <img src="asset/Logo-JobNble.png" alt="โลโก้แพลตฟอร์ม JobNble">
+                </a>
+            </div>
+
+            <ul class="main-nav" role="menubar">
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false"
+                        aria-controls="employer-menu" aria-label="เมนูสำหรับนายจ้าง">
+                        นายจ้าง
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20"
+                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu" id="employer-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-employer.html">หน้าหลักนายจ้าง</a></li>
+                        <li role="none"><a role="menuitem" href="post-employer.html">โพสต์ประกาศงาน</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false"
+                        aria-controls="jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
+                        ผู้หางาน
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20"
+                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="about-menu"
+                        aria-label="เมนูเกี่ยวกับเรา">
+                        เกี่ยวกับเรา
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20"
+                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu" id="about-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item user-profile-item" role="none">
+                    <button class="nav-link-btn user-profile-btn" aria-haspopup="true" aria-expanded="false"
+                        aria-controls="user-menu" aria-label="เมนูโปรไฟล์ของ จ๊อบ">
+                        <div class="user-avatar" aria-hidden="true">จ</div>
+                    </button>
+                    <ul class="dropdown-menu user-dropdown" id="user-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="Index.html">ออกจากระบบ</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="job-detail-layout" id="main-content" aria-labelledby="job-title-main">
+        <div class="job-detail-wrapper">
+
+            <!-- 🌟 เริ่มโค้ดปุ่มย้อนกลับ 🌟 -->
+            <a href="profile-em.html" class="back-link" aria-label="กลับไปยังหน้าโปรไฟล์">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                กลับไปยังหน้าโปรไฟล์
+            </a>
+            <!-- 🌟 จบโค้ดปุ่มย้อนกลับ 🌟 -->
+
+            <div class="job-detail-card">
+
+                <div class="job-header-info">
+                    <div class="job-logo-large" id="render-job-logo" role="img" aria-label="โลโก้บริษัท">C</div>
+                    <div class="job-title-group">
+                        <h1 class="job-title-main" id="render-job-title">กำลังโหลดข้อมูล...</h1>
+                        <h2 class="job-company-name" id="render-company-name">กำลังโหลดข้อมูล...</h2>
+                        <div class="job-meta-tags">
+                            <span class="meta-tag" id="render-job-location">
+                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="sr-only">สถานที่ทำงาน:</span> -
+                            </span>
+                            <span class="meta-tag" id="render-job-type">
+                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                                <span class="sr-only">ประเภทงาน:</span> -
+                            </span>
+                            <span class="meta-tag" id="render-job-salary">
+                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <span class="sr-only">เงินเดือน:</span> -
+                            </span>
+                            <span class="meta-tag meta-tag-mode" id="render-work-mode" style="display:none;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="job-body-content">
+
+                    <div class="job-section">
+                        <h3>รายละเอียดงานและคุณสมบัติ</h3>
+                        <div id="render-job-desc"
+                            style="white-space: pre-line; line-height: 1.8; color: #4B5563; font-size: 16px;">
+                            กำลังโหลดข้อมูล...
+                        </div>
+                    </div>
+
+                    <div class="job-section">
+                        <h3>ทักษะที่ต้องการ (Skills Required)</h3>
+                        <p id="render-req-skills" style="color: #4B5563; font-size: 16px;">กำลังโหลดข้อมูล...</p>
+                    </div>
+
+                    <div class="job-section" id="jd-requirements-section">
+                        <h3>คุณสมบัติที่ต้องการ</h3>
+                        <div class="job-requirements-grid">
+                            <div class="req-item">
+                                <span class="req-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                </span>
+                                <div class="req-info">
+                                    <div class="req-label">วุฒิการศึกษา</div>
+                                    <div class="req-value" id="render-req-education">-</div>
+                                </div>
+                            </div>
+                            <div class="req-item" id="jd-age-item">
+                                <span class="req-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
+                                <div class="req-info">
+                                    <div class="req-label">ช่วงอายุที่รับ</div>
+                                    <div class="req-value" id="render-age-range">ไม่จำกัด</div>
+                                </div>
+                            </div>
+                            <div class="req-item" id="jd-experience-item">
+                                <span class="req-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                                </span>
+                                <div class="req-info">
+                                    <div class="req-label">ประสบการณ์ที่ต้องการ</div>
+                                    <div class="req-value" id="render-req-experience">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="job-section accessibility-section">
+                        <h3><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                style="margin-right: 8px; vertical-align: middle;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
+                            </svg> นโยบายรองรับผู้พิการ (Accessibility Support)</h3>
+                        <p id="render-disability-support" style="font-size: 16px;">กำลังโหลดข้อมูล...</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 40px;">
+                <a href="home-employer.html" class="btn-submit-job"
+                    style="text-decoration: none;">กลับสู่หน้าหลักนายจ้าง</a>
+            </div>
+        </div>
+    </main>
+
+
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-content">
+            
+            <div class="footer-socials">
+                <a href="#" aria-label="ติดตาม JobNble บน TikTok">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M22.84 10.5V26.26C22.84 27.94 21.48 29.3 19.8 29.3C18.12 29.3 16.76 27.94 16.76 26.26C16.76 24.58 18.12 23.22 19.8 23.22C20.1 23.22 20.38 23.27 20.64 23.36V19.79C20.37 19.74 20.09 19.71 19.8 19.71C16.18 19.71 13.25 22.64 13.25 26.26C13.25 29.88 16.18 32.81 19.8 32.81C23.42 32.81 26.35 29.88 26.35 26.26V16.3C27.56 17.27 29.11 17.86 30.79 17.86V14.35C28.53 14.35 26.62 12.72 26.2 10.5H22.84Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Facebook">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M25.75 22H22.5V34H17.5V22H15V17.5H17.5V14.25C17.5 11.16 19.16 9.5 22.5 9.5H26.25V14H23.75C22.37 14 22.5 14.81 22.5 15.62V17.5H26.25L25.75 22Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Instagram">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M16 10H28C31.3137 10 34 12.6863 34 16V28C34 31.3137 31.3137 34 28 34H16C12.6863 34 10 31.3137 10 28V16C10 12.6863 12.6863 10 16 10ZM16 12.5C14.067 12.5 12.5 14.067 12.5 16V28C12.5 29.933 14.067 31.5 16 31.5H28C29.933 31.5 31.5 29.933 31.5 28V16C31.5 14.067 29.933 12.5 28 12.5H16ZM22 17C19.2386 17 17 19.2386 17 22C17 24.7614 19.2386 27 22 27C24.7614 27 27 24.7614 27 22C27 19.2386 24.7614 17 22 17ZM19.5 22C19.5 20.6193 20.6193 19.5 22 19.5C23.3807 19.5 24.5 20.6193 24.5 22C24.5 23.3807 23.3807 24.5 22 24.5C20.6193 24.5 19.5 23.3807 19.5 22ZM28.5 16.5C28.5 17.0523 28.0523 17.5 27.5 17.5C26.9477 17.5 26.5 17.0523 26.5 16.5C26.5 15.9477 26.9477 15.5 27.5 15.5C28.0523 15.5 28.5 15.9477 28.5 16.5Z" fill="white"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-feedback">
+                <label for="feedback-input" class="sr-only">แสดงความคิดเห็นของคุณ</label>
+                <input type="text" id="feedback-input" placeholder="แสดงความคิดเห็น" class="feedback-input">
+                <button class="feedback-btn" aria-label="ส่งความคิดเห็น">ส่ง</button>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            © 2026 JobNble — Digital Platform for Inclusive Employment Opportunities. Accessibility Statement • Terms & Conditions • Privacy Policy • Contact Support
+        </div>
+    </footer>
+
+</body>
+
+</html>

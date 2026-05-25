@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="asset/Logbook.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobNble</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <header class="site-header" role="banner">
+        
+        <nav class="navbar" aria-label="เมนูนำทางหลัก" role="navigation">
+            
+            <div class="logo-container">
+                <a href="Index.html" aria-label="กลับสู่หน้าแรก JobNble">
+                    <img src="asset/Logo-JobNble.png" alt="โลโก้แพลตฟอร์ม JobNble">
+                </a>
+            </div>
+
+            <ul class="main-nav" role="menubar">
+                
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="employer-menu" aria-label="เมนูสำหรับนายจ้าง">
+                        นายจ้าง
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="employer-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-employer.html">หน้าหลักนายจ้าง</a></li>
+                        <li role="none"><a role="menuitem" href="post-employer.html">โพสต์ประกาศงาน</a></li>
+                        <li role="none" id="nav-resume-db-item" style="display:none;"><a role="menuitem" href="resume-database.html">ดูเรซูเม่ผู้หางานทั้งหมด</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
+                        ผู้หางาน
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="jobseeker-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-jobseeker.html">หน้าหลักผู้หางาน</a></li>
+                        <li role="none"><a role="menuitem" href="resume.html">สร้างเรซูเม่</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" role="none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="about-menu" aria-label="เมนูเกี่ยวกับเรา">
+                        เกี่ยวกับเรา
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="about-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item user-profile-item" role="none">
+                    <button class="nav-link-btn user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" aria-label="เมนูโปรไฟล์ของ จ๊อบ">
+                        <div class="user-avatar" aria-hidden="true">จ</div> 
+                    </button>
+                    <ul class="dropdown-menu user-dropdown" id="user-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="Index.html">ออกจากระบบ</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ── แพ็คเกจโพสต์ประกาศงาน (section แรก) ── -->
+        <section class="pricing-section" aria-labelledby="pricing-main-title">
+            <div class="pricing-section__inner">
+                <h2 class="pricing-section__title" id="pricing-main-title">แพ็คเกจโพสต์ประกาศงาน</h2>
+                <p class="pricing-section__subtitle">เลือกแผนที่เหมาะกับองค์กรของคุณ — เริ่มต้นได้ฟรีทันทีโดยไม่ต้องชำระเงิน</p>
+
+                <div class="pricing-grid" role="list">
+
+                    <!-- การ์ดที่ 1: Free Trial -->
+                    <div class="pricing-card" role="listitem">
+                        <div class="pricing-card__header">
+                            <h3 class="pricing-card__name">ทดลองใช้ฟรี</h3>
+                            <div class="pricing-card__price">ฟรี</div>
+                        </div>
+                        <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจ Free Trial">
+                            <li class="pricing-feature pricing-feature--yes">โพสต์ได้ 3 โพสต์</li>
+                            <li class="pricing-feature pricing-feature--yes">โพสต์มีอายุ 30 วัน</li>
+                            <li class="pricing-feature pricing-feature--no">ดู score matching ไม่ได้</li>
+                            <li class="pricing-feature pricing-feature--no">ดูเรซูเม่ทั้งหมดในแพลตฟอร์มไม่ได้</li>
+                        </ul>
+                        <a href="post-employer.html" class="pricing-card__btn" aria-label="เริ่มใช้งาน Free Trial ทันที">เริ่มใช้งานฟรี</a>
+                    </div>
+
+                    <!-- การ์ดที่ 2: Pay Per Post -->
+                    <div class="pricing-card" role="listitem">
+                        <div class="pricing-card__header">
+                            <h3 class="pricing-card__name">Pay Per Post</h3>
+                            <div class="pricing-card__price">฿199 <span class="pricing-card__price-unit">/ 15 วัน</span></div>
+                            <div class="pricing-card__price-alt">หรือ ฿349 / 30 วัน</div>
+                        </div>
+                        <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจ Pay Per Post">
+                            <li class="pricing-feature pricing-feature--yes">โพสต์ทีละ 1 ตำแหน่งงาน</li>
+                            <li class="pricing-feature pricing-feature--yes">ดู score matching ได้</li>
+                            <li class="pricing-feature pricing-feature--no">ดูเรซูเม่ทั้งหมดในแพลตฟอร์มไม่ได้</li>
+                        </ul>
+                        <a href="payment.html?plan=pay_per_post_15" class="pricing-card__btn" aria-label="เลือกแพ็คเกจ Pay Per Post">เลือกแพ็คเกจนี้</a>
+                    </div>
+
+                    <!-- การ์ดที่ 3: รายเดือน (ไฮไลต์) -->
+                    <div class="pricing-card pricing-card--highlight" role="listitem">
+                        <div class="pricing-card__header pricing-card__header--dark">
+                            <h3 class="pricing-card__name">รายเดือน</h3>
+                            <div class="pricing-card__price">฿599 <span class="pricing-card__price-unit">/ เดือน</span></div>
+                        </div>
+                        <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจรายเดือน">
+                            <li class="pricing-feature pricing-feature--yes">โพสต์ไม่จำกัด</li>
+                            <li class="pricing-feature pricing-feature--yes">แต่ละโพสต์อายุ 30 วัน</li>
+                            <li class="pricing-feature pricing-feature--yes">ดูเรซูเม่ทั้งหมดในแพลตฟอร์มได้</li>
+                            <li class="pricing-feature pricing-feature--yes">ดู score matching ได้</li>
+                            <li class="pricing-feature pricing-feature--yes">badge "Inclusive Employer"</li>
+                        </ul>
+                        <a href="payment.html?plan=monthly" class="pricing-card__btn pricing-card__btn--light" aria-label="เลือกแพ็คเกจรายเดือน">เลือกแพ็คเกจนี้</a>
+                    </div>
+
+                    <!-- การ์ดที่ 4: รายปี -->
+                    <div class="pricing-card pricing-card--highlight" role="listitem">
+                        <div class="pricing-card__header pricing-card__header--dark">
+                            <div class="pricing-badge" aria-label="แพ็คเกจที่ประหยัดที่สุด">ประหยัดที่สุด</div>
+                            <h3 class="pricing-card__name">รายปี</h3>
+                            <div class="pricing-card__price">฿4,990 <span class="pricing-card__price-unit">/ ปี</span></div>
+                            <div class="pricing-card__price-alt">ประหยัดกว่ารายเดือนเกือบ ฿3,000</div>
+                        </div>
+                        <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจรายปี">
+                            <li class="pricing-feature pricing-feature--yes">ทุกอย่างเหมือนรายเดือน</li>
+                            <li class="pricing-feature pricing-feature--yes">เทียบเท่าฟรีเกือบ 4 เดือน</li>
+                            <li class="pricing-feature pricing-feature--yes">badge "Verified Inclusive Employer"</li>
+                        </ul>
+                        <a href="payment.html?plan=yearly" class="pricing-card__btn pricing-card__btn--light" aria-label="เลือกแพ็คเกจรายปี">เลือกแพ็คเกจนี้</a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="employer-cta-section" aria-labelledby="cta-title">
+            <div class="employer-cta-container">
+                <h2 class="cta-title" id="cta-title">ปลดล็อกศักยภาพองค์กรด้วยความหลากหลาย</h2>
+                <p class="cta-desc">ร่วมสร้างสรรค์สังคมการทำงานที่เท่าเทียมไปกับเรา ค้นหาบุคลากรผู้พิการที่มีศักยภาพและพร้อมทุ่มเท เพื่อนำมุมมองใหม่ๆ มาช่วยขับเคลื่อนธุรกิจของคุณให้เติบโตอย่างยั่งยืน</p>
+                <a href="post-employer.html" class="cta-btn" aria-label="ไปที่หน้าโพสต์ประกาศงาน">โพสต์ประกาศงานเลย!</a>
+            </div>
+        </section>
+
+        <section class="emp-welcome-section" aria-labelledby="emp-welcome-title">
+            <h2 class="emp-welcome-title" id="emp-welcome-title">ยินดีต้อนรับเข้าสู่ JobNble</h2>
+            
+            <div class="emp-welcome-container">
+                
+                <div class="emp-stats-column">
+                    
+                    <div class="emp-stat-box">
+                        <div class="emp-stat-value" id="db-total-hired" aria-live="polite">10,000+</div>
+                        <div class="emp-stat-label">ผู้หางานถูกจ้าง</div>
+                        <p class="emp-stat-desc">แพลตฟอร์มของเราช่วยเชื่อมโยงผู้หางานที่มีศักยภาพเข้ากับองค์กรชั้นนำมากมาย ค้นหาพนักงานที่พร้อมเติบโตไปกับคุณได้แล้ววันนี้</p>
+                    </div>
+
+                    <div class="emp-stat-box box-company">
+                        <div class="emp-top-badge" aria-label="นายจ้างที่จ้างงานเยอะที่สุด">จ้างเยอะที่สุด</div>
+                        <div class="emp-top-company" id="db-top-company-name">บริษัท ซีพี ออลล์ จำกัด (มหาชน)</div>
+                        
+                        <div class="emp-company-stats-row">
+                            <div class="emp-company-stat-item">
+                                <div class="emp-stat-value" id="db-top-company-hires" aria-live="polite">1,000</div>
+                                <div class="emp-stat-label">จ้างผู้หางาน</div>
+                            </div>
+                            <div class="emp-company-stat-item">
+                                <div class="emp-stat-value" id="db-top-company-tax" aria-live="polite">20%</div>
+                                <div class="emp-stat-label">ภาษีถูกลดหย่อน</div>
+                            </div>
+                        </div>
+                        
+                        <p class="emp-stat-desc">องค์กรตัวอย่างที่เห็นความสำคัญของความเท่าเทียม พร้อมรับสิทธิประโยชน์ลดหย่อนภาษีจากการจ้างงานอย่างเต็มที่ตามกฎหมาย</p>
+                    </div>
+
+                </div>
+
+                <div class="emp-image-column">
+                    <img src="asset/employer-award.jpg" alt="ภาพนายจ้างรับรางวัลสนับสนุนสังคม" class="emp-welcome-image">
+                </div>
+
+            </div>
+        </section>
+
+        <section class="core-features-section" aria-labelledby="features-main-title">
+            <h2 class="features-main-title" id="features-main-title">ฟีเจอร์ที่โดดเด่นของ JobNble</h2>
+            
+            <div class="features-container" role="list">
+                
+                <div class="feature-box" role="listitem">
+                    <svg class="feature-icon icon-resume" aria-hidden="true" viewBox="0 0 24 30" fill="none" stroke="#6E6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v22a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <circle cx="12" cy="15" r="3"></circle>
+                        <path d="M8 22v-1a4 4 0 0 1 8 0v1"></path>
+                    </svg>
+                    <h3 class="feature-title">สร้างเรซูเม่แบบง่าย</h3>
+                    <p class="feature-desc">เพียงกรอกข้อมูลและเลือกเทมเพลตที่ชื่นชอบ ระบบจะนำข้อมูลไปจัดวางในเรซูเม่ที่สวยงามและเป็นมืออาชีพให้คุณโดยอัตโนมัติ พร้อมใช้งานทันที</p>
+                </div>
+
+                <div class="feature-box" role="listitem">
+                    <svg class="feature-icon icon-match" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#6E6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="10" r="7"></circle>
+                        <line x1="21" y1="21" x2="15" y2="15"></line>
+                        <circle cx="10" cy="8" r="2"></circle>
+                        <path d="M13 13a4 4 0 0 0-6 0"></path>
+                    </svg>
+                    <h3 class="feature-title">อัลกอริทึมจับคู่งาน</h3>
+                    <p class="feature-desc">เมื่อสร้างเรซูเม่เสร็จสิ้น ระบบจะวิเคราะห์ข้อมูลเพื่อเทียบกับประกาศงานของนายจ้าง พร้อมจัดอันดับงานที่ตรงกับคุณสมบัติของคุณมากที่สุด</p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+   <footer class="site-footer" role="contentinfo">
+        <div class="footer-content">
+            
+            <div class="footer-socials">
+                <a href="#" aria-label="ติดตาม JobNble บน TikTok">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M22.84 10.5V26.26C22.84 27.94 21.48 29.3 19.8 29.3C18.12 29.3 16.76 27.94 16.76 26.26C16.76 24.58 18.12 23.22 19.8 23.22C20.1 23.22 20.38 23.27 20.64 23.36V19.79C20.37 19.74 20.09 19.71 19.8 19.71C16.18 19.71 13.25 22.64 13.25 26.26C13.25 29.88 16.18 32.81 19.8 32.81C23.42 32.81 26.35 29.88 26.35 26.26V16.3C27.56 17.27 29.11 17.86 30.79 17.86V14.35C28.53 14.35 26.62 12.72 26.2 10.5H22.84Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Facebook">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path d="M25.75 22H22.5V34H17.5V22H15V17.5H17.5V14.25C17.5 11.16 19.16 9.5 22.5 9.5H26.25V14H23.75C22.37 14 22.5 14.81 22.5 15.62V17.5H26.25L25.75 22Z" fill="white"/>
+                    </svg>
+                </a>
+                <a href="#" aria-label="ติดตาม JobNble บน Instagram">
+                    <svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="44" height="44" rx="8" fill="black"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M16 10H28C31.3137 10 34 12.6863 34 16V28C34 31.3137 31.3137 34 28 34H16C12.6863 34 10 31.3137 10 28V16C10 12.6863 12.6863 10 16 10ZM16 12.5C14.067 12.5 12.5 14.067 12.5 16V28C12.5 29.933 14.067 31.5 16 31.5H28C29.933 31.5 31.5 29.933 31.5 28V16C31.5 14.067 29.933 12.5 28 12.5H16ZM22 17C19.2386 17 17 19.2386 17 22C17 24.7614 19.2386 27 22 27C24.7614 27 27 24.7614 27 22C27 19.2386 24.7614 17 22 17ZM19.5 22C19.5 20.6193 20.6193 19.5 22 19.5C23.3807 19.5 24.5 20.6193 24.5 22C24.5 23.3807 23.3807 24.5 22 24.5C20.6193 24.5 19.5 23.3807 19.5 22ZM28.5 16.5C28.5 17.0523 28.0523 17.5 27.5 17.5C26.9477 17.5 26.5 17.0523 26.5 16.5C26.5 15.9477 26.9477 15.5 27.5 15.5C28.0523 15.5 28.5 15.9477 28.5 16.5Z" fill="white"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="footer-feedback">
+                <label for="feedback-input" class="sr-only">แสดงความคิดเห็นของคุณ</label>
+                <input type="text" id="feedback-input" placeholder="แสดงความคิดเห็น" class="feedback-input">
+                <button class="feedback-btn" aria-label="ส่งความคิดเห็น">ส่ง</button>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            © 2026 JobNble — Digital Platform for Inclusive Employment Opportunities. Accessibility Statement • Terms & Conditions • Privacy Policy • Contact Support
+        </div>
+    </footer>
+
+</body>
+</html>
