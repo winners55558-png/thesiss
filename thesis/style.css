@@ -1546,6 +1546,87 @@ body.mode-login  .auth-box {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+/* ================== GOOGLE AUTH BUTTON ================== */
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1e293b;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+    white-space: nowrap;
+}
+.btn-google:hover {
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.btn-google svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.form-action-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}
+
+/* ================== COMPLETE EMPLOYER PROFILE CARD ================== */
+.complete-profile-card {
+    width: 100%;
+    max-width: 700px;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 52px 64px 60px !important;
+    margin: 0 auto;
+}
+
+.complete-profile-card .form-input,
+.complete-profile-card .readonly-input {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.complete-profile-card .auth-title {
+    font-size: 26px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.complete-profile-card .form-action-row {
+    margin-top: 40px;
+    padding-bottom: 8px;
+}
+
+.complete-profile-card .auth-submit-btn {
+    width: auto;
+    padding: 0 40px;
+    height: 48px;
+    font-size: 17px;
+}
+
+/* ── wrapper สำหรับหน้า complete-profile ให้มี breathing room ── */
+.complete-profile-section {
+    padding: 56px 20px 72px;
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: #F8FAFC;
+}
+
+/* ================== AUTH BUTTON WRAPPER ================== */
 .auth-btn-wrapper {
     margin-top: 40px;
     display: flex;
@@ -2397,6 +2478,42 @@ body.mode-login  .auth-box {
     color: #94A3B8;
     cursor: not-allowed;
     border-color: #E2E8F0;
+}
+
+/* ================== ARIA COMBOBOX (address fields) ================== */
+.combobox-container {
+    position: relative;
+}
+.combobox-listbox {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: #ffffff;
+    border: 1.5px solid #3b82f6;
+    border-radius: 0 0 8px 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.combobox-option {
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #1e293b;
+    font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+    transition: background 0.1s;
+    list-style: none;
+}
+.combobox-option:hover { background: #eff6ff; color: #2563eb; }
+.combobox-option-active {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    outline: none;
 }
 
 @media (max-width: 768px) {
@@ -3588,7 +3705,7 @@ body.mode-login  .auth-box {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    padding: 0 40px;
+    padding: 0 100px 0 40px;
     border-left: 8px solid #3B82F6;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
     cursor: pointer;
@@ -4312,7 +4429,8 @@ th {
 }
 
 /* === Application Status Stepper (profile-job.html) === */
-.app-status-section {
+.app-status-section,
+#saved-jobs-section {
     width: 100%;
     max-width: 900px;
     margin-bottom: 40px;
@@ -5975,3 +6093,36 @@ th {
     /* Footer */
     .footer-copyright { font-size: 10px; }
 }
+
+/* ==========================================
+   Saved Jobs Section (profile-job.html)
+========================================== */
+.saved-job-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    gap: 12px;
+}
+.saved-job-title  { font-size: 14px; font-weight: 600; color: #0f172a; }
+.saved-job-company{ font-size: 13px; color: #64748b; margin-top: 2px; }
+.saved-job-meta   { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.saved-job-actions{ display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.btn-view-saved {
+    padding: 7px 14px; border-radius: 8px;
+    background: #eff6ff; color: #3b82f6;
+    font-size: 13px; font-weight: 600; text-decoration: none;
+    border: 1px solid #bfdbfe; transition: background .15s;
+}
+.btn-view-saved:hover { background: #dbeafe; }
+.btn-unsave {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid #fecaca; background: #fef2f2;
+    color: #dc2626; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+}
+.btn-unsave:hover { background: #fee2e2; }

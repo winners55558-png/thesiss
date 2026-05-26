@@ -102,24 +102,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const loggedInId = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
 
     // ลิสต์หน้าเว็บของแต่ละฝั่ง
-    // ลิสต์หน้าเว็บของแต่ละฝั่ง
     const seekerPages = ['home-jobseeker.html', 'resume.html', 'resume2.html', 'resume3.html', 'resume4.html', 'resume5.html', 'job-search.html', 'profile-job.html', 'profile-job2.html', 'job-detail.html'];
-    const employerPages = ['home-employer.html', 'post-job.html', 'profile-em.html', 'profile-em2.html', 'profile-em3.html', 'profile-em4.html', 'post-employer.html', 'post-employer2.html'];
+    const employerPages = ['home-employer.html', 'post-job.html', 'profile-em.html', 'profile-em2.html', 'profile-em3.html', 'profile-em4.html', 'post-employer.html', 'post-employer2.html', 'resume-database.html'];
 
-    // 🌟 เพิ่มบรรทัดนี้: เช็คว่าคนนี้คือ Admin ใช่ไหม? (เช็คจาก Session หรือ บัตรผ่านทางใน URL)
+    // 🌟 เช็คว่าคนนี้คือ Admin ไหม? (จาก Session หรือ ?admin=true ใน URL)
     const urlAdminBypass = new URLSearchParams(window.location.search).get('admin') === 'true';
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true' || urlAdminBypass;
 
-    // ถ้าไม่มีใครล็อกอินเข้ามาเลย (และไม่ใช่แอดมินด้วย)
     if (!loggedInUser && !isAdmin) {
-        if (seekerPages.includes(currentPageUrl)) { 
-            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับผู้หางาน'); 
-            window.location.href = 'login-jobseeker.html'; 
-            return; 
-        } else if (employerPages.includes(currentPageUrl)) { 
-            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับนายจ้าง'); 
-            window.location.href = 'login-employer.html'; 
-            return; 
+        if (seekerPages.includes(currentPageUrl)) {
+            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับผู้หางาน');
+            window.location.href = 'login-jobseeker.html?mode=login';
+            return;
+        } else if (employerPages.includes(currentPageUrl)) {
+            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับนายจ้าง');
+            window.location.href = 'login-employer.html?mode=login';
+            return;
         }
     } else {
         if (loggedInType === 'employer' && seekerPages.includes(currentPageUrl)) {
@@ -183,14 +181,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'Index.html';
             });
 
-            document.querySelectorAll('.main-nav > li.nav-item').forEach(item => {
-                const btn = item.querySelector('.nav-link-btn');
-                if (btn) {
-                    const menuText = btn.textContent.trim();
-                    if (loggedInType === 'employer' && menuText.includes('ผู้หางาน')) item.style.display = 'none';
-                    if (loggedInType === 'seeker' && menuText.includes('นายจ้าง')) item.style.display = 'none';
+            // ── Index.html: แสดง/ซ่อนเมนูตาม userType ──
+            const isIndexPage = ['index.html', 'Index.html', ''].includes(currentPageUrl);
+            if (isIndexPage) {
+                // ซ่อนเมนู guest (สมัครสมาชิก)
+                const registerNav = document.getElementById('index-register-nav');
+                if (registerNav) registerNav.style.display = 'none';
+
+                // แสดงเมนูตาม role
+                if (loggedInType === 'seeker') {
+                    const seekerNav = document.getElementById('index-seeker-nav');
+                    if (seekerNav) seekerNav.style.display = '';
+                } else if (loggedInType === 'employer') {
+                    const employerNav = document.getElementById('index-employer-nav');
+                    if (employerNav) employerNav.style.display = '';
                 }
-            });
+
+                // แสดงเมนูเกี่ยวกับเรา
+                const aboutNav = document.getElementById('index-about-nav');
+                if (aboutNav) aboutNav.style.display = '';
+            } else {
+                // หน้าอื่น: ซ่อนเมนูตาม role เดิม
+                document.querySelectorAll('.main-nav > li.nav-item').forEach(item => {
+                    const btn = item.querySelector('.nav-link-btn');
+                    if (btn) {
+                        const menuText = btn.textContent.trim();
+                        if (loggedInType === 'employer' && menuText.includes('ผู้หางาน')) item.style.display = 'none';
+                        if (loggedInType === 'seeker' && menuText.includes('นายจ้าง')) item.style.display = 'none';
+                    }
+                });
+            }
         } else {
             // ── ไม่ได้ login: ถ้าหน้านี้มีปุ่ม btn-outline-register (Index.html) ไม่ต้องเขียนทับ ──
             const hasNewNav = !!document.querySelector('.nav-link-btn.btn-outline-register');
@@ -312,6 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // แจ้ง screen reader
             const checked = btn.getAttribute('aria-checked') === 'true';
             announce(btn.getAttribute('aria-label') + (checked ? ' เลือกแล้ว' : ' ยกเลิกการเลือกแล้ว'));
+        });
+    });
+
+    // ── announce เมื่อเลือกระดับความพิการ ──
+    document.querySelectorAll('.disability-level-select').forEach(sel => {
+        sel.addEventListener('change', function () {
+            if (this.value && this.options[this.selectedIndex]) {
+                announce('เลือก: ' + this.options[this.selectedIndex].text);
+            }
         });
     });
 
@@ -708,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ── ฟังก์ชัน render ผลลัพธ์ ──
-        function renderSearchResults(jobs, q) {
+        async function renderSearchResults(jobs, q) {
             if (!searchResultsSec) return;
             searchResultsSec.style.display = 'block';
 
@@ -726,6 +755,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // โหลดงานที่บันทึกไว้แล้ว (ถ้า login อยู่)
+            const seekerIdForSearch = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
+            let savedJobIdsSearch = new Set();
+            if (seekerIdForSearch) {
+                try {
+                    const svRes = await fetch(`http://localhost:3000/api/saved-jobs/${seekerIdForSearch}`);
+                    const svData = await svRes.json();
+                    if (Array.isArray(svData)) svData.forEach(j => savedJobIdsSearch.add(String(j.id)));
+                } catch(_) {}
+            }
+
             searchResultsGrid.innerHTML = jobs.map(job => {
                 const catLabel = CAT_LABELS[job.job_category] || job.job_category || '';
                 const typeLabel = TYPE_LABELS[job.job_type] || job.job_type || '';
@@ -735,6 +775,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return DIS_LABELS[k] || k;
                 }).filter(Boolean);
                 const disText = disArr.join(', ');
+                const isSaved = savedJobIdsSearch.has(String(job.id));
+                const bookmarkSvgFilled = `<svg width="16" height="16" viewBox="0 0 24 24" fill="#3b82f6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                const bookmarkSvgEmpty = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                const safeTitle = (job.job_title||'').replace(/'/g,"\\'");
+                const safeCo = (job.company_name||'').replace(/'/g,"\\'");
 
                 return `
                 <a href="job-detail.html?id=${job.id}" class="search-job-card" role="listitem"
@@ -752,8 +797,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${disText ? `<div class="search-job-meta">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         รับ: ${disText}</div>` : ''}
-                    <div class="search-job-cta">ดูรายละเอียด
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                        <div class="search-job-cta">ดูรายละเอียด
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                        <button class="search-save-btn" data-job-id="${job.id}" data-saved="${isSaved}"
+                            onclick="event.stopPropagation(); event.preventDefault(); toggleSaveJob(this, '${job.id}', '${safeTitle}', '${safeCo}');"
+                            aria-label="${isSaved ? 'ยกเลิกบันทึกงานนี้' : 'บันทึกงานนี้'}"
+                            title="${isSaved ? 'ยกเลิกบันทึก' : 'บันทึกงาน'}"
+                            style="width:32px;height:32px;border-radius:50%;border:1.5px solid ${isSaved ? '#bfdbfe' : '#e2e8f0'};background:${isSaved ? '#eff6ff' : '#fff'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;">
+                            ${isSaved ? bookmarkSvgFilled : bookmarkSvgEmpty}
+                        </button>
                     </div>
                 </a>`;
             }).join('');
@@ -1016,6 +1070,268 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("❌ " + data.message);
                 }
             } catch (error) { announce('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); alert("⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"); }
+        });
+    }
+
+    // ==========================================
+    // 🌟 6.5 GOOGLE SIGN UP / SIGN IN
+    // ==========================================
+    (function initGoogleAuth() {
+        // โหลด Google Identity Services เฉพาะหน้าที่มีปุ่ม Google
+        const hasGoogleBtn = document.getElementById('btn-google-signup-seeker')
+            || document.getElementById('btn-google-login-seeker')
+            || document.getElementById('btn-google-signup-employer')
+            || document.getElementById('btn-google-login-employer');
+        if (!hasGoogleBtn) return;
+
+        const gsiScript = document.createElement('script');
+        gsiScript.src = 'https://accounts.google.com/gsi/client';
+        gsiScript.async = true;
+        gsiScript.defer = true;
+        gsiScript.onload = setupGoogleButtons;
+        document.head.appendChild(gsiScript);
+
+        function setupGoogleButtons() {
+            const GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || '';
+            if (!GOOGLE_CLIENT_ID) {
+                console.warn('GOOGLE_CLIENT_ID ไม่ได้ตั้งค่า — ตรวจสอบ window.GOOGLE_CLIENT_ID ใน HTML');
+                return;
+            }
+
+            // ── helper: loading state ──
+            function setLoading(btn, loading) {
+                if (!btn) return;
+                btn.disabled = loading;
+                btn.setAttribute('aria-busy', loading ? 'true' : 'false');
+                if (loading) {
+                    btn.innerText = 'กำลังดำเนินการ...';
+                } else {
+                    btn.innerHTML = btn.dataset.origHtml || btn.innerText;
+                }
+            }
+
+            // ── Direct OAuth2 Popup (ไม่ใช้ GIS library — เสถียรที่สุด) ──
+            // หน้า google-callback.html รับ access_token แล้วส่งกลับผ่าน postMessage
+            function triggerGoogle(btn, handler) {
+                setLoading(btn, true);
+
+                // คำนวณ callback URL จาก path ปัจจุบัน (ใช้งานได้ทุก environment)
+                const basePath = window.location.origin
+                    + window.location.pathname.replace(/[^\/]*$/, '');
+                const callbackUrl = basePath + 'google-callback.html';
+
+                const params = new URLSearchParams({
+                    client_id: GOOGLE_CLIENT_ID,
+                    redirect_uri: callbackUrl,
+                    response_type: 'token',
+                    scope: 'email profile',
+                    prompt: 'select_account',
+                });
+
+                const popup = window.open(
+                    'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString(),
+                    'google-login',
+                    'width=520,height=640,top=100,left=200,scrollbars=yes'
+                );
+
+                if (!popup || popup.closed) {
+                    setLoading(btn, false);
+                    alert('กรุณาอนุญาต popup ในเบราว์เซอร์แล้วลองใหม่');
+                    return;
+                }
+
+                // ล้าง result เก่าก่อนเปิด popup
+                localStorage.removeItem('_google_oauth_result');
+
+                // Poll localStorage ทุก 500ms — ไม่ต้องพึ่ง window.opener
+                const pollTimer = setInterval(() => {
+                    const raw = localStorage.getItem('_google_oauth_result');
+                    if (raw) {
+                        clearInterval(pollTimer);
+                        localStorage.removeItem('_google_oauth_result');
+                        try {
+                            const result = JSON.parse(raw);
+                            if (result.access_token) {
+                                handler(result.access_token, btn);
+                            } else {
+                                setLoading(btn, false);
+                                if (result.error && result.error !== 'access_denied') {
+                                    announce('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google');
+                                }
+                            }
+                        } catch (e) {
+                            setLoading(btn, false);
+                        }
+                        return;
+                    }
+                    // ถ้า popup ปิดแล้วแต่ยังไม่มีผลลัพธ์ → ผู้ใช้ปิดเอง
+                    try {
+                        if (popup.closed) {
+                            clearInterval(pollTimer);
+                            setLoading(btn, false);
+                        }
+                    } catch (e) {
+                        clearInterval(pollTimer);
+                        setLoading(btn, false);
+                    }
+                }, 500);
+            }
+
+            // ── SEEKER: ปุ่มสมัคร ──
+            const btnSignupSeeker = document.getElementById('btn-google-signup-seeker');
+            if (btnSignupSeeker) {
+                btnSignupSeeker.dataset.origHtml = btnSignupSeeker.innerHTML;
+                btnSignupSeeker.addEventListener('click', () => triggerGoogle(btnSignupSeeker, handleGoogleSeeker));
+            }
+
+            // ── SEEKER: ปุ่มเข้าสู่ระบบ ──
+            const btnLoginSeeker = document.getElementById('btn-google-login-seeker');
+            if (btnLoginSeeker) {
+                btnLoginSeeker.dataset.origHtml = btnLoginSeeker.innerHTML;
+                btnLoginSeeker.addEventListener('click', () => triggerGoogle(btnLoginSeeker, handleGoogleSeeker));
+            }
+
+            // ── EMPLOYER: ปุ่มสมัคร ──
+            const btnSignupEmployer = document.getElementById('btn-google-signup-employer');
+            if (btnSignupEmployer) {
+                btnSignupEmployer.dataset.origHtml = btnSignupEmployer.innerHTML;
+                btnSignupEmployer.addEventListener('click', () => triggerGoogle(btnSignupEmployer, handleGoogleEmployer));
+            }
+
+            // ── EMPLOYER: ปุ่มเข้าสู่ระบบ ──
+            const btnLoginEmployer = document.getElementById('btn-google-login-employer');
+            if (btnLoginEmployer) {
+                btnLoginEmployer.dataset.origHtml = btnLoginEmployer.innerHTML;
+                btnLoginEmployer.addEventListener('click', () => triggerGoogle(btnLoginEmployer, handleGoogleEmployer));
+            }
+        }
+
+        // ── ผู้หางาน: ส่ง access_token ไปยังเซิร์ฟเวอร์ ──
+        async function handleGoogleSeeker(access_token, btn) {
+            try {
+                const res = await fetch('http://localhost:3000/api/auth/google/seeker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    sessionStorage.setItem('userName', data.user.name);
+                    sessionStorage.setItem('userId', data.user.id);
+                    sessionStorage.setItem('userType', 'seeker');
+                    const msg = data.isNewUser ? 'สมัครสมาชิกด้วย Google สำเร็จ!' : 'เข้าสู่ระบบด้วย Google สำเร็จ!';
+                    announce(msg + ' กำลังพาไปหน้าหลัก');
+                    window.location.href = 'home-jobseeker.html';
+                } else {
+                    announce('เกิดข้อผิดพลาด: ' + (data.error || 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้'));
+                    alert('❌ ' + (data.error || 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้'));
+                    if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); btn.innerHTML = btn.dataset.origHtml; }
+                }
+            } catch (err) {
+                announce('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                alert('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); btn.innerHTML = btn.dataset.origHtml; }
+            }
+        }
+
+        // ── นายจ้าง: ส่ง access_token ไปยังเซิร์ฟเวอร์ ──
+        async function handleGoogleEmployer(access_token, btn) {
+            try {
+                const res = await fetch('http://localhost:3000/api/auth/google/employer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    sessionStorage.setItem('userName', data.user.name);
+                    sessionStorage.setItem('userId', data.user.id);
+                    sessionStorage.setItem('userType', 'employer');
+
+                    if (data.needsProfileCompletion) {
+                        sessionStorage.setItem('pendingEmployerData', JSON.stringify({
+                            id: data.user.id,
+                            name: data.user.name,
+                            email: data.user.email || ''
+                        }));
+                        announce('สมัครสมาชิกด้วย Google สำเร็จ กรุณากรอกข้อมูลบริษัทเพิ่มเติม');
+                        window.location.href = 'complete-employer-profile.html';
+                    } else {
+                        announce('เข้าสู่ระบบด้วย Google สำเร็จ! กำลังพาไปหน้าหลัก');
+                        window.location.href = 'home-employer.html';
+                    }
+                } else {
+                    announce('เกิดข้อผิดพลาด: ' + (data.error || 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้'));
+                    alert('❌ ' + (data.error || 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้'));
+                    if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); btn.innerHTML = btn.dataset.origHtml; }
+                }
+            } catch (err) {
+                announce('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                alert('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); btn.innerHTML = btn.dataset.origHtml; }
+            }
+        }
+    })();
+
+    // ── complete-employer-profile.html: Pre-fill + Submit ──
+    const completeProfileForm = document.getElementById('complete-employer-profile-form');
+    if (completeProfileForm) {
+        const pending = JSON.parse(sessionStorage.getItem('pendingEmployerData') || 'null');
+        if (!pending) {
+            // ไม่มีข้อมูล pending → redirect กลับ
+            window.location.href = 'login-employer.html';
+        } else {
+            // Pre-fill read-only fields
+            const nameEl  = document.getElementById('complete-emp-name');
+            const emailEl = document.getElementById('complete-emp-email');
+            if (nameEl)  nameEl.value  = pending.name  || '';
+            if (emailEl) emailEl.value = pending.email || '';
+        }
+
+        completeProfileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById('complete-profile-error');
+            const submitBtn = document.getElementById('btn-complete-profile');
+
+            const company = document.getElementById('complete-emp-company')?.value.trim();
+            const phone   = document.getElementById('complete-emp-phone')?.value.trim();
+            const address = document.getElementById('complete-emp-address')?.value.trim();
+            const tax_id  = document.getElementById('complete-emp-tax')?.value.trim();
+
+            if (!company || !phone || !address || !tax_id) {
+                if (errorEl) { errorEl.textContent = 'กรุณากรอกข้อมูลให้ครบทุกช่อง'; errorEl.style.display = 'block'; }
+                announce('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+
+            if (submitBtn) submitBtn.disabled = true;
+            try {
+                const pData = JSON.parse(sessionStorage.getItem('pendingEmployerData') || '{}');
+                const res = await fetch('http://localhost:3000/api/employer/complete-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        employer_id: pData.id,
+                        company_name: company,
+                        phone, address, tax_id
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    sessionStorage.setItem('userName', company);
+                    sessionStorage.removeItem('pendingEmployerData');
+                    announce('บันทึกข้อมูลบริษัทสำเร็จ กำลังพาไปหน้าหลัก');
+                    window.location.href = 'home-employer.html';
+                } else {
+                    if (errorEl) { errorEl.textContent = data.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่'; errorEl.style.display = 'block'; }
+                    announce('เกิดข้อผิดพลาด: ' + (data.error || ''));
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            } catch (err) {
+                if (errorEl) { errorEl.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่'; errorEl.style.display = 'block'; }
+                announce('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                if (submitBtn) submitBtn.disabled = false;
+            }
         });
     }
 
@@ -1599,6 +1915,83 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     // ==========================================
+    // 🌟 7.6 งานที่บันทึกไว้ (profile-job.html)
+    // ==========================================
+    (async function loadSavedJobs() {
+        const savedSection = document.getElementById('saved-jobs-section');
+        const savedList    = document.getElementById('saved-jobs-list');
+        if (!savedSection || !savedList) return;
+
+        // ── ตรวจสอบ session ──
+        const userType = sessionStorage.getItem('userType') || '';
+        const rawId    = sessionStorage.getItem('userId') || '';
+        const seekerId = rawId.split(':')[0].trim();
+
+        console.log('[SavedJobs] userType:', userType, '| seekerId:', seekerId);
+
+        if (userType !== 'seeker') {
+            console.warn('[SavedJobs] ข้ามเพราะ userType ไม่ใช่ seeker:', userType);
+            return;
+        }
+        if (!seekerId) {
+            console.warn('[SavedJobs] ข้ามเพราะ seekerId ว่าง');
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/saved-jobs/${seekerId}`);
+            console.log('[SavedJobs] API status:', res.status);
+
+            if (!res.ok) {
+                const errText = await res.text().catch(() => '');
+                console.error('[SavedJobs] API error', res.status, errText);
+                // แสดง section พร้อม error message แทนการซ่อน
+                savedSection.style.display = 'block';
+                savedList.innerHTML = `<p style="color:#94a3b8;font-size:13px;text-align:center;padding:16px 0;">ไม่สามารถโหลดงานที่บันทึกได้ (${res.status})</p>`;
+                return;
+            }
+
+            const jobs = await res.json();
+            console.log('[SavedJobs] jobs received:', jobs?.length, jobs);
+
+            if (!Array.isArray(jobs) || jobs.length === 0) {
+                savedSection.style.display = 'none';
+                return;
+            }
+
+            savedSection.style.display = 'block';
+            savedList.innerHTML = '';
+            jobs.forEach(job => {
+                const card = document.createElement('div');
+                card.className = 'saved-job-card';
+                card.innerHTML = `
+                    <div class="saved-job-info">
+                        <div class="saved-job-title">${job.job_title || '-'}</div>
+                        <div class="saved-job-company">${job.company_name || '-'}</div>
+                        <div class="saved-job-meta">${job.job_type || ''} ${job.job_location ? '· ' + job.job_location : ''}</div>
+                    </div>
+                    <div class="saved-job-actions">
+                        <a href="resume5.html?id=${job.id}" class="btn-view-saved">ดูรายละเอียด</a>
+                        <button class="btn-unsave" data-job-id="${job.id}" aria-label="ยกเลิกบันทึกงานนี้">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                `;
+                card.querySelector('.btn-unsave').addEventListener('click', async () => {
+                    const delRes = await fetch(`http://localhost:3000/api/saved-jobs/${seekerId}/${job.id}`, { method: 'DELETE' });
+                    if (delRes.ok) {
+                        card.remove();
+                        if (savedList.children.length === 0) savedSection.style.display = 'none';
+                    }
+                });
+                savedList.appendChild(card);
+            });
+        } catch(err) {
+            console.error('[SavedJobs] fetch error:', err);
+        }
+    })();
+
+    // ==========================================
     // 🌟 8. ระบบ AI Auto-Replace
     // ==========================================
     const summaryInput = document.getElementById('inspiration-text');
@@ -1719,7 +2112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         items.forEach(item => {
                             let html = '';
                             if (type === 'edu') {
-                                html = `<div class="form-row"><div class="form-col"><label class="form-label">ระดับการศึกษา</label><select class="form-input custom-select edu-level"><option>มัธยมศึกษาตอนปลาย / ปวช.</option><option>ปวส.</option><option>ปริญญาตรี</option><option>ปริญญาโท</option></select></div><div class="form-col"><label class="form-label">ชื่อสถาบันการศึกษา</label><input type="text" class="form-input edu-inst" placeholder="เช่น มหาวิทยาลัย..."></div></div><div class="form-row"><div class="form-col"><label class="form-label">คณะ / สาขาวิชา</label><input type="text" class="form-input edu-major" placeholder="เช่น บริหารธุรกิจ"></div><div class="form-col"><label class="form-label">เกรดเฉลี่ย (GPA)</label><input type="text" class="form-input edu-gpa" placeholder="เช่น 3.50"></div></div>`;
+                                html = `<div class="form-row"><div class="form-col"><label class="form-label">ระดับการศึกษา</label><select class="form-input custom-select edu-level"><option value="" disabled selected>— เลือกระดับการศึกษา —</option><option>มัธยมศึกษาตอนปลาย / ปวช.</option><option>ปวส.</option><option>ปริญญาตรี</option><option>ปริญญาโท</option></select></div><div class="form-col"><label class="form-label">ชื่อสถาบันการศึกษา</label><input type="text" class="form-input edu-inst" placeholder="เช่น มหาวิทยาลัย..."></div></div><div class="form-row"><div class="form-col"><label class="form-label">คณะ / สาขาวิชา</label><input type="text" class="form-input edu-major" placeholder="เช่น บริหารธุรกิจ"></div><div class="form-col"><label class="form-label">เกรดเฉลี่ย (GPA)</label><input type="text" class="form-input edu-gpa" placeholder="เช่น 3.50"></div></div>`;
                             } else if (type === 'work') {
                                 html = `<div class="form-row"><div class="form-col"><label class="form-label">ตำแหน่ง</label><input type="text" class="form-input work-title" placeholder="เช่น พนักงานบัญชี"></div><div class="form-col"><label class="form-label">ชื่อบริษัท / องค์กร</label><input type="text" class="form-input work-company"></div></div><div class="form-row"><div class="form-col full-width"><label class="form-label">ระยะเวลาที่ทำงาน</label><input type="text" class="form-input work-duration" placeholder="เช่น 2564 - 2566"></div></div>`;
                             } else if (type === 'intern') {
@@ -1814,6 +2207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="form-col">
                         <label class="form-label" for="edu-level-${uid}">ระดับการศึกษา</label>
                         <select id="edu-level-${uid}" class="form-input custom-select edu-level">
+                            <option value="" disabled selected>— เลือกระดับการศึกษา —</option>
                             <option>มัธยมศึกษาตอนปลาย / ปวช.</option>
                             <option>ปวส.</option>
                             <option>ปริญญาตรี</option>
@@ -1925,99 +2319,240 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ==========================================
+    // ── 9.4 ADDRESS COMBOBOX (ARIA-compliant) ──
+    // ==========================================
     const provInput = document.getElementById('addr-province');
     const distInput = document.getElementById('addr-district');
-    const subInput = document.getElementById('addr-subdistrict');
-    const zipInput = document.getElementById('addr-zipcode');
+    const subInput  = document.getElementById('addr-subdistrict');
+    const zipInput  = document.getElementById('addr-zipcode');
 
     if (provInput && distInput && subInput && zipInput) {
         const thaiProvinces = [
-            "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท",
-            "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม",
-            "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์",
-            "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์",
-            "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง",
-            "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ",
-            "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย",
-            "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
+            "กรุงเทพมหานคร","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท",
+            "ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม",
+            "นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์",
+            "ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา","พะเยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์",
+            "แพร่","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง",
+            "ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ",
+            "สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย",
+            "หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"
         ];
 
         const bkkDistricts = [
-            "เขตพระนคร", "เขตดุสิต", "เขตหนองจอก", "เขตบางรัก", "เขตบางเขน", "เขตบางกะปิ", "เขตปทุมวัน", "เขตป้อมปราบศัตรูพ่าย", "เขตพระโขนง", "เขตมีนบุรี",
-            "เขตลาดกระบัง", "เขตยานนาวา", "เขตสัมพันธวงศ์", "เขตพญาไท", "เขตธนบุรี", "เขตบางกอกใหญ่", "เขตห้วยขวาง", "เขตคลองสาน", "เขตตลิ่งชัน", "เขตบางกอกน้อย",
-            "เขตบางขุนเทียน", "เขตภาษีเจริญ", "เขตหนองแขม", "เขตราษฎร์บูรณะ", "เขตบางพลัด", "เขตดินแดง", "เขตบึงกุ่ม", "เขตสาทร", "เขตบางซื่อ", "เขตจตุจักร",
-            "เขตบางคอแหลม", "เขตประเวศ", "เขตคลองเตย", "เขตสวนหลวง", "เขตจอมทอง", "เขตดอนเมือง", "เขตราชเทวี", "เขตลาดพร้าว", "เขตวัฒนา", "เขตบางแค",
-            "เขตหลักสี่", "เขตสายไหม", "เขตคันนายาว", "เขตสะพานสูง", "เขตวังทองหลาง", "เขตคลองสามวา", "เขตบางนา", "เขตทวีวัฒนา", "เขตทุ่งครุ", "เขตบางบอน"
+            "เขตพระนคร","เขตดุสิต","เขตหนองจอก","เขตบางรัก","เขตบางเขน","เขตบางกะปิ","เขตปทุมวัน","เขตป้อมปราบศัตรูพ่าย","เขตพระโขนง","เขตมีนบุรี",
+            "เขตลาดกระบัง","เขตยานนาวา","เขตสัมพันธวงศ์","เขตพญาไท","เขตธนบุรี","เขตบางกอกใหญ่","เขตห้วยขวาง","เขตคลองสาน","เขตตลิ่งชัน","เขตบางกอกน้อย",
+            "เขตบางขุนเทียน","เขตภาษีเจริญ","เขตหนองแขม","เขตราษฎร์บูรณะ","เขตบางพลัด","เขตดินแดง","เขตบึงกุ่ม","เขตสาทร","เขตบางซื่อ","เขตจตุจักร",
+            "เขตบางคอแหลม","เขตประเวศ","เขตคลองเตย","เขตสวนหลวง","เขตจอมทอง","เขตดอนเมือง","เขตราชเทวี","เขตลาดพร้าว","เขตวัฒนา","เขตบางแค",
+            "เขตหลักสี่","เขตสายไหม","เขตคันนายาว","เขตสะพานสูง","เขตวังทองหลาง","เขตคลองสามวา","เขตบางนา","เขตทวีวัฒนา","เขตทุ่งครุ","เขตบางบอน"
         ];
-
         const mockDistricts = {
-            "เชียงใหม่": ["อำเภอเมืองเชียงใหม่", "อำเภอหางดง", "อำเภอแม่ริม", "อำเภอดอยสะเก็ด"],
-            "ชลบุรี": ["อำเภอเมืองชลบุรี", "อำเภอบางละมุง", "อำเภอศรีราชา", "อำเภอสัตหีบ"]
+            "เชียงใหม่": ["อำเภอเมืองเชียงใหม่","อำเภอหางดง","อำเภอแม่ริม","อำเภอดอยสะเก็ด"],
+            "ชลบุรี":    ["อำเภอเมืองชลบุรี","อำเภอบางละมุง","อำเภอศรีราชา","อำเภอสัตหีบ"]
         };
 
-        const provList = document.getElementById('province-list');
-        const distList = document.getElementById('district-list');
-        const subList = document.getElementById('subdistrict-list');
+        // ── setupCombobox: ฟังก์ชัน ARIA combobox ที่ใช้ซ้ำได้ ──
+        function setupCombobox(inputEl, listboxEl, getOptions, onSelect) {
+            let activeOpt = null;
 
-        thaiProvinces.forEach(prov => {
-            const opt = document.createElement('option');
-            opt.value = prov;
-            provList.appendChild(opt);
-        });
+            function getOpts() { return Array.from(listboxEl.querySelectorAll('[role="option"]')); }
 
-        provInput.addEventListener('input', function () {
-            distInput.value = ''; subInput.value = ''; zipInput.value = '';
-            distList.innerHTML = ''; subList.innerHTML = '';
-            subInput.disabled = true;
+            function openList(query) {
+                const opts = getOptions(query || '');
+                if (!opts.length) { closeList(); return; }
+                listboxEl.innerHTML = '';
+                opts.forEach((text, i) => {
+                    const li = document.createElement('li');
+                    li.setAttribute('role', 'option');
+                    li.setAttribute('id', `${listboxEl.id}-opt-${i}`);
+                    li.setAttribute('aria-selected', 'false');
+                    li.className = 'combobox-option';
+                    li.textContent = text;
+                    li.addEventListener('mousedown', (e) => { e.preventDefault(); confirmSelect(text); });
+                    listboxEl.appendChild(li);
+                });
+                listboxEl.removeAttribute('hidden');
+                inputEl.setAttribute('aria-expanded', 'true');
+                activeOpt = null;
+                inputEl.removeAttribute('aria-activedescendant');
+                announce(`พบ ${opts.length} ตัวเลือก กดลูกศรลงเพื่อเลือก`);
+            }
 
-            if (thaiProvinces.includes(this.value)) {
+            function closeList() {
+                listboxEl.setAttribute('hidden', '');
+                listboxEl.innerHTML = '';
+                inputEl.setAttribute('aria-expanded', 'false');
+                inputEl.removeAttribute('aria-activedescendant');
+                activeOpt = null;
+            }
+
+            function setActive(li) {
+                getOpts().forEach(o => { o.setAttribute('aria-selected', 'false'); o.classList.remove('combobox-option-active'); });
+                activeOpt = li;
+                if (li) {
+                    li.setAttribute('aria-selected', 'true');
+                    li.classList.add('combobox-option-active');
+                    inputEl.setAttribute('aria-activedescendant', li.id);
+                    li.scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            function confirmSelect(value) {
+                inputEl.value = value;
+                closeList();
+                onSelect(value);
+                announce(`เลือก${value}แล้ว`);
+            }
+
+            inputEl.addEventListener('input', function () {
+                openList(this.value.trim());
+            });
+
+            inputEl.addEventListener('keydown', function (e) {
+                const opts = getOpts();
+                const isOpen = inputEl.getAttribute('aria-expanded') === 'true';
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (!isOpen) { openList(this.value.trim()); return; }
+                        if (!opts.length) return;
+                        setActive(activeOpt ? (opts[opts.indexOf(activeOpt) + 1] || opts[0]) : opts[0]);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (!isOpen || !opts.length) return;
+                        setActive(activeOpt ? (opts[opts.indexOf(activeOpt) - 1] || opts[opts.length - 1]) : opts[opts.length - 1]);
+                        break;
+                    case 'Enter':
+                        if (isOpen && activeOpt) { e.preventDefault(); confirmSelect(activeOpt.textContent); }
+                        else if (isOpen) { e.preventDefault(); closeList(); }
+                        break;
+                    case 'Escape':
+                        if (isOpen) { e.preventDefault(); closeList(); }
+                        break;
+                    case 'Tab':
+                        if (isOpen && activeOpt) confirmSelect(activeOpt.textContent);
+                        else closeList();
+                        break;
+                }
+            });
+
+            inputEl.addEventListener('blur', function () {
+                setTimeout(() => { if (!listboxEl.contains(document.activeElement)) closeList(); }, 150);
+            });
+        }
+
+        // ── ตั้งค่า Province combobox ──
+        setupCombobox(
+            provInput,
+            document.getElementById('province-listbox'),
+            (q) => q ? thaiProvinces.filter(p => p.includes(q)) : thaiProvinces,
+            (province) => {
+                // cascade: reset ค่า district + subdistrict เมื่อเปลี่ยนจังหวัด
+                distInput.value = ''; subInput.value = ''; zipInput.value = '';
+                document.getElementById('district-listbox').innerHTML = '';
+                document.getElementById('subdistrict-listbox').innerHTML = '';
+                // ไม่ disable — ให้พิมพ์ได้เสมอ
                 distInput.disabled = false;
-                let districts = this.value === "กรุงเทพมหานคร" ? bkkDistricts : (mockDistricts[this.value] || [`อำเภอเมือง${this.value}`, `อำเภอที่ 1`, `อำเภอที่ 2`]);
-                districts.forEach(dist => {
-                    const opt = document.createElement('option');
-                    opt.value = dist;
-                    distList.appendChild(opt);
-                });
-            } else {
-                distInput.disabled = true;
-            }
-        });
-
-        distInput.addEventListener('input', function () {
-            subInput.value = ''; zipInput.value = '';
-            subList.innerHTML = '';
-
-            if (this.value) {
                 subInput.disabled = false;
-                let prefix = provInput.value === "กรุงเทพมหานคร" ? "แขวง" : "ตำบล";
-                let subs = [];
-                if (this.value === "เขตจอมทอง") {
-                    subs = ["แขวงบางขุนเทียน", "แขวงบางค้อ", "แขวงบางมด", "แขวงจอมทอง"];
-                } else {
-                    let baseName = this.value.replace("เขต", "").replace("อำเภอ", "").replace("เมือง", "");
-                    subs = [`${prefix}${baseName}`, `${prefix}${baseName}เหนือ`, `${prefix}${baseName}ใต้`];
-                }
-                subs.forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    subList.appendChild(opt);
-                });
-            } else {
-                subInput.disabled = true;
+                announce(`เลือกจังหวัด${province}แล้ว กรุณากรอกเขตหรืออำเภอ`);
+                distInput.focus();
             }
-        });
+        );
 
-        subInput.addEventListener('input', function () {
-            if (distInput.value) {
-                if (distInput.value === "เขตจอมทอง" || this.value === "แขวงบางมด") {
-                    zipInput.value = "10150";
-                } else {
-                    let baseZip = 10000 + (distInput.value.length * 1111);
-                    if (baseZip > 99990) baseZip = 90000;
-                    zipInput.value = baseZip.toString().substring(0, 5);
+        // ── ตั้งค่า District combobox ──
+        setupCombobox(
+            distInput,
+            document.getElementById('district-listbox'),
+            (q) => {
+                const prov = provInput.value;
+                // ถ้าไม่มีจังหวัด ไม่แสดง dropdown
+                if (!prov) return [];
+                let all = prov === 'กรุงเทพมหานคร' ? bkkDistricts
+                    : (mockDistricts[prov] || []);
+                // ถ้าไม่มีข้อมูลใน mockDistricts ให้พิมพ์อิสระ (ไม่ต้องแสดง dropdown)
+                return q ? all.filter(d => d.includes(q)) : all;
+            },
+            (district) => {
+                subInput.value = ''; zipInput.value = '';
+                document.getElementById('subdistrict-listbox').innerHTML = '';
+                subInput.disabled = false;
+                if (district) {
+                    announce(`เลือก${district}แล้ว กรุณากรอกแขวงหรือตำบล`);
+                    subInput.focus();
                 }
             }
-        });
+        );
+
+        // ── ตั้งค่า Subdistrict combobox ──
+        setupCombobox(
+            subInput,
+            document.getElementById('subdistrict-listbox'),
+            (q) => {
+                const dist = distInput.value;
+                if (!dist) return [];
+                const prefix = provInput.value === 'กรุงเทพมหานคร' ? 'แขวง' : 'ตำบล';
+                let subs = [];
+                if (dist === 'เขตจอมทอง') {
+                    subs = ['แขวงบางขุนเทียน', 'แขวงบางค้อ', 'แขวงบางมด', 'แขวงจอมทอง'];
+                } else if (dist === 'เขตบางรัก') {
+                    subs = ['แขวงบางรัก', 'แขวงสีลม', 'แขวงสุริยวงศ์', 'แขวงมหาพฤฒาราม', 'แขวงบางรัก'];
+                } else if (dist === 'เขตคลองเตย') {
+                    subs = ['แขวงคลองเตย', 'แขวงคลองตัน', 'แขวงพระโขนง'];
+                } else if (dist === 'เขตวัฒนา') {
+                    subs = ['แขวงคลองเตยเหนือ', 'แขวงคลองตันเหนือ', 'แขวงพระโขนงเหนือ'];
+                } else if (dist === 'เขตจตุจักร') {
+                    subs = ['แขวงลาดยาว', 'แขวงเสนานิคม', 'แขวงจันทรเกษม', 'แขวงจอมพล', 'แขวงจตุจักร'];
+                } else {
+                    // สำหรับเขต/อำเภออื่น: สร้าง placeholder แต่ให้พิมพ์อิสระได้
+                    const base = dist.replace('เขต','').replace('อำเภอ','').replace('เมือง','');
+                    subs = base ? [`${prefix}${base}`] : [];
+                }
+                return q ? subs.filter(s => s.includes(q)) : subs;
+            },
+            (sub) => {
+                // auto-fill zipcode จาก Bangkok districts ที่รู้จัก
+                const dist = distInput.value;
+                const zipMap = {
+                    'เขตพระนคร':'10200','เขตดุสิต':'10300','เขตบางรัก':'10500',
+                    'เขตปทุมวัน':'10330','เขตป้อมปราบศัตรูพ่าย':'10100','เขตพระโขนง':'10260',
+                    'เขตยานนาวา':'10120','เขตสาทร':'10120','เขตบางคอแหลม':'10120',
+                    'เขตคลองเตย':'10110','เขตวัฒนา':'10110','เขตสวนหลวง':'10250',
+                    'เขตประเวศ':'10250','เขตจตุจักร':'10900','เขตลาดพร้าว':'10230',
+                    'เขตบางเขน':'10220','เขตดอนเมือง':'10210','เขตสายไหม':'10220',
+                    'เขตหลักสี่':'10210','เขตบึงกุ่ม':'10240','เขตบางกะปิ':'10240',
+                    'เขตห้วยขวาง':'10310','เขตดินแดง':'10400','เขตราชเทวี':'10400',
+                    'เขตพญาไท':'10400','เขตบางซื่อ':'10800','เขตจอมทอง':'10150',
+                    'เขตบางขุนเทียน':'10150','เขตราษฎร์บูรณะ':'10140','เขตทุ่งครุ':'10140',
+                    'เขตบางบอน':'10150','เขตภาษีเจริญ':'10160','เขตหนองแขม':'10160',
+                    'เขตตลิ่งชัน':'10170','เขตทวีวัฒนา':'10170','เขตบางกอกน้อย':'10700',
+                    'เขตบางพลัด':'10700','เขตคลองสาน':'10600','เขตธนบุรี':'10600',
+                    'เขตบางกอกใหญ่':'10600','เขตลาดกระบัง':'10520','เขตมีนบุรี':'10510',
+                    'เขตหนองจอก':'10530','เขตคลองสามวา':'10510','เขตคันนายาว':'10230',
+                    'เขตสะพานสูง':'10240','เขตวังทองหลาง':'10310','เขตบางนา':'10260',
+                    'เขตสัมพันธวงศ์':'10100',
+                    // ต่างจังหวัด (ตัวอย่าง)
+                    'อำเภอเมืองเชียงใหม่':'50000','อำเภอหางดง':'50230',
+                    'อำเภอเมืองชลบุรี':'20000','อำเภอบางละมุง':'20150',
+                };
+                if (dist && zipMap[dist]) {
+                    zipInput.value = zipMap[dist];
+                }
+                // ถ้าไม่มีใน map ปล่อย zipcode ว่างให้พิมพ์เอง
+                if (zipInput.value) announce(`รหัสไปรษณีย์ ${zipInput.value}`);
+            }
+        );
+
+        // ── สำคัญ: enable ทั้ง 2 fields เสมอ (ลบ disabled ที่ตั้งไว้ใน HTML) ──
+        // เพื่อให้พิมพ์อิสระได้ทันที ไม่ต้องรอ cascade จาก province
+        distInput.disabled = false;
+        subInput.disabled = false;
+
+        // ── กรณี pre-fill ข้อมูลเก่า: ถ้า province/district มีค่าอยู่แล้ว ให้ enable ทันที ──
+        if (provInput.value) {
+            distInput.disabled = false;
+            subInput.disabled = false;
+        }
     }
 
     const getDynamicData = (containerId) => {
@@ -2042,7 +2577,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!loggedInId) {
                 alert('กรุณาเข้าสู่ระบบก่อนบันทึกเรซูเม่');
-                window.location.href = 'login-jobseeker.html';
+                window.location.href = 'login-jobseeker.html?mode=login';
                 return;
             }
 
@@ -2519,9 +3054,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderRankedJobs(rankedJobs) {
-        rankListContainer.innerHTML = ''; 
+        rankListContainer.innerHTML = '';
 
-        // ปุ่ม Rematch 
+        // ปุ่ม Rematch
         rankListContainer.innerHTML += `
             <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 20px;">
                 <button id="btn-rematch" style="padding: 10px 20px; background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
@@ -2536,27 +3071,21 @@ document.addEventListener('DOMContentLoaded', () => {
         rankedJobs.forEach((job, index) => {
             let logoText = job.company_name ? job.company_name.substring(0, 3).toUpperCase() : 'JOB';
             let bgColor = bgColors[(job.id || 0) % bgColors.length];
-            
+
             rankListContainer.innerHTML += `
-                <div class="rank-card" role="listitem" tabindex="0" onclick="window.location.href='resume5.html?id=${job.id}'" style="cursor: pointer; position: relative; padding-right: 100px;" aria-label="อันดับ ${index + 1} ${job.company_name} ตำแหน่ง ${job.job_title}">
-                    
+                <div class="rank-card" role="listitem" tabindex="0" onclick="window.location.href='resume5.html?id=${job.id}'" style="cursor: pointer; position: relative; margin-bottom: 12px;" aria-label="ลำดับที่ ${index + 1} บริษัท ${job.company_name} ตำแหน่งที่รับ ${job.job_title} ประเภทงาน ${job.job_type || 'ไม่ระบุ'} คะแนนความเข้ากัน ${job.matchScore} จาก 100 คะแนน กด Enter เพื่อดูรายละเอียด">
                     <div class="rank-number" aria-hidden="true">${index + 1}</div>
-                    
-                    <div class="rank-logo-placeholder" style="background-color: ${bgColor}; color: white;" aria-hidden="true">${logoText}</div> 
-                    
+                    <div class="rank-logo-placeholder" style="background-color: ${bgColor}; color: white;" aria-hidden="true">${logoText}</div>
                     <div class="rank-company" aria-hidden="true">${job.company_name}</div>
-                    
                     <div class="rank-position" aria-hidden="true">
                         <span class="rank-label">ตำแหน่งที่รับ :</span>
                         <span class="rank-value">${job.job_title}</span>
                     </div>
-                    
                     <div class="rank-type" aria-hidden="true">
                         <span class="rank-label">ประเภทงาน :</span>
                         <span class="rank-value">${job.job_type || 'ไม่ระบุ'}</span>
                     </div>
-
-                    <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 65px; border: 3px solid ${bgColor}; border-radius: 50%; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <div aria-hidden="true" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 65px; height: 65px; border: 3px solid ${bgColor}; border-radius: 50%; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                         <span style="color: ${bgColor}; font-size: 20px; font-weight: 800; line-height: 1;">${job.matchScore}</span>
                         <span style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px;">/ 100</span>
                     </div>
@@ -2581,6 +3110,55 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // ── Toggle Save Job ──
+    async function toggleSaveJob(btn, jobId, jobTitle, companyName) {
+        const sId = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
+        if (!sId) {
+            alert('กรุณาเข้าสู่ระบบก่อนบันทึกงาน');
+            return;
+        }
+        const isSaved = btn.dataset.saved === 'true';
+        const svgSize = btn.querySelector('svg')?.getAttribute('width') || '18';
+        try {
+            if (isSaved) {
+                const res = await fetch(`http://localhost:3000/api/saved-jobs/${sId}/${jobId}`, { method: 'DELETE' });
+                if (!res.ok) { console.error('unsave failed:', res.status); return; }
+                btn.dataset.saved = 'false';
+                btn.style.background = '#fff';
+                btn.style.borderColor = '#e2e8f0';
+                btn.innerHTML = `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                btn.setAttribute('aria-label', 'บันทึกงานนี้');
+                btn.title = 'บันทึกงาน';
+            } else {
+                const res = await fetch('http://localhost:3000/api/saved-jobs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seeker_id: sId, job_id: jobId })
+                });
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    console.error('save failed:', res.status, errData);
+                    showToast('เกิดข้อผิดพลาดในการบันทึกงาน กรุณาลองใหม่', 'error');
+                    return;
+                }
+                btn.dataset.saved = 'true';
+                btn.style.background = '#eff6ff';
+                btn.style.borderColor = '#bfdbfe';
+                btn.innerHTML = `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="#3b82f6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                btn.setAttribute('aria-label', 'ยกเลิกบันทึกงานนี้');
+                btn.title = 'ยกเลิกบันทึก';
+                // ── แจ้งเตือนพร้อม link ไปโปรไฟล์ ──
+                const note = document.createElement('div');
+                note.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.25);white-space:nowrap;';
+                note.innerHTML = `🔖 บันทึกงานแล้ว! &nbsp;<a href="profile-job.html" style="color:#93c5fd;font-weight:700;text-decoration:underline;">ดูงานที่บันทึก →</a>`;
+                document.body.appendChild(note);
+                setTimeout(() => { note.style.opacity='0'; note.style.transition='opacity .4s'; setTimeout(() => note.remove(), 400); }, 3000);
+            }
+        } catch(e) { console.error('toggleSaveJob error:', e); showToast('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ', 'error'); }
+    }
+    // เปิดให้เรียกได้จาก inline onclick ใน HTML ที่สร้างด้วย innerHTML
+    window.toggleSaveJob = toggleSaveJob;
 
     async function loadAndRankJobsWithAI() {
         try {
@@ -2736,32 +3314,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 score += salaryScore;
 
                 // =========================================================
-                // 🛠️ เกณฑ์ที่ 6: ประวัติการศึกษา (Education) - 10 คะแนน
-                // =========================================================
-                // =========================================================
                 // 🛠️ เกณฑ์ที่ 6: ประวัติการศึกษา (Education Match) - 10 คะแนน
                 // =========================================================
                 let eduScore = 0;
                 const parseSafeEdu = (str) => { try { return typeof str === 'string' ? JSON.parse(str || '[]') : (str || []); } catch(e) { return []; } };
                 const eduHist = parseSafeEdu(resume.education_history);
-                const jobDescQual = (job.job_desc || '').toLowerCase(); // รวมรายละเอียดและคุณสมบัติของบริษัท
-                const jobCatEdu = (job.job_category || '').toLowerCase(); // หมวดหมู่งาน
-                
-                if (eduHist.length > 0) {
-                    const myMajor = (eduHist[0].major || '').toLowerCase(); // คณะ/สาขาที่จบ
-                    const myLevel = (eduHist[0].level || '').toLowerCase(); // ระดับการศึกษา (เช่น ปริญญาตรี)
 
-                    // 🔍 เปรียบเทียบที่ 1: สาขาที่จบมา ตรงกับ หมวดหมู่งาน หรือ รายละเอียดงานไหม?
+                const jobDescQual = (job.job_desc || '').toLowerCase(); // รายละเอียดและคุณสมบัติของบริษัท
+                const jobCatEdu   = (job.job_category || '').toLowerCase(); // หมวดหมู่งาน
+
+                if (eduHist.length > 0) {
+                    const myMajor = (eduHist[0].major || '').toLowerCase(); // สาขาที่จบ
+                    const myLevel = (eduHist[0].level || '').toLowerCase(); // ระดับการศึกษา
+
+                    // 🔍 เปรียบเทียบที่ 1: สาขาที่จบตรงกับหมวดหมู่งาน หรือรายละเอียดงานไหม?
                     if (myMajor && (jobCatEdu.includes(myMajor) || jobDescQual.includes(myMajor) || myMajor.includes(jobCatEdu.split('/')[0]))) {
                         eduScore = 10;
                         reasons.push(`🎓 สาขาวิชาที่จบ (${eduHist[0].major}) ตรงกับสายงานนี้ (+10)`);
-                    } 
-                    // 🔍 เปรียบเทียบที่ 2: ถ้าสาขาไม่ตรง แต่ระดับวุฒิการศึกษาตรงกับที่บริษัทระบุไว้ไหม?
+                    }
+                    // 🔍 เปรียบเทียบที่ 2: ระดับวุฒิการศึกษาตรงกับที่บริษัทระบุไว้ไหม?
                     else if (myLevel && jobDescQual.includes(myLevel)) {
                         eduScore = 8;
                         reasons.push(`🎓 ระดับวุฒิการศึกษา (${eduHist[0].level}) ตรงกับที่ระบุไว้ (+8)`);
-                    } 
-                    // ถ้าไม่ตรงเลย แต่มีประวัติการศึกษา
+                    }
+                    // มีประวัติการศึกษาแต่ไม่ตรงสายงาน
                     else {
                         eduScore = 5;
                         reasons.push(`🎓 มีประวัติการศึกษาขั้นพื้นฐาน (+5)`);
@@ -2961,6 +3537,28 @@ document.addEventListener('DOMContentLoaded', () => {
                                     } else {
                                         aiReasonsList.innerHTML = '<li>ไม่สามารถวิเคราะห์ได้ในขณะนี้</li>';
                                     }
+
+                                    // ── แสดง AI tip ถ้าคะแนน ranking ต่ำกว่า 50 ──
+                                    try {
+                                        const cachedRanked = sessionStorage.getItem('aiMatchedJobs');
+                                        if (cachedRanked && r5JobId) {
+                                            const ranked = JSON.parse(cachedRanked);
+                                            const thisJob = ranked.find(j => String(j.id) === String(r5JobId));
+                                            if (thisJob && thisJob.matchScore < 50) {
+                                                const details = Array.isArray(thisJob.matchDetails) ? thisJob.matchDetails : [];
+                                                const missing = details.filter(d =>
+                                                    d.includes('(-') || d.includes('ไม่ตรง') || d.includes('ไม่พบ') || d.includes('0/')
+                                                ).slice(0, 2);
+                                                const tipText = missing.length > 0
+                                                    ? `ลองปรับปรุง: ${missing.map(d => d.replace(/[🔧🎓📍💰🏢]/g,'').trim()).join(' · ')}`
+                                                    : 'ลองเพิ่มทักษะและประสบการณ์ในเรซูเม่เพื่อเพิ่มคะแนน';
+                                                const tipEl = document.createElement('div');
+                                                tipEl.style.cssText = 'margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400e;display:flex;align-items:flex-start;gap:8px;';
+                                                tipEl.innerHTML = `<span style="flex-shrink:0;font-size:16px;">💡</span><span>คะแนนความเข้ากัน <strong>${thisJob.matchScore}/100</strong> — ${tipText}</span>`;
+                                                if (aiReasonSection) aiReasonSection.appendChild(tipEl);
+                                            }
+                                        }
+                                    } catch(_) {}
                                 } catch (aiErr) {
                                     console.warn('AI match skipped (resume5):', aiErr.message);
                                     showAiFallback();
@@ -2990,6 +3588,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!loggedInId) {
                     alert('กรุณาเข้าสู่ระบบก่อนสมัครงาน');
                     return;
+                }
+
+                // ตรวจสอบว่ามีเรซูเม่หรือยัง
+                try {
+                    const resResume = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
+                    const resumeCheck = await resResume.json();
+                    if (!resumeCheck || !resumeCheck.seeker_id) {
+                        // ยังไม่มีเรซูเม่ → แสดง modal แนะนำไปสร้าง
+                        const m = document.createElement('div');
+                        m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+                        m.innerHTML = `
+                            <div style="background:#fff;border-radius:20px;padding:36px 28px 28px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,0.2);text-align:center;">
+                                <div style="font-size:48px;margin-bottom:16px;">📄</div>
+                                <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 10px;">ยังไม่มีเรซูเม่</h3>
+                                <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0 0 24px;">คุณต้องสร้างและบันทึกเรซูเม่ก่อน<br>จึงจะสามารถส่งใบสมัครได้ ใช้เวลาแค่ไม่กี่นาที!</p>
+                                <div style="display:flex;gap:10px;justify-content:center;">
+                                    <button id="_sr5_go_resume" style="flex:1;max-width:180px;padding:12px 16px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;">
+                                        🚀 ไปสร้างเรซูเม่เลย
+                                    </button>
+                                    <button id="_sr5_cancel_resume" style="padding:12px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-weight:600;font-size:14px;cursor:pointer;">
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        m.querySelector('#_sr5_go_resume').addEventListener('click', () => { window.location.href = 'resume.html'; });
+                        m.querySelector('#_sr5_cancel_resume').addEventListener('click', () => m.remove());
+                        m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+                        document.body.appendChild(m);
+                        return;
+                    }
+                } catch(_) {
+                    // ถ้าตรวจสอบไม่ได้ ให้ผ่านต่อ (fail open)
                 }
 
                 try {
@@ -3034,6 +3665,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (e.target === sendSuccessModal) sendSuccessModal.style.display = 'none';
                 });
             }
+        }
+
+        // ── ปุ่มบันทึกงาน (บน card รายละเอียด) ──
+        const btnSaveR5 = document.getElementById('btn-save-job-r5');
+        if (btnSaveR5 && r5JobId && loggedInId) {
+            // ตรวจสอบสถานะที่บันทึกไว้แล้ว
+            (async function initR5SaveBtn() {
+                try {
+                    const svRes = await fetch(`http://localhost:3000/api/saved-jobs/${loggedInId}`);
+                    const svData = await svRes.json();
+                    const alreadySaved = Array.isArray(svData) && svData.some(j => String(j.id) === String(r5JobId));
+                    if (alreadySaved) {
+                        btnSaveR5.dataset.saved = 'true';
+                        btnSaveR5.style.background = '#eff6ff';
+                        btnSaveR5.style.borderColor = '#bfdbfe';
+                        btnSaveR5.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#3b82f6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                        btnSaveR5.setAttribute('aria-label', 'ยกเลิกบันทึกงานนี้');
+                        btnSaveR5.title = 'ยกเลิกบันทึก';
+                    } else {
+                        btnSaveR5.dataset.saved = 'false';
+                    }
+                } catch(_) {}
+            })();
+
+            btnSaveR5.addEventListener('click', () => {
+                // ดึงชื่องานและบริษัทจาก DOM ที่โหลดแล้ว
+                const jTitle = document.getElementById('render-job-title')?.textContent || '';
+                const jCo    = document.getElementById('render-company-name')?.textContent || '';
+                toggleSaveJob(btnSaveR5, r5JobId, jTitle, jCo);
+            });
         }
 
     } // end resume5.html
@@ -3166,7 +3827,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const employerId = sessionStorage.getItem('userId');
             if (!employerId) {
                 alert('⚠️ เซสชันหมดอายุ กรุณาเข้าสู่ระบบนายจ้างอีกครั้ง');
-                window.location.href = 'login-employer.html';
+                window.location.href = 'login-employer.html?mode=login';
                 return;
             }
 
@@ -3598,7 +4259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyBtn.addEventListener('click', async () => {
                 if (!loggedInId) {
                     showToast('กรุณาเข้าสู่ระบบก่อนสมัครงาน', 'error');
-                    setTimeout(() => { window.location.href = 'login-jobseeker.html'; }, 1500);
+                    setTimeout(() => { window.location.href = 'login-jobseeker.html?mode=login'; }, 1500);
                     return;
                 }
 
@@ -3611,12 +4272,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     const resResume = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
                     const resumeData = await resResume.json();
 
-                    if (!resumeData || !resumeData.first_name) {
+                    if (!resumeData || !resumeData.seeker_id) {
                         applyBtn.innerHTML = originalText;
                         applyBtn.disabled = false;
-                        if (confirm('คุณยังไม่ได้สร้างเรซูเม่ในระบบ! คุณต้องสร้างและบันทึกเรซูเม่ก่อน จึงจะสามารถสมัครงานได้ ต้องการไปสร้างเรซูเม่ตอนนี้เลยหรือไม่?')) {
-                            window.location.href = 'resume.html';
-                        }
+                        // ── Styled modal แทน confirm() ──
+                        const m = document.createElement('div');
+                        m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+                        m.innerHTML = `
+                            <div style="background:#fff;border-radius:20px;padding:36px 28px 28px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,0.2);text-align:center;">
+                                <div style="font-size:48px;margin-bottom:16px;">📄</div>
+                                <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 10px;">ยังไม่มีเรซูเม่</h3>
+                                <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0 0 24px;">คุณต้องสร้างและบันทึกเรซูเม่ก่อน<br>จึงจะสามารถสมัครงานได้ ใช้เวลาแค่ไม่กี่นาที!</p>
+                                <div style="display:flex;gap:10px;justify-content:center;">
+                                    <button id="_modal_go_resume" style="flex:1;max-width:180px;padding:12px 16px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;">
+                                        🚀 ไปสร้างเรซูเม่เลย
+                                    </button>
+                                    <button id="_modal_cancel_resume" style="padding:12px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-weight:600;font-size:14px;cursor:pointer;">
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        m.querySelector('#_modal_go_resume').addEventListener('click', () => { window.location.href = 'resume.html'; });
+                        m.querySelector('#_modal_cancel_resume').addEventListener('click', () => m.remove());
+                        m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+                        document.body.appendChild(m);
                         return;
                     }
 
@@ -4153,6 +4833,9 @@ ${renderedHtml}
                 const json = await res.json();
                 if (json.success) {
                     applyInterviewStatus(result);
+                    if (result === 'approved' && json.contact) {
+                        showContactPopup(json.contact);
+                    }
                 } else {
                     alert('เกิดข้อผิดพลาด: ' + (json.error || 'ไม่สามารถบันทึกได้'));
                 }
@@ -4163,6 +4846,57 @@ ${renderedHtml}
                 if (btnPass) btnPass.disabled = false;
                 if (btnFail) btnFail.disabled = false;
             }
+        }
+
+        function showContactPopup(contact) {
+            const name  = `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || '-';
+            const email = contact.email || '-';
+            const phone = contact.phone || '-';
+            const subjectTh = encodeURIComponent('นัดสัมภาษณ์งาน — JobNble');
+            const bodyTh = encodeURIComponent(`เรียน คุณ${name}\n\nทางบริษัทขอแจ้งว่าคุณผ่านการคัดเลือกเบื้องต้นแล้ว\nขอนัดสัมภาษณ์ในวันที่ ...\n\nขอบคุณครับ/ค่ะ`);
+
+            document.getElementById('em3-contact-popup')?.remove();
+            const overlay = document.createElement('div');
+            overlay.id = 'em3-contact-popup';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:20px;padding:36px 32px 28px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,0.2);animation:fadeInUp .25s ease;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                        <div style="width:44px;height:44px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;">✅</div>
+                        <div>
+                            <h3 style="font-size:17px;font-weight:700;color:#0f172a;margin:0;">ผ่านการคัดเลือก!</h3>
+                            <p style="font-size:13px;color:#64748b;margin:2px 0 0;">ช่องทางติดต่อผู้สมัคร</p>
+                        </div>
+                    </div>
+                    <div style="background:#f8fafc;border-radius:12px;padding:16px 18px;margin-bottom:20px;display:flex;flex-direction:column;gap:12px;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">👤</span>
+                            <div><div style="font-size:11px;color:#94a3b8;font-weight:500;margin-bottom:1px;">ชื่อ-นามสกุล</div><div style="font-size:15px;font-weight:600;color:#0f172a;">${name}</div></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">✉️</span>
+                            <div><div style="font-size:11px;color:#94a3b8;font-weight:500;margin-bottom:1px;">อีเมล</div><div style="font-size:15px;font-weight:600;color:#1d4ed8;word-break:break-all;">${email}</div></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">📞</span>
+                            <div><div style="font-size:11px;color:#94a3b8;font-weight:500;margin-bottom:1px;">เบอร์โทรศัพท์</div><div style="font-size:15px;font-weight:600;color:#0f172a;">${phone}</div></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <a href="mailto:${email}?subject=${subjectTh}&body=${bodyTh}"
+                           style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#3b82f6;color:#fff;text-decoration:none;padding:11px 16px;border-radius:10px;font-weight:600;font-size:14px;transition:background .2s;"
+                           onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                           ✉️ ส่งอีเมลนัดสัมภาษณ์
+                        </a>
+                        <button onclick="document.getElementById('em3-contact-popup').remove()"
+                                style="padding:11px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-weight:600;font-size:14px;cursor:pointer;">
+                            ปิด
+                        </button>
+                    </div>
+                </div>
+            `;
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
         }
 
         if (btnPass) btnPass.addEventListener('click', () => setInterviewResult('approved'));

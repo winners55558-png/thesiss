@@ -130,25 +130,54 @@
                     <div class="form-row">
                         <div class="form-col">
                             <label class="form-label" for="addr-province">จังหวัด</label>
-                            <input type="text" id="addr-province" class="form-input" list="province-list" placeholder="พิมพ์หรือเลือกจังหวัด..." autocomplete="off" required>
-                            <datalist id="province-list"></datalist>
+                            <span id="addr-province-hint" class="sr-only">พิมพ์ชื่อจังหวัดก่อน แล้วกดปุ่มลูกศรลงเพื่อเลือกตัวเลือก กด Enter เพื่อยืนยัน กด Escape เพื่อปิด</span>
+                            <div class="combobox-container">
+                                <input type="text" id="addr-province" class="form-input"
+                                       role="combobox"
+                                       aria-autocomplete="list"
+                                       aria-expanded="false"
+                                       aria-controls="province-listbox"
+                                       aria-describedby="addr-province-hint"
+                                       placeholder="พิมพ์ชื่อจังหวัด..."
+                                       autocomplete="off" required>
+                                <ul id="province-listbox" role="listbox" class="combobox-listbox" hidden aria-label="ตัวเลือกจังหวัด"></ul>
+                            </div>
                         </div>
                         <div class="form-col">
                             <label class="form-label" for="addr-district">เขต/อำเภอ</label>
-                            <input type="text" id="addr-district" class="form-input" list="district-list" placeholder="พิมพ์หรือเลือกเขต/อำเภอ..." autocomplete="off" required disabled>
-                            <datalist id="district-list"></datalist>
+                            <span id="addr-district-hint" class="sr-only">พิมพ์ชื่อเขตหรืออำเภอก่อน แล้วกดปุ่มลูกศรลงเพื่อเลือกตัวเลือก กด Enter เพื่อยืนยัน</span>
+                            <div class="combobox-container">
+                                <input type="text" id="addr-district" class="form-input"
+                                       role="combobox"
+                                       aria-autocomplete="list"
+                                       aria-expanded="false"
+                                       aria-controls="district-listbox"
+                                       aria-describedby="addr-district-hint"
+                                       placeholder="พิมพ์ชื่อเขต/อำเภอ..."
+                                       autocomplete="off" required disabled>
+                                <ul id="district-listbox" role="listbox" class="combobox-listbox" hidden aria-label="ตัวเลือกเขต/อำเภอ"></ul>
+                            </div>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="form-col">
                             <label class="form-label" for="addr-subdistrict">แขวง/ตำบล</label>
-                            <input type="text" id="addr-subdistrict" class="form-input" list="subdistrict-list" placeholder="พิมพ์หรือเลือกแขวง/ตำบล..." autocomplete="off" required disabled>
-                            <datalist id="subdistrict-list"></datalist>
+                            <span id="addr-subdistrict-hint" class="sr-only">พิมพ์ชื่อแขวงหรือตำบลก่อน แล้วกดปุ่มลูกศรลงเพื่อเลือกตัวเลือก กด Enter เพื่อยืนยัน</span>
+                            <div class="combobox-container">
+                                <input type="text" id="addr-subdistrict" class="form-input"
+                                       role="combobox"
+                                       aria-autocomplete="list"
+                                       aria-expanded="false"
+                                       aria-controls="subdistrict-listbox"
+                                       aria-describedby="addr-subdistrict-hint"
+                                       placeholder="พิมพ์ชื่อแขวง/ตำบล..."
+                                       autocomplete="off" required disabled>
+                                <ul id="subdistrict-listbox" role="listbox" class="combobox-listbox" hidden aria-label="ตัวเลือกแขวง/ตำบล"></ul>
+                            </div>
                         </div>
                         <div class="form-col">
                             <label class="form-label" for="addr-zipcode">รหัสไปรษณีย์</label>
-                            <input type="text" id="addr-zipcode" class="form-input readonly-input" placeholder="อัตโนมัติ" readonly>
+                            <input type="text" id="addr-zipcode" class="form-input readonly-input" placeholder="กรอกอัตโนมัติเมื่อเลือกแขวง/ตำบล" readonly aria-label="รหัสไปรษณีย์ กรอกอัตโนมัติ">
                         </div>
                     </div>
 
@@ -180,7 +209,7 @@
                                     <option value="visual_2">ระดับ 2 — สายตาพิการ (ลานสายตาแคบกว่า 10 องศา)</option>
                                     <option value="visual_3">ระดับ 3 — ตาบอดข้างหนึ่ง (ลานสายตาแคบกว่า 10 องศา จนถึง 5 องศา)</option>
                                     <option value="visual_4">ระดับ 4 — ตาบอดสองข้าง (ลานสายตาแคบกว่า 5 องศา)</option>
-                                    <option value="visual_5">ระดับ 5 — ตาบอดสามข้าง (มองไม่เห็นแม้แต่แสงสว่าง)</option>
+                                    <option value="visual_5">ระดับ 5 — ตาบอดสมบูรณ์ทั้งสองข้าง (มองไม่เห็นแม้แต่แสงสว่าง)</option>
                                 </select>
                             </div>
                         </div>
@@ -257,9 +286,10 @@
                                 <div class="form-col">
                                     <label class="form-label" for="edu-level-1">ระดับการศึกษา</label>
                                     <select id="edu-level-1" class="form-input custom-select">
+                                        <option value="" disabled selected>— เลือกระดับการศึกษา —</option>
                                         <option>มัธยมศึกษาตอนปลาย / ปวช.</option>
                                         <option>ปวส.</option>
-                                        <option selected>ปริญญาตรี</option>
+                                        <option>ปริญญาตรี</option>
                                         <option>ปริญญาโท</option>
                                     </select>
                                 </div>

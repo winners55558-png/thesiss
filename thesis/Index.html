@@ -27,40 +27,44 @@
         </div>
 
             <ul class="main-nav" role="menubar">
-                
-                <!-- <li class="nav-item" role="none">
-                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="employer-menu" aria-label="เมนูสำหรับนายจ้าง">
-                        นายจ้าง
-                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-                    <ul class="dropdown-menu" id="employer-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="home-employer.html">หน้าหลักนายจ้าง</a></li>
-                        <li role="none"><a role="menuitem" href="post-employer.html">โพสต์ประกาศงาน</a></li>
-                    </ul>
-                </li>
 
-                <li class="nav-item" role="none">
-                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
+                <!-- เมนูผู้หางาน: แสดงเมื่อ login เป็น seeker -->
+                <li class="nav-item" id="index-seeker-nav" role="none" style="display:none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="index-jobseeker-menu" aria-label="เมนูสำหรับผู้หางาน">
                         ผู้หางาน
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                    <ul class="dropdown-menu" id="jobseeker-menu" role="menu">
+                    <ul class="dropdown-menu" id="index-jobseeker-menu" role="menu">
                         <li role="none"><a role="menuitem" href="home-jobseeker.html">หน้าหลักผู้หางาน</a></li>
                         <li role="none"><a role="menuitem" href="resume.html">สร้างเรซูเม่</a></li>
                     </ul>
                 </li>
 
-                <li class="nav-item" role="none">
-                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="about-menu" aria-label="เมนูเกี่ยวกับเรา">
+                <!-- เมนูนายจ้าง: แสดงเมื่อ login เป็น employer -->
+                <li class="nav-item" id="index-employer-nav" role="none" style="display:none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="index-employer-menu" aria-label="เมนูสำหรับนายจ้าง">
+                        นายจ้าง
+                        <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <ul class="dropdown-menu" id="index-employer-menu" role="menu">
+                        <li role="none"><a role="menuitem" href="home-employer.html">หน้าหลักนายจ้าง</a></li>
+                        <li role="none"><a role="menuitem" href="post-employer.html">โพสต์ประกาศงาน</a></li>
+                    </ul>
+                </li>
+
+                <!-- เมนูเกี่ยวกับเรา: แสดงเมื่อ login แล้ว -->
+                <li class="nav-item" id="index-about-nav" role="none" style="display:none">
+                    <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="index-about-menu" aria-label="เมนูเกี่ยวกับเรา">
                         เกี่ยวกับเรา
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                    <ul class="dropdown-menu" id="about-menu" role="menu">
+                    <ul class="dropdown-menu" id="index-about-menu" role="menu">
                         <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
                     </ul>
-                </li> -->
+                </li>
 
-                <li class="nav-item" role="none">
+                <!-- สมัครสมาชิก: แสดงเมื่อยังไม่ login -->
+                <li class="nav-item" id="index-register-nav" role="none">
                     <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="register-menu" aria-label="เมนูสมัครสมาชิก">
                         สมัครสมาชิก
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -71,7 +75,8 @@
                     </ul>
                 </li>
 
-                <li class="nav-item last-item" role="none">
+                <!-- เข้าสู่ระบบ: แสดงเมื่อยังไม่ login (last-child → ถูก dynamic navbar แทนที่เมื่อ login) -->
+                <li class="nav-item last-item" id="index-login-nav" role="none">
                     <button class="nav-link-btn" aria-haspopup="true" aria-expanded="false" aria-controls="login-menu" aria-label="เมนูเข้าสู่ระบบ">
                         เข้าสู่ระบบ
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>

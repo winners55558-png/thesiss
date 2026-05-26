@@ -77,8 +77,16 @@
                 กลับไปหน้างานที่แนะนำ
             </a>
 
-            <div class="job-detail-card">
-                
+            <div class="job-detail-card" style="position:relative;">
+
+                <!-- ── ปุ่มบันทึกงาน ── -->
+                <button id="btn-save-job-r5"
+                    aria-label="บันทึกงานนี้"
+                    title="บันทึกงาน"
+                    style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;border:1.5px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;z-index:2;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </button>
+
                 <div class="job-header-info">
                     <div class="job-logo-large" id="render-job-logo" role="img" aria-label="โลโก้บริษัท">กำลังโหลด...</div>
                     <div class="job-title-group">

@@ -4,6 +4,9 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 const port = 3000;
@@ -26,6 +29,20 @@ const db = mysql.createConnection({
 db.connect(err => {
     if (err) throw err;
     console.log('เชื่อมต่อ MySQL สำเร็จ!');
+
+    // ── สร้าง saved_jobs table ทันที (ไม่รอ ensureColumn chain) ──
+    db.query(`
+        CREATE TABLE IF NOT EXISTS saved_jobs (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            seeker_id  INT NOT NULL,
+            job_id     INT NOT NULL,
+            saved_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_save (seeker_id, job_id)
+        )
+    `, (err) => {
+        if (err) console.error('saved_jobs CREATE TABLE error:', err.message);
+        else     console.log('✅ saved_jobs table พร้อมใช้งาน');
+    });
 
     // ── helper: ตรวจ & เพิ่ม column ถ้ายังไม่มี ──
     function ensureColumn(table, column, definition, cb) {
@@ -81,7 +98,19 @@ db.connect(err => {
                                         ensureColumn('jobs_post', 'age_min', "INT DEFAULT NULL", function () {
                                             ensureColumn('jobs_post', 'age_max', "INT DEFAULT NULL", function () {
                                                 ensureColumn('resumes', 'preferred_work_mode', "VARCHAR(50) DEFAULT NULL", function () {
-                                                    ensureColumn('employers', 'verification_status', "VARCHAR(20) DEFAULT 'pending'");
+                                                    ensureColumn('employers', 'verification_status', "VARCHAR(20) DEFAULT 'pending'", function() {
+                                        // ── Auto-create saved_jobs table ──
+                                        db.query(`CREATE TABLE IF NOT EXISTS saved_jobs (
+                                            id INT AUTO_INCREMENT PRIMARY KEY,
+                                            seeker_id INT NOT NULL,
+                                            job_id INT NOT NULL,
+                                            saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                            UNIQUE KEY unique_save (seeker_id, job_id)
+                                        )`, (err) => {
+                                            if (err) console.error('saved_jobs table error:', err.message);
+                                            else console.log('✅ saved_jobs table พร้อมใช้งาน');
+                                        });
+                                    });
                                                 });
                                             });
                                         });
@@ -883,7 +912,7 @@ app.post('/api/mark-application-viewed', (req, res) => {
 app.get('/api/application/:appId', (req, res) => {
     const sql = `
         SELECT a.id, a.status, a.seeker_id, a.job_id,
-               s.first_name, s.last_name,
+               s.first_name, s.last_name, s.email, s.phone,
                j.job_title
         FROM applications a
         JOIN job_seekers s ON a.seeker_id = s.id
@@ -901,14 +930,58 @@ app.get('/api/application/:appId', (req, res) => {
 // 🌟 18c. API อัปเดตผลการเรียกสัมภาษณ์ (approved / rejected)
 // ==========================================
 app.patch('/api/applications/:appId/result', (req, res) => {
-    const { result } = req.body; // 'approved' หรือ 'rejected'
+    const { result } = req.body;
     if (!['approved', 'rejected'].includes(result)) {
         return res.status(400).json({ error: 'result ต้องเป็น approved หรือ rejected เท่านั้น' });
     }
-    const sql = `UPDATE applications SET status = ? WHERE id = ?`;
-    db.query(sql, [result, req.params.appId], (err) => {
+    db.query(`UPDATE applications SET status = ? WHERE id = ?`, [result, req.params.appId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, status: result });
+        // ดึงข้อมูลติดต่อ seeker เพื่อแสดงใน popup ฝั่ง HR
+        const contactSql = `
+            SELECT s.first_name, s.last_name, s.email, s.phone
+            FROM applications a JOIN job_seekers s ON a.seeker_id = s.id
+            WHERE a.id = ?
+        `;
+        db.query(contactSql, [req.params.appId], (err2, rows) => {
+            const contact = (rows && rows.length > 0) ? rows[0] : null;
+            res.json({ success: true, status: result, contact });
+        });
+    });
+});
+
+// ==========================================
+// 🌟 18d. Saved Jobs API (บันทึกงานที่สนใจ)
+// ==========================================
+app.get('/api/saved-jobs/:seekerId', (req, res) => {
+    const sql = `
+        SELECT j.id, j.job_title, e.company_name, j.job_type, j.job_location,
+               j.salary, j.disability_type, sj.saved_at
+        FROM saved_jobs sj
+        JOIN jobs_post j  ON sj.job_id     = j.id
+        JOIN employers e  ON j.employer_id = e.id
+        WHERE sj.seeker_id = ?
+        ORDER BY sj.saved_at DESC
+    `;
+    db.query(sql, [req.params.seekerId], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/api/saved-jobs', (req, res) => {
+    const { seeker_id, job_id } = req.body;
+    if (!seeker_id || !job_id) return res.status(400).json({ error: 'seeker_id และ job_id จำเป็น' });
+    db.query('INSERT IGNORE INTO saved_jobs (seeker_id, job_id) VALUES (?, ?)', [seeker_id, job_id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/saved-jobs/:seekerId/:jobId', (req, res) => {
+    db.query('DELETE FROM saved_jobs WHERE seeker_id = ? AND job_id = ?',
+        [req.params.seekerId, req.params.jobId], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 
@@ -1055,95 +1128,14 @@ app.get('/api/all-resumes', (req, res) => {
 
 // 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
 app.get('/api/admin/stats', (req, res) => {
-    const stats = {};
-    db.query('SELECT COUNT(*) AS count FROM job_seekers', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        stats.total_seekers = rows[0].count;
-        
-        db.query('SELECT COUNT(*) AS count FROM employers', (err, rows) => {
-            stats.total_employers = rows[0].count;
-            
-            db.query('SELECT COUNT(*) AS count FROM jobs_post', (err, rows) => {
-                stats.total_jobs = rows[0].count;
-                
-                db.query('SELECT COUNT(*) AS count FROM applications', (err, rows) => {
-                    stats.total_applications = rows[0].count;
-                    res.json(stats); // ส่งสถิติทั้ง 4 ตัวกลับไป
-                });
-            });
-        });
-    });
-});
-
-// ==========================================
-// 🌟 22. API สำหรับ Admin Dashboard (ระบบหลังบ้าน)
-// ==========================================
-
-// 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
-app.get('/api/admin/stats', (req, res) => {
-    const stats = {};
-    db.query('SELECT COUNT(*) AS count FROM job_seekers', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        stats.total_seekers = rows[0].count;
-        
-        db.query('SELECT COUNT(*) AS count FROM employers', (err, rows) => {
-            stats.total_employers = rows[0].count;
-            
-            db.query('SELECT COUNT(*) AS count FROM jobs_post', (err, rows) => {
-                stats.total_jobs = rows[0].count;
-                
-                db.query('SELECT COUNT(*) AS count FROM applications', (err, rows) => {
-                    stats.total_applications = rows[0].count;
-                    res.json(stats); // ส่งสถิติทั้ง 4 ตัวกลับไป
-                });
-            });
-        });
-    });
-});
-
-// ==========================================
-// 🌟 22. API สำหรับ Admin Dashboard (ระบบหลังบ้าน)
-// ==========================================
-
-// 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
-app.get('/api/admin/stats', (req, res) => {
-    const stats = {};
-    db.query('SELECT COUNT(*) AS count FROM job_seekers', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        stats.total_seekers = rows[0].count;
-        
-        db.query('SELECT COUNT(*) AS count FROM employers', (err, rows) => {
-            stats.total_employers = rows[0].count;
-            
-            db.query('SELECT COUNT(*) AS count FROM jobs_post', (err, rows) => {
-                stats.total_jobs = rows[0].count;
-                
-                db.query('SELECT COUNT(*) AS count FROM applications', (err, rows) => {
-                    stats.total_applications = rows[0].count;
-                    res.json(stats); // ส่งสถิติทั้ง 4 ตัวกลับไป
-                });
-            });
-        });
-    });
-});
-
-// ==========================================
-// 🌟 22. API สำหรับ Admin Dashboard (ระบบหลังบ้าน)
-// ==========================================
-
-// 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
-// ==========================================
-// 🌟 22.1 ดึงสถิติภาพรวม (Dashboard Stats) - อัปเดตใหม่
-// ==========================================
-app.get('/api/admin/stats', (req, res) => {
     const queries = {
-        total_seekers: 'SELECT COUNT(*) AS count FROM job_seekers',
-        total_employers: 'SELECT COUNT(*) AS count FROM employers',
-        total_jobs: 'SELECT COUNT(*) AS count FROM jobs_post',
+        total_seekers:      'SELECT COUNT(*) AS count FROM job_seekers',
+        total_employers:    'SELECT COUNT(*) AS count FROM employers',
+        total_jobs:         'SELECT COUNT(*) AS count FROM jobs_post',
         total_applications: 'SELECT COUNT(*) AS count FROM applications',
-        // --- เพิ่มใหม่ 2 ตัว ---
+        // 🌟 เพิ่มใหม่ 2 ตัว
         total_pending_apps: "SELECT COUNT(*) AS count FROM applications WHERE status = 'pending'",
-        total_hired: "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'"
+        total_hired:        "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'"
     };
 
     let stats = {};
@@ -1238,6 +1230,120 @@ app.delete('/api/admin/delete-employer/:id', (req, res) => {
             if (err2) return res.status(500).json({ error: err2.message });
             res.json({ success: true, message: 'ลบแอคเค้าน์นายจ้างและประกาศงานทั้งหมดเรียบร้อยแล้ว' });
         });
+    });
+});
+
+// ==========================================
+// 🌟 GOOGLE OAUTH 2.0 APIs
+// ==========================================
+
+// POST /api/auth/google/seeker — Google Sign Up / Sign In สำหรับผู้หางาน
+app.post('/api/auth/google/seeker', async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'access_token is required' });
+
+    try {
+        // ตรวจสอบ access_token โดยเรียก Google userinfo API
+        const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+        const { email, given_name, family_name, name } = userInfoRes.data;
+
+        // ตรวจว่ามีอีเมลนี้ในระบบหรือยัง
+        db.query('SELECT id, first_name, last_name, email FROM job_seekers WHERE email = ?', [email], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            if (rows.length > 0) {
+                // ✅ Login: อีเมลมีอยู่แล้ว
+                const user = rows[0];
+                return res.json({
+                    success: true,
+                    isNewUser: false,
+                    user: { id: user.id, name: user.first_name || name }
+                });
+            }
+
+            // ✅ Register: INSERT user ใหม่ (ไม่มี password เพราะใช้ Google)
+            const firstName = given_name || (name ? name.split(' ')[0] : 'ผู้ใช้');
+            const lastName  = family_name || (name && name.split(' ').length > 1 ? name.split(' ').slice(1).join(' ') : '');
+            const sql = 'INSERT INTO job_seekers (first_name, last_name, email, phone, password) VALUES (?, ?, ?, ?, ?)';
+            db.query(sql, [safeStr(firstName), safeStr(lastName), safeStr(email), '', 'GOOGLE_AUTH'], (err2, result) => {
+                if (err2) {
+                    if (err2.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'อีเมลนี้มีผู้ใช้งานแล้ว' });
+                    return res.status(500).json({ error: err2.message });
+                }
+                return res.json({
+                    success: true,
+                    isNewUser: true,
+                    user: { id: result.insertId, name: firstName }
+                });
+            });
+        });
+    } catch (err) {
+        console.error('Google verify error (seeker):', err.message);
+        return res.status(401).json({ error: 'Google token ไม่ถูกต้องหรือหมดอายุ' });
+    }
+});
+
+// POST /api/auth/google/employer — Google Sign Up / Sign In สำหรับนายจ้าง
+app.post('/api/auth/google/employer', async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'access_token is required' });
+
+    try {
+        // ตรวจสอบ access_token โดยเรียก Google userinfo API
+        const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+        const { email, name } = userInfoRes.data;
+
+        // ตรวจว่ามีอีเมลนี้ในระบบหรือยัง
+        db.query('SELECT id, company_name, email FROM employers WHERE email = ?', [email], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            if (rows.length > 0) {
+                // ✅ Login: อีเมลมีอยู่แล้ว
+                const emp = rows[0];
+                return res.json({
+                    success: true,
+                    isNewUser: false,
+                    needsProfileCompletion: false,
+                    user: { id: emp.id, name: emp.company_name || name }
+                });
+            }
+
+            // ✅ Register: INSERT เฉพาะ email + company_name ชั่วคราว (ยังไม่ครบ)
+            const companyName = name || email.split('@')[0];
+            const sql = "INSERT INTO employers (company_name, email, password, phone, address, tax_id, verification_status) VALUES (?, ?, ?, ?, ?, ?, 'pending')";
+            db.query(sql, [safeStr(companyName), safeStr(email), 'GOOGLE_AUTH', '', '', ''], (err2, result) => {
+                if (err2) {
+                    if (err2.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'อีเมลนี้มีผู้ใช้งานแล้ว' });
+                    return res.status(500).json({ error: err2.message });
+                }
+                return res.json({
+                    success: true,
+                    isNewUser: true,
+                    needsProfileCompletion: true,
+                    user: { id: result.insertId, name: companyName, email: email }
+                });
+            });
+        });
+    } catch (err) {
+        console.error('Google verify error (employer):', err.message);
+        return res.status(401).json({ error: 'Google token ไม่ถูกต้องหรือหมดอายุ' });
+    }
+});
+
+// POST /api/employer/complete-profile — บันทึกข้อมูลบริษัทที่เหลือหลัง Google Sign-Up
+app.post('/api/employer/complete-profile', (req, res) => {
+    const { employer_id, company_name, phone, address, tax_id } = req.body;
+    if (!employer_id) return res.status(400).json({ error: 'employer_id is required' });
+
+    const sql = 'UPDATE employers SET company_name = ?, phone = ?, address = ?, tax_id = ? WHERE id = ?';
+    db.query(sql, [safeStr(company_name), safeStr(phone), safeStr(address), safeStr(tax_id), employer_id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'ไม่พบบัญชีนายจ้าง' });
+        res.json({ success: true, message: 'บันทึกข้อมูลบริษัทสำเร็จ!' });
     });
 });
 
