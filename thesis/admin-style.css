@@ -175,7 +175,7 @@ body {
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* 🌟 เปลี่ยนเป็น 3 คอลัมน์ */
     gap: 24px;
     margin-bottom: 24px;
 }

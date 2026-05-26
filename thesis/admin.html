@@ -84,10 +84,26 @@
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="icon-box green"><i class="fas fa-paper-plane"></i></div>
-                    <span class="title">ใบสมัครที่ส่งแล้ว</span>
+                    <div class="icon-box" style="background:#f3e8ff; color:#a855f7;"><i class="fas fa-paper-plane"></i></div>
+                    <span class="title">ใบสมัครที่ส่งทั้งหมด</span>
                 </div>
                 <h3 id="stat-apps">...</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="icon-box" style="background:#fef08a; color:#ca8a04;"><i class="fas fa-hourglass-half"></i></div>
+                    <span class="title">ผู้สมัครที่รอการพิจารณา</span>
+                </div>
+                <h3 id="stat-pending-apps">...</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="icon-box green"><i class="fas fa-user-check"></i></div>
+                    <span class="title">ผู้หางานที่ได้งานแล้ว</span>
+                </div>
+                <h3 id="stat-hired">...</h3>
             </div>
         </div>
 
@@ -157,6 +173,9 @@
                 document.getElementById('stat-employers').textContent = stats.total_employers;
                 document.getElementById('stat-jobs').textContent = stats.total_jobs;
                 document.getElementById('stat-apps').textContent = stats.total_applications;
+                // 🌟 เพิ่ม 2 บรรทัดนี้
+                document.getElementById('stat-pending-apps').textContent = stats.total_pending_apps;
+                document.getElementById('stat-hired').textContent = stats.total_hired;
             } catch (err) { console.error("Error fetching stats:", err); }
 
             // 2. โหลด KYC Pending
@@ -183,20 +202,19 @@
 
                 tbody.innerHTML = '';
                 employers.forEach(em => {
-                    const taxId = em.tax_id ? em.tax_id : '<span style="color:#ef4444; font-weight:600;">ยังไม่ระบุ</span>';
+                    // 🌟 อัปเดต: เปลี่ยนเป็นปุ่มกดแล้วไปเว็บสรรพากร
+                    const taxIdHtml = em.tax_id 
+                        ? `<button onclick="verifyTaxId('${em.tax_id}')" class="badge" style="background:#f1f5f9; color:#3b82f6; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-external-link-alt"></i> ${em.tax_id}</button>` 
+                        : '<span style="color:red">ยังไม่ระบุ</span>';
+
                     tbody.innerHTML += `
                         <tr>
                             <td>#${em.id}</td>
-                            <td style="font-weight:600;">${em.company_name}</td>
+                            <td style="font-weight: 600;">${em.company_name}</td>
                             <td>${em.email}</td>
-                            <td><span class="tax-id-badge">${taxId}</span></td>
-                            <td>
-                                <button class="btn-approve" onclick="approveEmployer(${em.id})">
-                                    <i class="fas fa-check"></i> อนุมัติ (Tax ID ถูกต้อง)
-                                </button>
-                                <button class="btn-reject-delete" onclick="deleteEmployer(${em.id}, '${em.company_name.replace(/'/g, "\\'")}')">
-                                    <i class="fas fa-trash"></i> ปฏิเสธ + ลบแอคเค้าน์
-                                </button>
+                            <td>${taxIdHtml}</td> <td>
+                                <button onclick="verifyEmployer(${em.id}, 'approved')" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; margin-right:5px;">✅ อนุมัติ</button>
+                                <button onclick="verifyEmployer(${em.id}, 'rejected')" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600;">❌ ปฏิเสธ</button>
                             </td>
                         </tr>
                     `;
@@ -277,10 +295,18 @@
                     jobTbody.innerHTML += `
                         <tr>
                             <td>#${job.id}</td>
-                            <td style="font-weight:500;">${job.company_name}</td>
+                            <td style="font-weight: 500;">${job.company_name}</td>
                             <td>${job.job_title}</td>
                             <td><span class="badge bg-green">เปิดรับสมัคร</span></td>
-                            <td><button class="btn-delete" onclick="deleteJob(${job.id})"><i class="fas fa-trash"></i> ลบประกาศ</button></td>
+                            <td>
+                                <a href="job-detail.html?id=${job.id}&admin=true" target="_blank" style="background:#3b82f6; color:white; text-decoration:none; padding:8px 12px; border-radius:6px; font-size:13px; font-weight:600; margin-right:5px; display:inline-block; transition: 0.2s;">
+                                    <i class="fas fa-eye"></i> ดูประกาศ
+                                </a>
+                                
+                                <button class="btn-delete" onclick="deleteJob(${job.id})">
+                                    <i class="fas fa-trash"></i> ลบ
+                                </button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -301,6 +327,16 @@
                     }
                 } catch (err) { alert('เกิดข้อผิดพลาดในการลบงาน'); }
             }
+        }
+        // 🌟 ฟังก์ชันคัดลอกเลขและเปิดเว็บสรรพากร
+        function verifyTaxId(taxId) {
+            navigator.clipboard.writeText(taxId).then(() => {
+                alert(`📋 คัดลอกเลขผู้เสียภาษี "${taxId}" เรียบร้อยแล้ว!\n\nระบบจะเปิดหน้าเว็บกรมสรรพากร ให้คุณคลิกขวาแล้วกด "วาง" (Paste) ในช่องค้นหาได้เลยครับ`);
+                window.open('https://vsinter.rd.go.th/rd-webcontent-web/#/vatsearch', '_blank');
+            }).catch(err => {
+                // กรณีเบราว์เซอร์ไม่รองรับให้เปิดหน้าเว็บปกติ
+                window.open('https://vsinter.rd.go.th/rd-webcontent-web/#/vatsearch', '_blank');
+            });
         }
     </script>
 </body>

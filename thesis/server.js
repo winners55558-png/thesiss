@@ -1132,23 +1132,32 @@ app.get('/api/admin/stats', (req, res) => {
 // ==========================================
 
 // 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
+// ==========================================
+// 🌟 22.1 ดึงสถิติภาพรวม (Dashboard Stats) - อัปเดตใหม่
+// ==========================================
 app.get('/api/admin/stats', (req, res) => {
-    const stats = {};
-    db.query('SELECT COUNT(*) AS count FROM job_seekers', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        stats.total_seekers = rows[0].count;
-        
-        db.query('SELECT COUNT(*) AS count FROM employers', (err, rows) => {
-            stats.total_employers = rows[0].count;
-            
-            db.query('SELECT COUNT(*) AS count FROM jobs_post', (err, rows) => {
-                stats.total_jobs = rows[0].count;
-                
-                db.query('SELECT COUNT(*) AS count FROM applications', (err, rows) => {
-                    stats.total_applications = rows[0].count;
-                    res.json(stats); // ส่งสถิติทั้ง 4 ตัวกลับไป
-                });
-            });
+    const queries = {
+        total_seekers: 'SELECT COUNT(*) AS count FROM job_seekers',
+        total_employers: 'SELECT COUNT(*) AS count FROM employers',
+        total_jobs: 'SELECT COUNT(*) AS count FROM jobs_post',
+        total_applications: 'SELECT COUNT(*) AS count FROM applications',
+        // --- เพิ่มใหม่ 2 ตัว ---
+        total_pending_apps: "SELECT COUNT(*) AS count FROM applications WHERE status = 'pending'",
+        total_hired: "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'"
+    };
+
+    let stats = {};
+    let completed = 0;
+    const keys = Object.keys(queries);
+
+    keys.forEach(key => {
+        db.query(queries[key], (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            stats[key] = results[0].count;
+            completed++;
+            if (completed === keys.length) {
+                res.json(stats);
+            }
         });
     });
 });

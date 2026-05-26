@@ -102,18 +102,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const loggedInId = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
 
     // ลิสต์หน้าเว็บของแต่ละฝั่ง
+    // ลิสต์หน้าเว็บของแต่ละฝั่ง
     const seekerPages = ['home-jobseeker.html', 'resume.html', 'resume2.html', 'resume3.html', 'resume4.html', 'resume5.html', 'job-search.html', 'profile-job.html', 'profile-job2.html', 'job-detail.html'];
-    const employerPages = ['home-employer.html', 'post-job.html', 'profile-em.html', 'profile-em2.html', 'profile-em3.html', 'profile-em4.html', 'post-employer.html', 'post-employer2.html', 'resume-database.html'];
+    const employerPages = ['home-employer.html', 'post-job.html', 'profile-em.html', 'profile-em2.html', 'profile-em3.html', 'profile-em4.html', 'post-employer.html', 'post-employer2.html'];
 
-    if (!loggedInUser) {
-        if (seekerPages.includes(currentPageUrl)) {
-            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับผู้หางาน');
-            window.location.href = 'login-jobseeker.html';
-            return;
-        } else if (employerPages.includes(currentPageUrl)) {
-            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับนายจ้าง');
-            window.location.href = 'login-employer.html';
-            return;
+    // 🌟 เพิ่มบรรทัดนี้: เช็คว่าคนนี้คือ Admin ใช่ไหม? (เช็คจาก Session หรือ บัตรผ่านทางใน URL)
+    const urlAdminBypass = new URLSearchParams(window.location.search).get('admin') === 'true';
+    const isAdmin = sessionStorage.getItem('isAdmin') === 'true' || urlAdminBypass;
+
+    // ถ้าไม่มีใครล็อกอินเข้ามาเลย (และไม่ใช่แอดมินด้วย)
+    if (!loggedInUser && !isAdmin) {
+        if (seekerPages.includes(currentPageUrl)) { 
+            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับผู้หางาน'); 
+            window.location.href = 'login-jobseeker.html'; 
+            return; 
+        } else if (employerPages.includes(currentPageUrl)) { 
+            alert('⚠️ กรุณาเข้าสู่ระบบสำหรับนายจ้าง'); 
+            window.location.href = 'login-employer.html'; 
+            return; 
         }
     } else {
         if (loggedInType === 'employer' && seekerPages.includes(currentPageUrl)) {
@@ -2732,13 +2738,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 // =========================================================
                 // 🛠️ เกณฑ์ที่ 6: ประวัติการศึกษา (Education) - 10 คะแนน
                 // =========================================================
+                // =========================================================
+                // 🛠️ เกณฑ์ที่ 6: ประวัติการศึกษา (Education Match) - 10 คะแนน
+                // =========================================================
                 let eduScore = 0;
                 const parseSafeEdu = (str) => { try { return typeof str === 'string' ? JSON.parse(str || '[]') : (str || []); } catch(e) { return []; } };
                 const eduHist = parseSafeEdu(resume.education_history);
+                const jobDescQual = (job.job_desc || '').toLowerCase(); // รวมรายละเอียดและคุณสมบัติของบริษัท
+                const jobCatEdu = (job.job_category || '').toLowerCase(); // หมวดหมู่งาน
                 
                 if (eduHist.length > 0) {
-                    eduScore = 10;
-                    reasons.push(`🎓 มีประวัติการศึกษาผ่านเกณฑ์พื้นฐาน (+10)`);
+                    const myMajor = (eduHist[0].major || '').toLowerCase(); // คณะ/สาขาที่จบ
+                    const myLevel = (eduHist[0].level || '').toLowerCase(); // ระดับการศึกษา (เช่น ปริญญาตรี)
+
+                    // 🔍 เปรียบเทียบที่ 1: สาขาที่จบมา ตรงกับ หมวดหมู่งาน หรือ รายละเอียดงานไหม?
+                    if (myMajor && (jobCatEdu.includes(myMajor) || jobDescQual.includes(myMajor) || myMajor.includes(jobCatEdu.split('/')[0]))) {
+                        eduScore = 10;
+                        reasons.push(`🎓 สาขาวิชาที่จบ (${eduHist[0].major}) ตรงกับสายงานนี้ (+10)`);
+                    } 
+                    // 🔍 เปรียบเทียบที่ 2: ถ้าสาขาไม่ตรง แต่ระดับวุฒิการศึกษาตรงกับที่บริษัทระบุไว้ไหม?
+                    else if (myLevel && jobDescQual.includes(myLevel)) {
+                        eduScore = 8;
+                        reasons.push(`🎓 ระดับวุฒิการศึกษา (${eduHist[0].level}) ตรงกับที่ระบุไว้ (+8)`);
+                    } 
+                    // ถ้าไม่ตรงเลย แต่มีประวัติการศึกษา
+                    else {
+                        eduScore = 5;
+                        reasons.push(`🎓 มีประวัติการศึกษาขั้นพื้นฐาน (+5)`);
+                    }
                 }
                 score += eduScore;
 
