@@ -2,6 +2,15 @@
    === JAVASCRIPT: รวมฟังก์ชันทั้งหมด (Full Expanded Version) ===
 ========================================= */
 
+/* =============================================
+   FONT SIZE CONTROL — Early Apply (ก่อน DOMContentLoaded)
+   เพื่อป้องกัน Flash of Wrong Font Size
+============================================= */
+(function () {
+    const saved = localStorage.getItem('jobnble-font-size') || 'md';
+    document.documentElement.classList.add('font-' + saved);
+})();
+
 /* ── Defensive salary patch (job-detail.html): render ค่า NaN → ตามตกลง ── */
 (function () {
     function patchSalaryNaN() {
@@ -17,28 +26,29 @@
     window.addEventListener('load', function () { setTimeout(patchSalaryNaN, 800); });
 })();
 
-/* ── Global function: sync disability card button state (resume.html) ── */
+/* ── Global function: sync disability card button state (resume.html / post-employer.html) ── */
 function toggleDisabilityLevel(type) {
     // button = <button role="checkbox"> ที่เป็น header ของการ์ด
     const btn = document.querySelector(`.disability-card-header[data-type="${type}"]`);
     const cb  = document.getElementById('dis-' + type);
     const level = document.getElementById('level-' + type);
-    if (!level) return;
 
-    // ใช้สถานะของ hidden checkbox เป็น source of truth
-    // (ถูก toggle ก่อนเรียก toggleDisabilityLevel โดย click handler ใน DOMContentLoaded)
+    // ใช้สถานะของ checkbox เป็น source of truth
     const isChecked = cb ? cb.checked : false;
 
-    // อัปเดต button ARIA state
+    // อัปเดต button ARIA state (ทุกประเภท รวมถึง LD ที่ไม่มี level dropdown)
     if (btn) {
         btn.setAttribute('aria-checked', isChecked ? 'true' : 'false');
         btn.setAttribute('aria-expanded', isChecked ? 'true' : 'false');
     }
-    // แสดง/ซ่อน level section
-    level.style.display = isChecked ? 'block' : 'none';
-    if (!isChecked) {
-        const sel = document.getElementById('level-select-' + type);
-        if (sel) sel.value = '';
+
+    // แสดง/ซ่อน level section (ถ้ามี)
+    if (level) {
+        level.style.display = isChecked ? 'block' : 'none';
+        if (!isChecked) {
+            const sel = document.getElementById('level-select-' + type);
+            if (sel) sel.value = '';
+        }
     }
 }
 
@@ -68,6 +78,130 @@ document.addEventListener('DOMContentLoaded', () => {
         srLiveRegion.textContent = '';
         setTimeout(() => { srLiveRegion.textContent = message; }, 50);
     }
+
+    /* =============================================
+       🔵 0.0 FONT SIZE CONTROL — Dropdown
+       ปรับขนาดตัวอักษร เล็ก / กลาง / ใหญ่
+       - บันทึกลง localStorage
+       - รองรับ screen reader ด้วย aria-expanded + announce
+    ============================================= */
+
+    const _fszLabels = { sm: 'เล็ก', md: 'กลาง', lg: 'ใหญ่' };
+
+    function applyFontSize(size) {
+        // ลบ class เก่า → ใส่ class ใหม่บน <html>
+        document.documentElement.classList.remove('font-sm', 'font-md', 'font-lg');
+        document.documentElement.classList.add('font-' + size);
+
+        // อัปเดต toggle label + active state ใน dropdown ทุก navbar
+        document.querySelectorAll('.font-size-ctrl').forEach(ctrl => {
+            const toggle = ctrl.querySelector('.fsz-toggle');
+            const iconEl = ctrl.querySelector('.fsz-toggle__icon');
+            if (toggle) toggle.setAttribute('aria-label', 'ปรับขนาดตัวอักษร: ' + _fszLabels[size]);
+            if (iconEl) iconEl.textContent = 'A';
+
+            ctrl.querySelectorAll('.fsz-option').forEach(opt => {
+                opt.classList.toggle('fsz-active', opt.dataset.size === size);
+                opt.setAttribute('aria-checked', opt.dataset.size === size ? 'true' : 'false');
+            });
+        });
+
+        // บันทึก preference
+        localStorage.setItem('jobnble-font-size', size);
+
+        // ประกาศให้ screen reader ทราบ
+        announce('ปรับขนาดตัวอักษรเป็น ' + _fszLabels[size]);
+    }
+
+    function _closeFszDropdown(ctrl) {
+        const toggle = ctrl.querySelector('.fsz-toggle');
+        const dropdown = ctrl.querySelector('.fsz-dropdown');
+        if (!dropdown) return;
+        dropdown.classList.remove('fsz-open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function _closeAllFszDropdowns(except) {
+        document.querySelectorAll('.font-size-ctrl').forEach(ctrl => {
+            if (ctrl !== except) _closeFszDropdown(ctrl);
+        });
+    }
+
+    // Sync active state จาก localStorage ที่ IIFE ตั้งไว้แล้ว
+    const _initSize = localStorage.getItem('jobnble-font-size') || 'md';
+    applyFontSize(_initSize);
+
+    // คลิก toggle — เปิด/ปิด dropdown
+    document.addEventListener('click', function (e) {
+        const toggle = e.target.closest('.fsz-toggle');
+        if (toggle) {
+            const ctrl = toggle.closest('.font-size-ctrl');
+            const dropdown = ctrl.querySelector('.fsz-dropdown');
+            const isOpen = dropdown.classList.contains('fsz-open');
+            _closeAllFszDropdowns(isOpen ? null : ctrl);
+            dropdown.classList.toggle('fsz-open', !isOpen);
+            toggle.setAttribute('aria-expanded', (!isOpen).toString());
+            return;
+        }
+
+        // คลิก option — เลือกขนาด
+        const option = e.target.closest('.fsz-option');
+        if (option) {
+            const size = option.dataset.size;
+            const ctrl = option.closest('.font-size-ctrl');
+            applyFontSize(size);
+            _closeFszDropdown(ctrl);
+            // คืน focus ไปที่ toggle
+            const toggle = ctrl.querySelector('.fsz-toggle');
+            if (toggle) toggle.focus();
+            return;
+        }
+
+        // คลิกนอก — ปิดทุก dropdown
+        if (!e.target.closest('.font-size-ctrl')) {
+            _closeAllFszDropdowns(null);
+        }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function (e) {
+        const ctrl = e.target.closest('.font-size-ctrl');
+        if (!ctrl) return;
+
+        const dropdown = ctrl.querySelector('.fsz-dropdown');
+        const isOpen = dropdown.classList.contains('fsz-open');
+        const toggle = ctrl.querySelector('.fsz-toggle');
+
+        if (e.key === 'Escape') {
+            _closeFszDropdown(ctrl);
+            if (toggle) toggle.focus();
+            return;
+        }
+
+        // Space/Enter บน toggle
+        if ((e.key === ' ' || e.key === 'Enter') && e.target === toggle) {
+            e.preventDefault();
+            dropdown.classList.toggle('fsz-open');
+            const nowOpen = dropdown.classList.contains('fsz-open');
+            toggle.setAttribute('aria-expanded', nowOpen.toString());
+            if (nowOpen) {
+                const first = dropdown.querySelector('.fsz-option');
+                if (first) first.focus();
+            }
+            return;
+        }
+
+        // Arrow keys ใน dropdown
+        if (isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault();
+            const opts = [...dropdown.querySelectorAll('.fsz-option')];
+            const idx = opts.indexOf(document.activeElement);
+            const next = e.key === 'ArrowDown'
+                ? opts[(idx + 1) % opts.length]
+                : opts[(idx - 1 + opts.length) % opts.length];
+            if (next) next.focus();
+        }
+    });
 
     /* ========= 🔵 0.1 TOAST NOTIFICATION ========= */
     function showToast(message, type = 'success') {
@@ -100,6 +234,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const loggedInUser = sessionStorage.getItem('userName');
     const loggedInType = sessionStorage.getItem('userType');
     const loggedInId = (sessionStorage.getItem('userId') || '').split(':')[0].trim();
+
+    // ── Track activity เพื่อนับ Active Users ──
+    if (loggedInId && loggedInType) {
+        fetch('http://localhost:3000/api/track-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: loggedInId, user_type: loggedInType === 'employer' ? 'employer' : 'seeker' })
+        }).catch(() => {});
+    }
 
     // ลิสต์หน้าเว็บของแต่ละฝั่ง
     const seekerPages = ['home-jobseeker.html', 'resume.html', 'resume2.html', 'resume3.html', 'resume4.html', 'resume5.html', 'job-search.html', 'profile-job.html', 'profile-job2.html', 'job-detail.html'];
@@ -138,6 +281,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
+    }
+
+    // ── KYC Status Check (employer pages) ──
+    const kycBlockPages = ['post-job.html', 'post-employer.html', 'post-employer2.html'];
+    const kycWarnPages  = ['home-employer.html', 'profile-em.html', 'profile-em2.html', 'profile-em3.html', 'profile-em4.html', 'resume-database.html'];
+    if (loggedInType === 'employer' && loggedInUser) {
+        const empId = sessionStorage.getItem('userId');
+        if (empId) {
+            fetch(`http://localhost:3000/api/employer/kyc-status?id=${empId}`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d.verification_status && d.verification_status !== 'approved') {
+                        sessionStorage.setItem('kyc_status', d.verification_status);
+                        showKycBanner(d.verification_status);
+                        if (kycBlockPages.includes(currentPageUrl)) {
+                            blockPageForKyc();
+                        }
+                    } else {
+                        sessionStorage.removeItem('kyc_status');
+                    }
+                }).catch(() => {});
+        }
+    }
+
+    function showKycBanner(status) {
+        if (document.getElementById('kyc-pending-banner')) return;
+        const isRejected = status === 'rejected';
+        const banner = document.createElement('div');
+        banner.id = 'kyc-pending-banner';
+        banner.className = 'kyc-pending-banner';
+        banner.style.cssText = 'position:sticky;top:0;z-index:999;margin:0;border-radius:0;border-left-width:4px;';
+        banner.innerHTML = `
+            <span class="kyc-icon">${isRejected ? '❌' : '⏳'}</span>
+            <div class="kyc-text">
+                <strong>${isRejected ? 'บัญชีถูกปฏิเสธการยืนยันตัวตน' : 'บัญชีของคุณอยู่ระหว่างรอการยืนยันตัวตน (KYC)'}</strong>
+                <span>${isRejected
+                    ? 'เลขประจำตัวผู้เสียภาษีของคุณไม่ผ่านการตรวจสอบ กรุณาติดต่อทีมงาน'
+                    : 'แอดมินกำลังตรวจสอบข้อมูลบริษัทของคุณ คุณจะสามารถโพสต์งานและซื้อ Subscription ได้หลังจากได้รับการอนุมัติ'
+                }</span>
+            </div>`;
+        if (isRejected) banner.style.borderLeftColor = '#dc2626';
+        document.body.prepend(banner);
+    }
+
+    function blockPageForKyc() {
+        const main = document.querySelector('main') || document.querySelector('.main-content') || document.querySelector('.page-content');
+        if (!main) return;
+        main.classList.add('kyc-blocked-overlay');
+        const blocker = document.createElement('div');
+        blocker.style.cssText = 'position:fixed;inset:0;z-index:998;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.6);backdrop-filter:blur(3px);';
+        blocker.innerHTML = `
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 40px;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.12);">
+                <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+                <h3 style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:8px;">รอการยืนยันตัวตน</h3>
+                <p style="font-size:14px;color:#64748b;line-height:1.6;">บัญชีของคุณยังอยู่ระหว่างรอแอดมินตรวจสอบ KYC<br>หลังจากได้รับการอนุมัติแล้ว คุณจะสามารถโพสต์งานได้ทันที</p>
+                <a href="home-employer.html" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#2563eb;color:#fff;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;">กลับหน้าหลัก</a>
+            </div>`;
+        document.body.appendChild(blocker);
     }
 
     // ==========================================
@@ -247,6 +448,143 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .catch(() => { });
         }
+    }
+
+    // ==========================================
+    // 🌟 0.2 ระบบแจ้งเตือนกระดิ่ง — สำหรับนายจ้าง (monthly/yearly เท่านั้น)
+    // ==========================================
+    if (loggedInType === 'employer' && loggedInId) {
+
+        const _DIS_LBL_N = { visual: 'ทางการมองเห็น', hearing: 'ทางการได้ยิน', physical: 'ทางกายฯ' };
+
+        // ── สร้าง Bell + Panel แล้ว inject เข้า navbar ──
+        function _injectBell(count, seekers) {
+            const mainNav     = document.querySelector('.main-nav');
+            const profileItem = mainNav?.querySelector('.user-profile-item');
+            if (!mainNav || !profileItem || document.getElementById('notif-bell-item')) return;
+
+            const badgeHtml = count > 0
+                ? `<span class="notif-bell-badge" aria-hidden="true">${count > 9 ? '9+' : count}</span>`
+                : '';
+
+            const itemsHtml = seekers.length === 0
+                ? `<div class="notif-panel-empty">ยังไม่มีเรซูเม่ที่ตรงกัน</div>`
+                : seekers.map(s => {
+                    const name     = `${s.first_name || ''} ${s.last_name || ''}`.trim() || 'ไม่ระบุชื่อ';
+                    const disLabel = _DIS_LBL_N[(s.disability_type || '').toLowerCase()] || s.disability_type || '';
+                    const disBadge = disLabel ? `<span class="notif-dis-badge">${disLabel}</span>` : '';
+                    return `
+                        <a class="notif-panel-item" href="resume-database.html?seeker=${s.seeker_id}">
+                            <div class="notif-item-avatar" aria-hidden="true">
+                                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="20" cy="20" r="20" fill="#e2e8f0"/>
+                                    <circle cx="20" cy="16" r="7" fill="#94a3b8"/>
+                                    <ellipse cx="20" cy="32" rx="11" ry="7" fill="#94a3b8"/>
+                                </svg>
+                            </div>
+                            <div class="notif-item-info">
+                                <div class="notif-item-name">${name}</div>
+                                <div class="notif-item-pos">${s.job_position || 'ไม่ระบุตำแหน่ง'} ${disBadge}</div>
+                            </div>
+                        </a>`;
+                }).join('');
+
+            const li = document.createElement('li');
+            li.className = 'nav-item notif-bell-item';
+            li.id        = 'notif-bell-item';
+            li.setAttribute('role', 'none');
+            li.innerHTML = `
+                <button class="notif-bell-btn" id="notif-bell-btn"
+                    aria-label="การแจ้งเตือน${count > 0 ? ` ${count} รายการ` : ''}"
+                    aria-haspopup="true" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    ${badgeHtml}
+                </button>
+                <div class="notif-panel" id="notif-panel" role="dialog"
+                    aria-label="เรซูเม่ที่น่าสนใจ" style="display:none;">
+                    <div class="notif-panel-header">
+                        <span class="notif-panel-title">เรซูเม่ที่น่าสนใจสำหรับคุณ</span>
+                        <span class="notif-panel-count">${count} เรซูเม่</span>
+                    </div>
+                    <div class="notif-panel-list" role="list">${itemsHtml}</div>
+                    <a href="resume-database.html" class="notif-panel-footer">ดูเรซูเม่ทั้งหมด →</a>
+                </div>
+            `;
+
+            mainNav.insertBefore(li, profileItem);
+
+            // ── Toggle Panel ──
+            const bellBtn = document.getElementById('notif-bell-btn');
+            const panel   = document.getElementById('notif-panel');
+
+            bellBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                const isOpen = panel.style.display !== 'none';
+                panel.style.display = isOpen ? 'none' : 'block';
+                bellBtn.setAttribute('aria-expanded', String(!isOpen));
+            });
+            document.addEventListener('click', e => {
+                if (!li.contains(e.target)) {
+                    panel.style.display = 'none';
+                    bellBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && panel.style.display !== 'none') {
+                    panel.style.display = 'none';
+                    bellBtn.setAttribute('aria-expanded', 'false');
+                    bellBtn.focus();
+                }
+            });
+        }
+
+        // ── Toast popup เมื่อเข้าหน้า (แสดงครั้งเดียวต่อ session) ──
+        function _showNotifToast(count) {
+            if (count === 0) return;
+            if (sessionStorage.getItem('_notif_toast_shown')) return;
+            sessionStorage.setItem('_notif_toast_shown', '1');
+
+            const toast = document.createElement('div');
+            toast.id = 'notif-toast';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'polite');
+            toast.innerHTML = `
+                <div class="notif-toast-icon">🔔</div>
+                <div class="notif-toast-text">
+                    <strong>มีเรซูเม่ที่น่าสนใจ ${count} เรซูเม่</strong>
+                    <span>ตรงกับตำแหน่งงานที่คุณกำลังหาอยู่</span>
+                </div>
+                <a href="resume-database.html" class="notif-toast-btn">ดูเลย →</a>
+                <button class="notif-toast-close" aria-label="ปิด">×</button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('notif-toast--visible'), 60);
+
+            let autoTimer = setTimeout(() => _dismissToast(toast), 6000);
+            toast.querySelector('.notif-toast-close').addEventListener('click', () => {
+                clearTimeout(autoTimer);
+                _dismissToast(toast);
+            });
+        }
+
+        function _dismissToast(toast) {
+            toast.classList.remove('notif-toast--visible');
+            setTimeout(() => toast?.remove(), 400);
+        }
+
+        // ── Fetch & init ──
+        fetch(`http://localhost:3000/api/employer-match-notifications/${loggedInId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.allowed) return;
+                _injectBell(data.count, data.seekers);
+                _showNotifToast(data.count);
+            })
+            .catch(() => { });
     }
 
     // ==========================================
@@ -378,9 +716,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const panelHeader = document.createElement('div');
         panelHeader.className = 'mobile-nav-header';
         panelHeader.innerHTML = `
-            <span class="mobile-nav-logo">เมนู</span>
+            <span class="mobile-nav-logo">JobNble</span>
             <button class="mobile-nav-close" aria-label="ปิดเมนู">
-                <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         `;
         panel.appendChild(panelHeader);
@@ -440,7 +778,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (loggedInUser) {
-            // ── เมนูเมื่อ login แล้ว ──
+            // ── 1) User Card (ขึ้นก่อน) ──
+            const userSection = document.createElement('div');
+            userSection.className = 'mobile-nav-user';
+            const profileHref = loggedInType === 'employer' ? 'profile-em.html' : 'profile-job.html';
+            const roleLabel = loggedInType === 'employer' ? 'นายจ้าง' : 'ผู้หางาน';
+            userSection.innerHTML = `
+                <div class="mobile-nav-user-info">
+                    <div class="mobile-nav-user-avatar" aria-hidden="true">${loggedInUser.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div class="mobile-nav-user-name">${loggedInUser}</div>
+                        <div class="mobile-nav-user-role">${roleLabel}</div>
+                    </div>
+                </div>
+                <a href="${profileHref}" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;margin-bottom:8px;background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe;border-radius:10px;font-size:14px;font-weight:600;text-align:center;text-decoration:none;font-family:'Noto Sans Thai','Inter',sans-serif;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    โปรไฟล์ของฉัน
+                </a>
+                <button class="mobile-nav-logout" id="mobile-logout-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    ออกจากระบบ
+                </button>
+            `;
+            panel.appendChild(userSection);
+            userSection.querySelector('#mobile-logout-btn').addEventListener('click', () => {
+                sessionStorage.clear();
+                localStorage.removeItem('user');
+                sessionStorage.removeItem('tempResumeData');
+                sessionStorage.removeItem('existingProfilePic');
+                announce('ออกจากระบบแล้ว');
+                window.location.href = 'Index.html';
+            });
+
+            // ── 2) Font size (อยู่หลัง user card) — will be appended after fszSection created below ──
+            panel._appendFszHere = true;
+
+            // ── 3) เมนู dropdown ──
             if (loggedInType === 'employer') {
                 ul.appendChild(createMobileMenuItem('นายจ้าง', [
                     { text: 'หน้าหลักนายจ้าง', href: 'home-employer.html' },
@@ -453,34 +826,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ]));
             }
             ul.appendChild(createMobileMenuItem('เกี่ยวกับเรา', [
-                { text: 'ติดต่อเรา', href: 'contact.html' }
+                { text: 'เกี่ยวกับเรา', href: 'aboutus.html' }
             ]));
             navList.appendChild(ul);
             panel.appendChild(navList);
-
-            // ── User Section (ใช้ class ตาม CSS: mobile-nav-user-avatar, mobile-nav-user-name, mobile-nav-logout) ──
-            const userSection = document.createElement('div');
-            userSection.className = 'mobile-nav-user';
-            const profileHref = loggedInType === 'employer' ? 'profile-em.html' : 'profile-job.html';
-            userSection.innerHTML = `
-                <div class="mobile-nav-user-info">
-                    <div class="mobile-nav-user-avatar" aria-hidden="true">${loggedInUser.charAt(0).toUpperCase()}</div>
-                    <span class="mobile-nav-user-name">${loggedInUser}</span>
-                </div>
-                <a href="${profileHref}" style="display:block;padding:10px;margin-bottom:8px;background:#EFF6FF;color:#2563EB;border:1.5px solid #BFDBFE;border-radius:8px;font-size:14px;font-weight:600;text-align:center;text-decoration:none;">โปรไฟล์ของฉัน</a>
-                <button class="mobile-nav-logout" id="mobile-logout-btn">ออกจากระบบ</button>
-            `;
-            panel.appendChild(userSection);
-
-            // logout handler (ใช้ event delegation เพื่อความปลอดภัย)
-            userSection.querySelector('#mobile-logout-btn').addEventListener('click', () => {
-                sessionStorage.clear();
-                localStorage.removeItem('user');
-                sessionStorage.removeItem('tempResumeData');
-                sessionStorage.removeItem('existingProfilePic');
-                announce('ออกจากระบบแล้ว');
-                window.location.href = 'Index.html';
-            });
         } else {
             // ── เมนูเมื่อยังไม่ login ──
             ul.appendChild(createMobileMenuItem('นายจ้าง', [
@@ -492,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { text: 'สร้างเรซูเม่', href: 'resume.html' }
             ]));
             ul.appendChild(createMobileMenuItem('เกี่ยวกับเรา', [
-                { text: 'ติดต่อเรา', href: 'contact.html' }
+                { text: 'เกี่ยวกับเรา', href: 'aboutus.html' }
             ]));
             ul.appendChild(createMobileMenuItem('สมัครสมาชิก', [
                 { text: 'สำหรับผู้หางาน', href: 'login-jobseeker.html?mode=register' },
@@ -504,6 +853,44 @@ document.addEventListener('DOMContentLoaded', () => {
             ]));
             navList.appendChild(ul);
             panel.appendChild(navList);
+        }
+
+        // ── Font Size Control inside panel ──
+        const fszSection = document.createElement('div');
+        fszSection.className = 'mobile-nav-fsz';
+        fszSection.innerHTML = `
+            <div class="mobile-nav-fsz-label">ขนาดตัวอักษร</div>
+            <div class="mobile-nav-fsz-btns">
+                <button class="mobile-fsz-btn" data-size="sm" aria-label="ตัวอักษรขนาดเล็ก">A<span>เล็ก</span></button>
+                <button class="mobile-fsz-btn mobile-fsz-active" data-size="md" aria-label="ตัวอักษรขนาดปกติ">A<span>กลาง</span></button>
+                <button class="mobile-fsz-btn" data-size="lg" aria-label="ตัวอักษรขนาดใหญ่">A<span>ใหญ่</span></button>
+            </div>`;
+        // sync active state with saved size
+        const _savedFsz = localStorage.getItem('jobnble-font-size') || 'md';
+        fszSection.querySelectorAll('.mobile-fsz-btn').forEach(btn => {
+            btn.classList.toggle('mobile-fsz-active', btn.dataset.size === _savedFsz);
+            btn.addEventListener('click', () => {
+                const size = btn.dataset.size;
+                document.documentElement.className = document.documentElement.className
+                    .replace(/\bfont-(sm|md|lg)\b/g, '').trim();
+                if (size !== 'md') document.documentElement.classList.add('font-' + size);
+                localStorage.setItem('jobnble-font-size', size);
+                fszSection.querySelectorAll('.mobile-fsz-btn').forEach(b =>
+                    b.classList.toggle('mobile-fsz-active', b.dataset.size === size));
+                // sync desktop control too
+                document.querySelectorAll('.fsz-option').forEach(o => {
+                    o.classList.toggle('fsz-active', o.dataset.size === size);
+                    o.setAttribute('aria-checked', o.dataset.size === size ? 'true' : 'false');
+                });
+            });
+        });
+        // ใส่ fszSection หลัง userSection (ถ้า login) หรือหลัง navList (ถ้ายังไม่ login)
+        if (panel._appendFszHere) {
+            // logged in: insert after userSection (index 1), before navList (index 2)
+            const navListEl = panel.querySelector('nav');
+            panel.insertBefore(fszSection, navListEl);
+        } else {
+            panel.appendChild(fszSection);
         }
 
         document.body.appendChild(panel);
@@ -558,58 +945,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevButton = document.querySelector('.left-btn');
         const dotsNav = document.querySelector('.carousel-nav');
         const dots = dotsNav ? Array.from(dotsNav.children) : [];
+        let carouselIndex = 0;
 
         if (slides.length > 0) {
             slides.forEach((slide, i) => slide.setAttribute('aria-label', `ข่าวที่ ${i + 1} จาก ${slides.length}`));
-            const slideWidth = slides[0].getBoundingClientRect().width;
-            slides.forEach((slide, index) => slide.style.left = slideWidth * index + 'px');
 
-            const moveToSlide = (track, current, target) => {
-                if (!target) return;
-                track.style.transform = 'translateX(-' + target.style.left + ')';
-                current.classList.remove('current-slide');
-                target.classList.add('current-slide');
-                announce(`กำลังแสดง ${target.getAttribute('aria-label')}`);
-            }
+            // คำนวณ + วาง left ใหม่ทุกครั้ง (รองรับ resize)
+            const initSlides = () => {
+                const w = track.parentElement.getBoundingClientRect().width || track.getBoundingClientRect().width;
+                slides.forEach((slide, index) => { slide.style.left = w * index + 'px'; });
+            };
+            initSlides();
+            window.addEventListener('resize', initSlides);
 
-            const updateDots = (currentDot, targetDot) => {
-                if (!currentDot || !targetDot) return;
-                currentDot.classList.remove('current-indicator');
-                targetDot.classList.add('current-indicator');
-            }
+            const moveToIndex = (idx) => {
+                const w = track.parentElement.getBoundingClientRect().width || track.getBoundingClientRect().width;
+                track.style.transform = `translateX(-${w * idx}px)`;
+                slides.forEach(s => s.classList.remove('current-slide'));
+                slides[idx].classList.add('current-slide');
+                dots.forEach(d => d.classList.remove('current-indicator'));
+                if (dots[idx]) dots[idx].classList.add('current-indicator');
+                announce(`กำลังแสดง ${slides[idx].getAttribute('aria-label')}`);
+            };
 
-            if (nextButton && prevButton) {
-                nextButton.addEventListener('click', () => {
-                    const currentSlide = track.querySelector('.current-slide');
-                    let nextSlide = currentSlide.nextElementSibling || slides[0];
-                    let nextDot = (dotsNav && dotsNav.querySelector('.current-indicator').nextElementSibling) || dots[0];
-                    moveToSlide(track, currentSlide, nextSlide);
-                    updateDots(dotsNav?.querySelector('.current-indicator'), nextDot);
-                });
-                prevButton.addEventListener('click', () => {
-                    const currentSlide = track.querySelector('.current-slide');
-                    let prevSlide = currentSlide.previousElementSibling || slides[slides.length - 1];
-                    let prevDot = (dotsNav && dotsNav.querySelector('.current-indicator').previousElementSibling) || dots[dots.length - 1];
-                    moveToSlide(track, currentSlide, prevSlide);
-                    updateDots(dotsNav?.querySelector('.current-indicator'), prevDot);
-                });
-            }
-            if (dotsNav) {
-                dotsNav.addEventListener('click', e => {
-                    const targetDot = e.target.closest('button');
-                    if (!targetDot) return;
-                    const targetIndex = dots.findIndex(dot => dot === targetDot);
-                    moveToSlide(track, track.querySelector('.current-slide'), slides[targetIndex]);
-                    updateDots(dotsNav.querySelector('.current-indicator'), targetDot);
-                });
-            }
+            nextButton?.addEventListener('click', () => {
+                carouselIndex = (carouselIndex + 1) % slides.length;
+                moveToIndex(carouselIndex);
+            });
+            prevButton?.addEventListener('click', () => {
+                carouselIndex = (carouselIndex - 1 + slides.length) % slides.length;
+                moveToIndex(carouselIndex);
+            });
+            dotsNav?.addEventListener('click', e => {
+                const targetDot = e.target.closest('button');
+                if (!targetDot) return;
+                carouselIndex = dots.findIndex(d => d === targetDot);
+                moveToIndex(carouselIndex);
+            });
         }
     }
 
     const jobTrack = document.querySelector('.job-track');
     if (jobTrack) {
-        document.querySelector('.job-next-btn')?.addEventListener('click', () => jobTrack.style.transform = 'translateX(calc(-100% - 30px))');
-        document.querySelector('.job-prev-btn')?.addEventListener('click', () => jobTrack.style.transform = 'translateX(0)');
+        const jobCards = jobTrack.querySelectorAll('.job-card');
+        let jobIndex = 0;
+        const getCardWidth = () => {
+            const card = jobCards[0];
+            if (!card) return 0;
+            const style = getComputedStyle(jobTrack);
+            const gap = parseFloat(style.gap) || 12;
+            return card.offsetWidth + gap;
+        };
+        const updateJobSlider = () => {
+            const maxIndex = Math.max(0, jobCards.length - 1);
+            jobIndex = Math.max(0, Math.min(jobIndex, maxIndex));
+            jobTrack.style.transform = `translateX(-${jobIndex * getCardWidth()}px)`;
+        };
+        document.querySelector('.job-next-btn')?.addEventListener('click', () => {
+            jobIndex = (jobIndex + 1 >= jobCards.length) ? 0 : jobIndex + 1;
+            updateJobSlider();
+        });
+        document.querySelector('.job-prev-btn')?.addEventListener('click', () => {
+            jobIndex = (jobIndex - 1 < 0) ? jobCards.length - 1 : jobIndex - 1;
+            updateJobSlider();
+        });
     }
 
     // ==========================================
@@ -917,8 +1316,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const empTrack = document.querySelector('.employer-track');
     if (empTrack) {
-        document.querySelector('.next-employer-btn')?.addEventListener('click', () => empTrack.style.transform = 'translateX(-750px)');
-        document.querySelector('.prev-employer-btn')?.addEventListener('click', () => empTrack.style.transform = 'translateX(0)');
+        const empCards = empTrack.querySelectorAll('.employer-card');
+        let empIndex = 0;
+        const getEmpCardWidth = () => {
+            const card = empCards[0];
+            if (!card) return 0;
+            const gap = parseFloat(getComputedStyle(empTrack).gap) || 32;
+            return card.offsetWidth + gap;
+        };
+        const updateEmpSlider = () => {
+            const maxIndex = Math.max(0, empCards.length - 1);
+            empIndex = Math.max(0, Math.min(empIndex, maxIndex));
+            empTrack.style.transform = `translateX(-${empIndex * getEmpCardWidth()}px)`;
+        };
+        document.querySelector('.next-employer-btn')?.addEventListener('click', () => {
+            empIndex = (empIndex + 1 >= empCards.length) ? 0 : empIndex + 1;
+            updateEmpSlider();
+        });
+        document.querySelector('.prev-employer-btn')?.addEventListener('click', () => {
+            empIndex = (empIndex - 1 < 0) ? empCards.length - 1 : empIndex - 1;
+            updateEmpSlider();
+        });
     }
 
     // ==========================================
@@ -1006,10 +1424,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── Tax ID Validation Helper ──
+    function validateTaxId(value) {
+        return /^\d{13}$/.test(value.trim());
+    }
+    function setTaxFieldState(input, errorEl, isValid) {
+        if (isValid) {
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+            if (errorEl) errorEl.style.display = 'none';
+        } else {
+            input.classList.remove('input-success');
+            input.classList.add('input-error');
+            if (errorEl) errorEl.style.display = 'block';
+        }
+    }
+
+    // Real-time validation on tax input (register form)
+    const taxInput = document.getElementById('emp-reg-tax');
+    const taxError = document.getElementById('tax-error');
+    if (taxInput) {
+        taxInput.addEventListener('input', () => {
+            // allow digits only while typing
+            taxInput.value = taxInput.value.replace(/\D/g, '');
+            if (taxInput.value.length === 0) {
+                taxInput.classList.remove('input-error', 'input-success');
+                if (taxError) taxError.style.display = 'none';
+            } else {
+                setTaxFieldState(taxInput, taxError, validateTaxId(taxInput.value));
+            }
+        });
+        taxInput.addEventListener('blur', () => {
+            if (taxInput.value.length > 0) {
+                setTaxFieldState(taxInput, taxError, validateTaxId(taxInput.value));
+            }
+        });
+    }
+
     const empRegisterForm = document.getElementById('employer-register-form');
     if (empRegisterForm) {
         empRegisterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            // Validate tax ID before submit
+            const taxVal = document.getElementById('emp-reg-tax')?.value || '';
+            if (!validateTaxId(taxVal)) {
+                setTaxFieldState(
+                    document.getElementById('emp-reg-tax'),
+                    document.getElementById('tax-error'),
+                    false
+                );
+                document.getElementById('emp-reg-tax')?.focus();
+                return;
+            }
             const data = {
                 company_name: document.getElementById('emp-reg-company').value,
                 phone: document.getElementById('emp-reg-phone').value,
@@ -1288,6 +1754,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (emailEl) emailEl.value = pending.email || '';
         }
 
+        // Real-time validation on complete-profile tax input
+        const cTaxInputEl = document.getElementById('complete-emp-tax');
+        const cTaxErrorEl = document.getElementById('complete-tax-error');
+        if (cTaxInputEl) {
+            cTaxInputEl.addEventListener('input', () => {
+                cTaxInputEl.value = cTaxInputEl.value.replace(/\D/g, '');
+                if (cTaxInputEl.value.length === 0) {
+                    cTaxInputEl.classList.remove('input-error', 'input-success');
+                    if (cTaxErrorEl) cTaxErrorEl.style.display = 'none';
+                } else {
+                    setTaxFieldState(cTaxInputEl, cTaxErrorEl, validateTaxId(cTaxInputEl.value));
+                }
+            });
+            cTaxInputEl.addEventListener('blur', () => {
+                if (cTaxInputEl.value.length > 0)
+                    setTaxFieldState(cTaxInputEl, cTaxErrorEl, validateTaxId(cTaxInputEl.value));
+            });
+        }
+
         completeProfileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const errorEl = document.getElementById('complete-profile-error');
@@ -1301,6 +1786,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!company || !phone || !address || !tax_id) {
                 if (errorEl) { errorEl.textContent = 'กรุณากรอกข้อมูลให้ครบทุกช่อง'; errorEl.style.display = 'block'; }
                 announce('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+            if (!validateTaxId(tax_id)) {
+                const cTaxInput = document.getElementById('complete-emp-tax');
+                const cTaxError = document.getElementById('complete-tax-error');
+                if (cTaxInput) setTaxFieldState(cTaxInput, cTaxError, false);
+                if (errorEl) { errorEl.textContent = 'เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก'; errorEl.style.display = 'block'; }
+                cTaxInput?.focus();
                 return;
             }
 
@@ -2114,7 +2607,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (type === 'edu') {
                                 html = `<div class="form-row"><div class="form-col"><label class="form-label">ระดับการศึกษา</label><select class="form-input custom-select edu-level"><option value="" disabled selected>— เลือกระดับการศึกษา —</option><option>มัธยมศึกษาตอนปลาย / ปวช.</option><option>ปวส.</option><option>ปริญญาตรี</option><option>ปริญญาโท</option></select></div><div class="form-col"><label class="form-label">ชื่อสถาบันการศึกษา</label><input type="text" class="form-input edu-inst" placeholder="เช่น มหาวิทยาลัย..."></div></div><div class="form-row"><div class="form-col"><label class="form-label">คณะ / สาขาวิชา</label><input type="text" class="form-input edu-major" placeholder="เช่น บริหารธุรกิจ"></div><div class="form-col"><label class="form-label">เกรดเฉลี่ย (GPA)</label><input type="text" class="form-input edu-gpa" placeholder="เช่น 3.50"></div></div>`;
                             } else if (type === 'work') {
-                                html = `<div class="form-row"><div class="form-col"><label class="form-label">ตำแหน่ง</label><input type="text" class="form-input work-title" placeholder="เช่น พนักงานบัญชี"></div><div class="form-col"><label class="form-label">ชื่อบริษัท / องค์กร</label><input type="text" class="form-input work-company"></div></div><div class="form-row"><div class="form-col full-width"><label class="form-label">ระยะเวลาที่ทำงาน</label><input type="text" class="form-input work-duration" placeholder="เช่น 2564 - 2566"></div></div>`;
+                                html = `<div class="form-row"><div class="form-col"><label class="form-label">ตำแหน่ง</label><input type="text" class="form-input work-title" placeholder="เช่น พนักงานบัญชี"></div><div class="form-col"><label class="form-label">ชื่อบริษัท / องค์กร</label><input type="text" class="form-input work-company"></div></div><div class="form-row"><div class="form-col full-width"><label class="form-label">ระยะเวลาที่ทำงาน</label><input type="text" class="form-input work-duration" placeholder="เช่น 2 ปี 3 เดือน / ม.ค. 66 - มี.ค. 67 / 6 เดือน"></div></div>`;
                             } else if (type === 'intern') {
                                 html = `<div class="form-row"><div class="form-col"><label class="form-label">ตำแหน่งฝึกงาน</label><input type="text" class="form-input intern-title"></div><div class="form-col"><label class="form-label">ชื่อบริษัท / องค์กร</label><input type="text" class="form-input intern-company"></div></div><div class="form-row"><div class="form-col full-width"><label class="form-label">ระยะเวลาฝึกงาน</label><input type="text" class="form-input intern-duration" placeholder="เช่น มิ.ย. 66 - ส.ค. 66"></div></div>`;
                             } else if (type === 'activity') {
@@ -2251,8 +2744,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="form-row">
                     <div class="form-col full-width">
-                        <label class="form-label" for="work-time-${uid}">ระยะเวลาที่ทำงาน (ปี - ปี)</label>
-                        <input type="text" id="work-time-${uid}" class="form-input work-duration" placeholder="เช่น 2564 - 2566">
+                        <label class="form-label" for="work-time-${uid}">ระยะเวลาที่ทำงาน</label>
+                        <input type="text" id="work-time-${uid}" class="form-input work-duration" placeholder="เช่น 2 ปี 3 เดือน / ม.ค. 66 - มี.ค. 67 / 6 เดือน">
                     </div>
                 </div>
             `;
@@ -3169,240 +3662,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     </svg>
                     <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
                     <h3 style="color:#ea580c; margin-top:20px; font-size: 20px;">⚙️ ระบบกำลังวิเคราะห์และจัดอันดับงานที่เหมาะสมที่สุด...</h3>
-                    <p style="color:#666; margin-top:10px; font-size: 15px;">กำลังใช้ Algorithm คำนวณความสอดคล้องของทักษะและประเมินด้วย AI</p>
+                    <p style="color:#666; margin-top:10px; font-size: 15px;">กำลังคำนวณความสอดคล้องของทักษะ...</p>
                 </div>
             `;
 
-            // 1. ดึงข้อมูลงาน
-            const res = await fetch('http://localhost:3000/api/jobs');
-            const jobs = await res.json();
-            
-            // 🚨 เพิ่มตัวดักจับ Error จากฐานข้อมูล
-            if (jobs.error) {
-                throw new Error("ฐานข้อมูลมีปัญหา: " + jobs.error);
-            }
-            if (!Array.isArray(jobs)) {
-                throw new Error("ข้อมูลที่ได้จาก API ไม่ใช่ Array (เช็คการเชื่อมต่อ Database หรือ API)");
-            }
-            
-            // 2. ดึงข้อมูลเรซูเม่
-            const userId = sessionStorage.getItem('userId') || 1;
-            const resumeRes = await fetch(`http://localhost:3000/api/get-resume/${userId}`);
-            const resume = await resumeRes.json();
+            const userId = (sessionStorage.getItem('userId') || '').split(':')[0].trim() || loggedInId;
+            if (!userId) throw new Error('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
 
-            if (resume.error) {
-                throw new Error("โหลดข้อมูลเรซูเม่ไม่ได้: " + resume.error);
-            }
+            const res = await fetch(`http://localhost:3000/api/rank-jobs/${userId}`);
+            const ranked = await res.json();
 
-            // --- คำนวณ Rule-Based Score ---
-            // --- 1. คำนวณ Rule-Based Score สำหรับทุกงาน (Algorithm 100 คะแนนเต็ม) ---
-            let rankedJobs = jobs.map(job => {
-                let score = 0;
-                let reasons = [];
+            if (ranked.error) throw new Error(ranked.error);
+            if (!Array.isArray(ranked)) throw new Error('ข้อมูลไม่ถูกต้อง กรุณาลองใหม่');
 
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 1: ความสอดคล้องด้านความพิการ (Disability Match) - 20 คะแนน
-                // =========================================================
-                const reqDisType = job.disability_type || '';
-                const myDisType = resume.disability_type || '';
-                if (reqDisType.includes('รับทุกประเภท') || reqDisType.includes(myDisType) || (myDisType && reqDisType.includes(myDisType))) {
-                    score += 20;
-                    reasons.push(`✔️ สภาพแวดล้อมรองรับความพิการของคุณ (+20)`);
-                } else {
-                    reasons.push(`⚠️ สภาพแวดล้อมอาจยังไม่รองรับโดยตรง (0)`);
-                }
+            sessionStorage.setItem('aiMatchedJobs', JSON.stringify(ranked));
+            renderRankedJobs(ranked);
 
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 2: ความตรงกันของตำแหน่งงาน (Position Match) - 20 คะแนน
-                // =========================================================
-                let posScore = 0;
-                const expectedPos = (resume.job_position || '').toLowerCase(); // ตำแหน่งที่ผู้สมัครคาดหวัง
-                const jobTitle = (job.job_title || '').toLowerCase(); // ชื่อตำแหน่งของบริษัท
-                const jobCat = (job.job_category || '').toLowerCase(); // หมวดหมู่งานของบริษัท
-
-                // เช็คว่าชื่อตำแหน่งที่ตั้งเป้าไว้ ตรงกับชื่อประกาศงานหรือหมวดหมู่หรือไม่
-                if (expectedPos && (jobTitle.includes(expectedPos) || expectedPos.includes(jobTitle) || jobCat.includes(expectedPos))) {
-                    posScore = 20;
-                    reasons.push(`🎯 ตำแหน่งงานตรงกับที่คุณคาดหวังไว้ (+20)`);
-                } else {
-                    // ถ้าไม่ตรงเป๊ะ ให้ค้นหาจากประวัติการทำงาน (Experience) ว่าเคยทำสายนี้ไหม
-                    const parseSafe = (str) => { try { return typeof str === 'string' ? JSON.parse(str || '[]') : (str || []); } catch(e) { return []; } };
-                    const workExp = parseSafe(resume.work_experience);
-                    let hasRelatedExp = false;
-                    
-                    workExp.forEach(exp => {
-                        const oldTitle = (exp.title || '').toLowerCase();
-                        if (oldTitle && (jobTitle.includes(oldTitle) || jobCat.includes(oldTitle))) hasRelatedExp = true;
-                    });
-
-                    if (hasRelatedExp) {
-                        posScore = 15;
-                        reasons.push(`💼 มีประสบการณ์ทำงานเก่าที่ตรงกับสายงานนี้ (+15)`);
-                    } else {
-                        posScore = 0; 
-                        reasons.push(`🔹 ตำแหน่งนี้เป็นสายงานใหม่สำหรับคุณ (+0)`);
-                    }
-                }
-                score += posScore;
-
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 3: ทักษะที่ต้องการ (Skills Match) - 20 คะแนน
-                // =========================================================
-                let skillScore = 0;
-                const mySkills = (resume.skills || '').toLowerCase();
-                const reqSkillsArr = (job.req_skills || '').split(',').map(s => s.trim().toLowerCase()).filter(s => s);
-
-                if (reqSkillsArr.length > 0 && mySkills) {
-                    let matchCount = 0;
-                    reqSkillsArr.forEach(req => {
-                        if (mySkills.includes(req)) matchCount++;
-                    });
-                    // ทักษะที่ตรง / ทักษะที่ขอทั้งหมด * 20 คะแนน
-                    skillScore = Math.floor((matchCount / reqSkillsArr.length) * 20);
-                    score += skillScore;
-                    if(skillScore > 0) reasons.push(`💡 มีทักษะตรงตามที่ตำแหน่งงานต้องการ ${matchCount} อย่าง (+${skillScore})`);
-                    else reasons.push(`⚠️ ทักษะอาจจะยังไม่ตรงกับที่ระบุไว้ (0)`);
-                } else if (reqSkillsArr.length === 0) {
-                    skillScore = 20;
-                    score += skillScore; // ถ้านายจ้างไม่ระบุทักษะ ให้คะแนนเต็มหมวดนี้
-                    reasons.push(`💡 นายจ้างไม่ได้ระบุทักษะเฉพาะทาง (+20)`);
-                }
-
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 4: สถานที่ทำงาน / ระยะทาง (Location Match) - 15 คะแนน
-                // =========================================================
-                let locScore = 0;
-                const myProvince = (resume.province || '').trim(); // จังหวัดของผู้สมัคร
-                const jobLocation = (job.job_location || '').trim(); // สถานที่ทำงาน
-                const jobType = (job.job_type || '').toLowerCase();
-
-                if (jobType.includes('work from home') || jobType.includes('wfh')) {
-                    locScore = 15; // WFH ทำจากที่ไหนก็ได้ ให้เต็ม
-                    reasons.push(`🏠 เป็นงาน Work From Home สามารถทำจากที่บ้านได้ (+15)`);
-                } else if (myProvince && jobLocation.includes(myProvince)) {
-                    locScore = 15; // จังหวัดเดียวกัน เดินทางสะดวก
-                    reasons.push(`📍 สถานที่ทำงานอยู่ในจังหวัดเดียวกับคุณ (+15)`);
-                } else {
-                    locScore = 5; // ต่างจังหวัด หรืออาจต้องเดินทาง
-                    reasons.push(`🚗 สถานที่ทำงานอยู่ต่างพื้นที่ (+5)`);
-                }
-                score += locScore;
-
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 5: ความคาดหวังเรื่องเงินเดือน (Salary Match) - 15 คะแนน
-                // =========================================================
-                let salaryScore = 0;
-                // สกัดเฉพาะตัวเลขเงินเดือนที่ผู้สมัครคาดหวัง เช่น "15000"
-                const expectedSalaryStr = (resume.expected_salary || '').replace(/,/g, '').match(/\d+/);
-                const expectedSalary = expectedSalaryStr ? parseInt(expectedSalaryStr[0]) : 0;
-
-                // สกัดตัวเลขเงินเดือนจากประกาศงาน (หาค่า Max) เช่น "15,000 - 20,000" ดึง 20000
-                const jobSalaryStr = (job.salary || '').replace(/,/g, '');
-                const jobSalaryNums = jobSalaryStr.match(/\d+/g);
-                const jobMaxSalary = jobSalaryNums ? Math.max(...jobSalaryNums.map(Number)) : 0;
-
-                if (jobSalaryStr.includes('ตามตกลง') || expectedSalary === 0) {
-                    salaryScore = 10; // ไม่ระบุตัวเลขที่ชัดเจน ให้คะแนนกลางๆ
-                    reasons.push(`💰 เงินเดือนพิจารณาตามตกลง (+10)`);
-                } else if (jobMaxSalary >= expectedSalary) {
-                    salaryScore = 15; // เงินเดือนของบริษัท ครอบคลุมที่ผู้สมัครหวังไว้
-                    reasons.push(`💰 ฐานเงินเดือนสอดคล้องกับความคาดหวังของคุณ (+15)`);
-                } else {
-                    salaryScore = 5; // เงินเดือนบริษัทให้น้อยกว่าที่หวัง
-                    reasons.push(`💰 ฐานเงินเดือนอาจต่ำกว่าที่คาดหวังเล็กน้อย (+5)`);
-                }
-                score += salaryScore;
-
-                // =========================================================
-                // 🛠️ เกณฑ์ที่ 6: ประวัติการศึกษา (Education Match) - 10 คะแนน
-                // =========================================================
-                let eduScore = 0;
-                const parseSafeEdu = (str) => { try { return typeof str === 'string' ? JSON.parse(str || '[]') : (str || []); } catch(e) { return []; } };
-                const eduHist = parseSafeEdu(resume.education_history);
-
-                const jobDescQual = (job.job_desc || '').toLowerCase(); // รายละเอียดและคุณสมบัติของบริษัท
-                const jobCatEdu   = (job.job_category || '').toLowerCase(); // หมวดหมู่งาน
-
-                if (eduHist.length > 0) {
-                    const myMajor = (eduHist[0].major || '').toLowerCase(); // สาขาที่จบ
-                    const myLevel = (eduHist[0].level || '').toLowerCase(); // ระดับการศึกษา
-
-                    // 🔍 เปรียบเทียบที่ 1: สาขาที่จบตรงกับหมวดหมู่งาน หรือรายละเอียดงานไหม?
-                    if (myMajor && (jobCatEdu.includes(myMajor) || jobDescQual.includes(myMajor) || myMajor.includes(jobCatEdu.split('/')[0]))) {
-                        eduScore = 10;
-                        reasons.push(`🎓 สาขาวิชาที่จบ (${eduHist[0].major}) ตรงกับสายงานนี้ (+10)`);
-                    }
-                    // 🔍 เปรียบเทียบที่ 2: ระดับวุฒิการศึกษาตรงกับที่บริษัทระบุไว้ไหม?
-                    else if (myLevel && jobDescQual.includes(myLevel)) {
-                        eduScore = 8;
-                        reasons.push(`🎓 ระดับวุฒิการศึกษา (${eduHist[0].level}) ตรงกับที่ระบุไว้ (+8)`);
-                    }
-                    // มีประวัติการศึกษาแต่ไม่ตรงสายงาน
-                    else {
-                        eduScore = 5;
-                        reasons.push(`🎓 มีประวัติการศึกษาขั้นพื้นฐาน (+5)`);
-                    }
-                }
-                score += eduScore;
-
-                // คะแนนรวม 100
-                score = Math.min(score, 100);
-
-                return { ...job, matchScore: score, matchDetails: reasons };
-            });
-
-            // --- เรียงลำดับงาน ---
-            rankedJobs.sort((a, b) => b.matchScore - a.matchScore);
-
-            // --- ดึง AI มาช่วยสรุปคำแนะนำ (Top 10) ---
-            const eduStr = JSON.stringify(resume.education_history || []);
-            const expStr = "ทำงาน: " + JSON.stringify(resume.work_experience || []) + " ฝึกงาน: " + JSON.stringify(resume.intern_experience || []);
-            const skillStr = resume.skills || '';
-
-            const topJobsCount = Math.min(10, rankedJobs.length);
-            for (let i = 0; i < topJobsCount; i++) {
-                let job = rankedJobs[i];
-                try {
-                    const aiRes = await fetch('http://localhost:3000/api/get-ai-match', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            job_title: job.job_title || '',
-                            job_desc: job.job_desc || '',
-                            req_skills: job.req_skills || '',
-                            education_history: eduStr,
-                            experience_and_activities: expStr,
-                            skills_and_custom_skills: skillStr,
-                            inspiration_message: '' 
-                        })
-                    });
-                    
-                    const aiData = await aiRes.json();
-                    
-                    if (aiData && aiData.match_reasons && Array.isArray(aiData.match_reasons)) {
-                        const aiSummaries = aiData.match_reasons
-                            .filter(r => r.length > 10) 
-                            .slice(0, 1) 
-                            .map(r => "🤖 AI สรุปจุดเด่น: " + r.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')); 
-                        
-                        job.matchDetails = [...aiSummaries, ...job.matchDetails];
-                    }
-                } catch(e) {
-                    console.log("ข้ามการสรุปด้วย AI เนื่องจากเชื่อมต่อไม่ได้");
-                }
-            }
-
-            sessionStorage.setItem('aiMatchedJobs', JSON.stringify(rankedJobs));
-            renderRankedJobs(rankedJobs);
-
-        } catch (error) { 
-            console.error("🔥 Error Detail:", error); 
-            // 🚨 อัปเดตให้แสดง Error ออกมาบนหน้าจอแบบชัดเจน!
+        } catch (error) {
+            console.error('🔥 Error Detail:', error);
             rankListContainer.innerHTML = `
                 <div style="text-align:center; padding: 40px; width: 100%; border: 2px dashed #ef4444; border-radius: 12px; background: #fef2f2;">
-                    <h3 style="color:#ef4444; margin-bottom: 10px;">❌ โปรแกรมหยุดทำงานกะทันหัน</h3>
+                    <h3 style="color:#ef4444; margin-bottom: 10px;">❌ โหลดข้อมูลไม่สำเร็จ</h3>
                     <p style="color:#7f1d1d; font-weight: 600; font-size: 16px;">สาเหตุ: ${error.message}</p>
-                    <p style="color:#666; font-size: 14px; margin-top: 15px;">(รบกวนแคปข้อความภาษาอังกฤษหลังคำว่า "สาเหตุ:" มาให้ผมดูได้เลยครับ จะได้จับจุดพังได้ 100%)</p>
                 </div>
             `;
         }
@@ -3467,108 +3748,203 @@ document.addEventListener('DOMContentLoaded', () => {
                             `โดยมีสิ่งอำนวยความสะดวก: <strong>${accom}</strong>`;
                     }
 
-                    // 2. ดึงเรซูเม่ + เรียก AI match
+                    // 2. วิเคราะห์ความเหมาะสมจาก calcMatchScore (บันทึก DB)
                     const aiReasonSection = document.getElementById('ai-match-reason-section');
                     const aiReasonsList = document.getElementById('render-ai-reasons');
                     const aiLoadingState = document.getElementById('ai-loading-state');
 
-                    // ── helpers ──
                     const hideLoading = () => { if (aiLoadingState) aiLoadingState.style.display = 'none'; };
-                    const showList = () => { if (aiReasonsList) aiReasonsList.style.display = 'block'; };
+                    const showList    = () => { if (aiReasonsList) aiReasonsList.style.display = 'block'; };
 
-                    const showAiFallback = () => {
-                        hideLoading();
-                        if (aiReasonSection) aiReasonSection.style.display = 'block';
-                        showList();
-                        if (aiReasonsList) aiReasonsList.innerHTML = '<li>ไม่สามารถวิเคราะห์ได้ในขณะนี้</li>';
-                    };
+                    let resumeData = null;
 
                     if (loggedInId) {
                         try {
-                            const resumeRes = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
-                            const resumeData = await resumeRes.json();
+                            if (aiReasonSection) aiReasonSection.style.display = 'block';
 
-                            if (resumeData && (resumeData.first_name || resumeData.skills)) {
-                                // ── แสดง section + loading state ทันทีก่อนเรียก AI ──
-                                if (aiReasonSection) aiReasonSection.style.display = 'block';
+                            // ── เรียก API วิเคราะห์ (ใช้ calcMatchScore + cache DB) ──
+                            const analysisRes = await fetch(`http://localhost:3000/api/match-analysis/${loggedInId}/${r5JobId}`);
+                            const analysisData = await analysisRes.json();
 
-                                // ── แปลง JSON fields จาก DB (อาจเป็น string หรือ array) ──
-                                const toStr = (v) => typeof v === 'string' ? v : JSON.stringify(v || []);
-                                const eduStr = toStr(resumeData.education_history);
-                                const workStr = toStr(resumeData.work_experience);
-                                const internStr = toStr(resumeData.intern_experience);
+                            // โหลด resumeData สำหรับใช้ใน popup ด้านล่าง
+                            try {
+                                const rRes = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
+                                resumeData = await rRes.json();
+                            } catch(_) {}
 
-                                // ── flat format ตรงกับ MatchData ใน main.py ──
-                                const aiBody = JSON.stringify({
-                                    job_title: job.job_title || '',
-                                    job_desc: job.job_desc || '',
-                                    req_skills: job.req_skills || '',
-                                    education_history: eduStr,
-                                    experience_and_activities: `ทำงาน: ${workStr} ฝึกงาน: ${internStr}`,
-                                    skills_and_custom_skills: resumeData.skills || '',
-                                    inspiration_message: resumeData.summary || ''
-                                });
+                            hideLoading();
+                            showList();
 
-                                const aiPromise = fetch('http://localhost:3000/api/get-ai-match', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: aiBody
-                                });
-                                const timeoutPromise = new Promise((_, reject) =>
-                                    setTimeout(() => reject(new Error('AI timeout')), 10000)
-                                );
+                            if (analysisData.error === 'no_resume') {
+                                if (aiReasonsList) {
+                                    aiReasonsList.style.listStyle = 'none';
+                                    aiReasonsList.style.paddingLeft = '0';
+                                    aiReasonsList.innerHTML = '<li>กรุณาสร้างเรซูเม่ก่อนเพื่อดูการวิเคราะห์</li>';
+                                }
+                            } else if (analysisData.ai_narrative) {
+                                // ── แสดง AI narrative เป็นย่อหน้า ──
+                                if (aiReasonsList) {
+                                    aiReasonsList.style.listStyle = 'none';
+                                    aiReasonsList.style.paddingLeft = '0';
+                                    aiReasonsList.innerHTML = `
+                                        <li style="margin-bottom:16px;line-height:1.9;font-size:15px;color:#374151;">
+                                            ${analysisData.ai_narrative}
+                                        </li>
+                                        <li>
+                                            <details style="margin-top:8px;">
+                                                <summary style="cursor:pointer;font-size:13px;color:#ea580c;font-weight:600;">
+                                                    ดูรายละเอียดคะแนนแต่ละเกณฑ์
+                                                </summary>
+                                                <ul style="margin-top:10px;padding-left:18px;font-size:13px;color:#6b7280;line-height:1.8;">
+                                                    ${(analysisData.reasons || []).map(r => `<li>${r}</li>`).join('')}
+                                                </ul>
+                                            </details>
+                                        </li>`;
+                                }
+                            } else if (analysisData.reasons && analysisData.reasons.length > 0) {
+                                // fallback: แสดง reasons list ถ้า AI ไม่ตอบ
+                                if (aiReasonsList) aiReasonsList.innerHTML =
+                                    analysisData.reasons.map(r => `<li style="margin-bottom:8px;">${r}</li>`).join('');
+                            } else {
+                                if (aiReasonsList) aiReasonsList.innerHTML = '<li>ไม่พบข้อมูลการวิเคราะห์</li>';
+                            }
 
-                                try {
-                                    const aiRes = await Promise.race([aiPromise, timeoutPromise]);
-                                    const aiData = await aiRes.json();
-                                    const reasons = (aiData && Array.isArray(aiData.match_reasons))
-                                        ? aiData.match_reasons.filter(r =>
-                                            !r.includes('ระบบ AI') &&
-                                            !r.includes('เกิดข้อผิดพลาด') &&
-                                            !r.includes('ไม่สามารถวิเคราะห์')
-                                        )
-                                        : [];
+                        } catch (analysisErr) {
+                            console.warn('match-analysis error:', analysisErr.message);
+                            hideLoading();
+                            showList();
+                            if (aiReasonsList) aiReasonsList.innerHTML = '<li>ไม่สามารถวิเคราะห์ได้ในขณะนี้</li>';
+                        }
+                    }
 
-                                    hideLoading();
-                                    showList();
-                                    if (reasons.length > 0) {
-                                        aiReasonsList.innerHTML =
-                                            reasons.map(r => `<li style="margin-bottom:8px;">${r}</li>`).join('');
-                                    } else {
-                                        aiReasonsList.innerHTML = '<li>ไม่สามารถวิเคราะห์ได้ในขณะนี้</li>';
-                                    }
-
-                                    // ── แสดง AI tip ถ้าคะแนน ranking ต่ำกว่า 50 ──
+                                                        // ── แสดง popup modal ถ้าคะแนน ranking ต่ำกว่า 50 ──
                                     try {
                                         const cachedRanked = sessionStorage.getItem('aiMatchedJobs');
                                         if (cachedRanked && r5JobId) {
                                             const ranked = JSON.parse(cachedRanked);
                                             const thisJob = ranked.find(j => String(j.id) === String(r5JobId));
                                             if (thisJob && thisJob.matchScore < 50) {
-                                                const details = Array.isArray(thisJob.matchDetails) ? thisJob.matchDetails : [];
-                                                const missing = details.filter(d =>
-                                                    d.includes('(-') || d.includes('ไม่ตรง') || d.includes('ไม่พบ') || d.includes('0/')
-                                                ).slice(0, 2);
-                                                const tipText = missing.length > 0
-                                                    ? `ลองปรับปรุง: ${missing.map(d => d.replace(/[🔧🎓📍💰🏢]/g,'').trim()).join(' · ')}`
-                                                    : 'ลองเพิ่มทักษะและประสบการณ์ในเรซูเม่เพื่อเพิ่มคะแนน';
-                                                const tipEl = document.createElement('div');
-                                                tipEl.style.cssText = 'margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:13px;color:#92400e;display:flex;align-items:flex-start;gap:8px;';
-                                                tipEl.innerHTML = `<span style="flex-shrink:0;font-size:16px;">💡</span><span>คะแนนความเข้ากัน <strong>${thisJob.matchScore}/100</strong> — ${tipText}</span>`;
-                                                if (aiReasonSection) aiReasonSection.appendChild(tipEl);
+                                                // (ยังคงส่งได้แม้คะแนนต่ำ — จะไปอยู่ในช่องไม่ผ่านเกณฑ์ของนายจ้าง)
+
+                                                // ── คำนวณ suggestions โดยตรงจากข้อมูล job + resume ──
+                                                const _EDU_MAP = { any:'ไม่จำกัด', highschool:'ม.6', vocational:'ปวช.', diploma:'ปวส.', bachelor:'ปริญญาตรี', master:'ปริญญาโทขึ้นไป' };
+                                                const _sugg = [];
+
+                                                // 1. ประเภทความพิการ
+                                                if (job.disability_type && !job.disability_type.includes('รับทุกประเภท')) {
+                                                    const myDis = resumeData.disability_type || '';
+                                                    if (!myDis || !job.disability_type.includes(myDis)) {
+                                                        _sugg.push(`♿ ตำแหน่งนี้รับผู้พิการประเภท <strong>"${job.disability_type}"</strong> — กรุณาตรวจสอบข้อมูลความพิการในเรซูเม่ของคุณ`);
+                                                    }
+                                                }
+
+                                                // 2. ระดับความพิการ
+                                                if (job.disability_level) {
+                                                    _sugg.push(`📋 ตำแหน่งนี้ระบุระดับความพิการ <strong>"${job.disability_level}"</strong> — ตรวจสอบว่าระดับของคุณตรงกัน`);
+                                                }
+
+                                                // 3. การศึกษา
+                                                if (job.req_education && job.req_education !== 'any') {
+                                                    const eduLabel = _EDU_MAP[job.req_education] || job.req_education;
+                                                    _sugg.push(`🎓 ต้องการวุฒิการศึกษา <strong>"${eduLabel}"</strong> ขึ้นไป — เพิ่มประวัติการศึกษาให้ครบถ้วนในเรซูเม่`);
+                                                }
+
+                                                // 4. ประสบการณ์
+                                                if (job.req_experience && job.req_experience !== 'ไม่จำเป็น') {
+                                                    _sugg.push(`💼 ต้องการประสบการณ์ <strong>"${job.req_experience}"</strong> — เพิ่มประวัติการทำงานหรือฝึกงานในเรซูเม่`);
+                                                }
+
+                                                // 5. ทักษะที่ขาด
+                                                if (job.req_skills) {
+                                                    const mySkillsLow = (resumeData.skills || '').toLowerCase();
+                                                    const reqSkills = job.req_skills.split(',').map(s => s.trim()).filter(Boolean);
+                                                    const missing = reqSkills.filter(s => !mySkillsLow.includes(s.toLowerCase()));
+                                                    if (missing.length > 0) {
+                                                        _sugg.push(`💡 ทักษะที่ควรเพิ่มในเรซูเม่: <strong>${missing.join(', ')}</strong>`);
+                                                    }
+                                                }
+
+                                                // 6. รูปแบบการทำงาน
+                                                if (job.work_mode && resumeData.preferred_work_mode &&
+                                                    job.work_mode !== 'ยืดหยุ่น / ตามตกลง' &&
+                                                    resumeData.preferred_work_mode !== 'ยืดหยุ่น / ตามตกลง' &&
+                                                    job.work_mode !== resumeData.preferred_work_mode) {
+                                                    _sugg.push(`🏢 งานนี้เป็นรูปแบบ <strong>"${job.work_mode}"</strong> แต่คุณเลือก <strong>"${resumeData.preferred_work_mode}"</strong>`);
+                                                }
+
+                                                // 7. สถานที่
+                                                if (job.job_location && resumeData.province &&
+                                                    !job.job_location.includes(resumeData.province)) {
+                                                    _sugg.push(`📍 งานนี้อยู่ที่ <strong>${job.job_location}</strong> แต่ที่อยู่ของคุณคือ <strong>${resumeData.province}</strong> — พิจารณางานใกล้บ้านหรือ WFH`);
+                                                }
+
+                                                // ถ้าไม่มี suggestions เลย ให้แนะนำทั่วไป
+                                                if (_sugg.length === 0) {
+                                                    _sugg.push('📝 เพิ่มทักษะและประสบการณ์ทำงาน/ฝึกงานให้มากขึ้นในเรซูเม่เพื่อเพิ่มคะแนนความเข้ากัน');
+                                                    _sugg.push('🎓 ระบุประวัติการศึกษาให้ครบถ้วน พร้อมระดับวุฒิที่ชัดเจน');
+                                                }
+
+                                                const _suggestHtml = `
+                                                    <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:16px;margin-bottom:16px;">
+                                                        <p style="font-size:14px;font-weight:700;color:#C2410C;margin:0 0 10px;">💡 สิ่งที่ควรเพิ่มเติมเพื่อเพิ่มคะแนน</p>
+                                                        <ul style="margin:0;padding-left:18px;font-size:13px;color:#7C2D12;line-height:1.9;">
+                                                            ${_sugg.map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('')}
+                                                        </ul>
+                                                    </div>`;
+
+                                                // ── ดึงงานแนะนำจาก server ──
+                                                let _recHtml = '';
+                                                try {
+                                                    const pmRes = await fetch(`http://localhost:3000/api/preview-match/${loggedInId}/${r5JobId}`);
+                                                    const pmData = await pmRes.json();
+                                                    const pmRec = pmData.recommended_jobs || [];
+                                                    if (pmRec.length > 0) {
+                                                        const bgCols = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4'];
+                                                        _recHtml = `<div>
+                                                            <p style="font-size:14px;font-weight:700;color:#1e40af;margin:0 0 10px;">🌟 งานที่เหมาะสมกับคุณมากกว่า</p>
+                                                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                                                ${pmRec.map(j => {
+                                                                    const col = bgCols[(j.id||0) % bgCols.length];
+                                                                    return `<a href="resume5.html?id=${j.id}" style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;text-decoration:none;color:#0f172a;">
+                                                                        <div style="width:36px;height:36px;border-radius:8px;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">${(j.company_name||'JOB').substring(0,3).toUpperCase()}</div>
+                                                                        <div><div style="font-weight:600;font-size:13px;">${j.job_title}</div><div style="font-size:12px;color:#64748b;">${j.company_name} · ${j.matchScore}% เข้ากัน</div></div>
+                                                                    </a>`;
+                                                                }).join('')}
+                                                            </div>
+                                                        </div>`;
+                                                    }
+                                                } catch(_recErr) {}
+
+                                                // ── สร้าง popup modal ──
+                                                const _m = document.createElement('div');
+                                                _m.id = 'r5-low-score-modal';
+                                                _m.setAttribute('role', 'dialog');
+                                                _m.setAttribute('aria-modal', 'true');
+                                                _m.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+                                                _m.innerHTML = `
+                                                    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:520px;margin:40px auto;box-shadow:0 24px 60px rgba(0,0,0,0.25);position:relative;">
+                                                        <button id="r5-modal-close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;" aria-label="ปิด">✕</button>
+                                                        <div style="text-align:center;margin-bottom:20px;">
+                                                            <div style="width:90px;height:90px;border-radius:50%;border:7px solid #ef4444;color:#ef4444;background:#fff7ed;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px;font-weight:800;">${thisJob.matchScore}%</div>
+                                                            <h2 style="font-size:17px;font-weight:700;color:#0f172a;margin:0 0 4px;">คะแนนความเข้ากัน</h2>
+                                                            <p style="font-size:13px;color:#ea580c;font-weight:600;margin:0;">💡 คะแนนต่ำกว่า 50% — เรซูเม่จะอยู่ในกลุ่มไม่ผ่านเกณฑ์คัดเลือกของนายจ้าง</p>
+                                                        </div>
+                                                        ${_suggestHtml}
+                                                        ${_recHtml}
+                                                    </div>
+                                                `;
+                                                document.body.appendChild(_m);
+                                                document.body.style.overflow = 'hidden';
+
+                                                const _closeModal = () => { _m.remove(); document.body.style.overflow = ''; };
+                                                _m.querySelector('#r5-modal-close').addEventListener('click', _closeModal);
+                                                _m.addEventListener('click', e => { if (e.target === _m) _closeModal(); });
+                                                document.addEventListener('keydown', function _r5Esc(e) {
+                                                    if (e.key === 'Escape') { _closeModal(); document.removeEventListener('keydown', _r5Esc); }
+                                                });
                                             }
                                         }
                                     } catch(_) {}
-                                } catch (aiErr) {
-                                    console.warn('AI match skipped (resume5):', aiErr.message);
-                                    showAiFallback();
-                                }
-                            }
-                        } catch (resumeErr) {
-                            console.warn('Resume fetch error (resume5):', resumeErr.message);
-                        }
-                    }
-
                 } catch (err) {
                     console.error('Error loading resume5 job data:', err);
                 }
@@ -3589,6 +3965,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('กรุณาเข้าสู่ระบบก่อนสมัครงาน');
                     return;
                 }
+
+                // (ส่งได้เสมอ ไม่ว่าคะแนนจะเท่าไหร่)
 
                 // ตรวจสอบว่ามีเรซูเม่หรือยัง
                 try {
@@ -4381,6 +4759,133 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        // ── ปุ่ม "คำนวณคะแนน" (btn-calc-match) ──
+        const calcBtn = document.getElementById('btn-calc-match');
+        const matchModal = document.getElementById('match-score-modal');
+        if (calcBtn && matchModal) {
+            calcBtn.addEventListener('click', async () => {
+                if (!loggedInId) {
+                    showToast('กรุณาเข้าสู่ระบบก่อนคำนวณคะแนน', 'error');
+                    return;
+                }
+                if (!jobId) return;
+
+                const origCalcHtml = calcBtn.innerHTML;
+                calcBtn.innerHTML = '⏳ กำลังคำนวณ...';
+                calcBtn.disabled = true;
+
+                try {
+                    const res = await fetch(`http://localhost:3000/api/preview-match/${loggedInId}/${jobId}`);
+                    const data = await res.json();
+
+                    if (data.error === 'no_resume') {
+                        showToast('กรุณาสร้างเรซูเม่ก่อนคำนวณคะแนน', 'error');
+                        calcBtn.innerHTML = origCalcHtml;
+                        calcBtn.disabled = false;
+                        return;
+                    }
+
+                    const score = data.score || 0;
+                    const reasons = data.reasons || [];
+                    const suggestions = data.suggestions || [];
+                    const recommendedJobs = data.recommended_jobs || [];
+                    const isGood = score >= 50;
+
+                    // score ring
+                    const ringEl = document.getElementById('modal-score-ring');
+                    const ringColor = score >= 75 ? '#16a34a' : score >= 50 ? '#3b82f6' : score >= 25 ? '#ea580c' : '#ef4444';
+                    if (ringEl) {
+                        ringEl.textContent = `${score}%`;
+                        ringEl.style.borderColor = ringColor;
+                        ringEl.style.color = ringColor;
+                        ringEl.style.background = isGood ? '#f0fdf4' : '#fff7ed';
+                    }
+
+                    const labelEl = document.getElementById('modal-score-label');
+                    if (labelEl) {
+                        labelEl.textContent = score >= 75 ? '🌟 เหมาะสมมาก' : score >= 50 ? '✅ ผ่านเกณฑ์ สามารถสมัครได้' : score >= 25 ? '⚠️ คะแนนยังไม่เพียงพอ' : '❌ ไม่เหมาะสมกับตำแหน่งนี้';
+                    }
+
+                    // reasons
+                    const reasonsEl = document.getElementById('modal-reasons');
+                    if (reasonsEl) {
+                        reasonsEl.innerHTML = reasons.length > 0
+                            ? `<ul style="margin:0;padding-left:18px;font-size:13px;color:#374151;line-height:1.9;">${reasons.map(r => `<li>${r}</li>`).join('')}</ul>`
+                            : '';
+                    }
+
+                    // suggestions (< 50%)
+                    const suggestWrap = document.getElementById('modal-suggestions-wrap');
+                    const suggestList = document.getElementById('modal-suggestions-list');
+                    if (suggestWrap && suggestList) {
+                        if (!isGood && suggestions.length > 0) {
+                            suggestList.innerHTML = suggestions.map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('');
+                            suggestWrap.style.display = 'block';
+                        } else {
+                            suggestWrap.style.display = 'none';
+                        }
+                    }
+
+                    // recommended jobs (< 50%)
+                    const recWrap = document.getElementById('modal-recommended-wrap');
+                    const recList = document.getElementById('modal-recommended-list');
+                    if (recWrap && recList) {
+                        if (!isGood && recommendedJobs.length > 0) {
+                            const bgCols = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4'];
+                            recList.innerHTML = recommendedJobs.map(j => {
+                                const col = bgCols[(j.id || 0) % bgCols.length];
+                                return `<a href="job-detail.html?id=${j.id}" style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;text-decoration:none;color:#0f172a;">
+                                    <div style="width:36px;height:36px;border-radius:8px;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">${(j.company_name||'JOB').substring(0,3).toUpperCase()}</div>
+                                    <div>
+                                        <div style="font-weight:600;font-size:13px;">${j.job_title}</div>
+                                        <div style="font-size:12px;color:#64748b;">${j.company_name} · ${j.matchScore}% เข้ากัน</div>
+                                    </div>
+                                </a>`;
+                            }).join('');
+                            recWrap.style.display = 'block';
+                        } else {
+                            recWrap.style.display = 'none';
+                        }
+                    }
+
+                    // แสดง notice แต่ไม่ block ปุ่ม — ผู้หางานยังสมัครได้ แต่จะอยู่ในกลุ่มไม่ผ่านเกณฑ์ของนายจ้าง
+                    const blockNoticeEl = document.getElementById('modal-block-notice');
+                    if (blockNoticeEl) blockNoticeEl.style.display = 'none';
+
+                    // show modal
+                    matchModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                    document.getElementById('modal-close-btn')?.focus();
+
+                } catch (err) {
+                    console.error('Error calculating match score:', err);
+                    showToast('ไม่สามารถคำนวณคะแนนได้ กรุณาลองใหม่', 'error');
+                } finally {
+                    calcBtn.innerHTML = origCalcHtml;
+                    calcBtn.disabled = false;
+                }
+            });
+
+            // ปิด modal
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            if (modalCloseBtn) modalCloseBtn.addEventListener('click', () => {
+                matchModal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            matchModal.addEventListener('click', e => {
+                if (e.target === matchModal) {
+                    matchModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && matchModal.style.display !== 'none') {
+                    matchModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+        }
     } // 🟢 ปิดบล็อก if ของ job-detail.html อย่างถูกต้องตรงนี้! 🟢
 
 
@@ -4440,7 +4945,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 score,
                 name: `${app.first_name || ''} ${app.last_name || ''}`.trim(),
                 details,
-                plan: subscriptionPlan
+                plan: subscriptionPlan,
+                seeker_id: app.seeker_id,
+                job_id: app.job_id
             });
 
             // Pay Per Post / Monthly / Yearly — แสดงตัวเลข % + data-app-id
@@ -4461,7 +4968,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ── เปิด Score Detail Modal ──
-        function openScoreModal(appKey) {
+        async function openScoreModal(appKey) {
             const d = _scoreDataMap.get(appKey);
             if (!d) return;
 
@@ -4480,25 +4987,42 @@ document.addEventListener('DOMContentLoaded', () => {
             pctEl.textContent = d.score + '%';
             subEl.textContent = d.name;
 
-            if ((d.plan === 'monthly' || d.plan === 'yearly') && d.details.length > 0) {
-                listEl.innerHTML = d.details.map(item => `<li>${item}</li>`).join('');
+            // แสดง modal ก่อน แล้วค่อยโหลด reasons
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('score-modal-close').focus();
+
+            if (d.plan === 'monthly' || d.plan === 'yearly') {
+                // ── ดึง reasons ใหม่จาก calcMatchScore เสมอ ──
+                listEl.innerHTML = '<li style="color:#94a3b8;">กำลังโหลดรายละเอียด...</li>';
                 listEl.style.display = '';
                 noDetEl.style.display = 'none';
-            } else if (d.plan === 'monthly' || d.plan === 'yearly') {
-                listEl.innerHTML = '';
-                listEl.style.display = 'none';
-                noDetEl.textContent = 'ไม่มีข้อมูลรายละเอียดเพิ่มเติม';
-                noDetEl.style.display = '';
+
+                try {
+                    const res = await fetch(`http://localhost:3000/api/preview-match/${d.seeker_id}/${d.job_id}`);
+                    const data = await res.json();
+                    const freshReasons = (data.reasons || []).filter(r => r && r.trim());
+
+                    if (freshReasons.length > 0) {
+                        listEl.innerHTML = freshReasons.map(item => `<li style="margin-bottom:6px;">${item}</li>`).join('');
+                        listEl.style.display = '';
+                        noDetEl.style.display = 'none';
+                    } else {
+                        listEl.style.display = 'none';
+                        noDetEl.textContent = 'ไม่มีข้อมูลรายละเอียดเพิ่มเติม';
+                        noDetEl.style.display = '';
+                    }
+                } catch (err) {
+                    listEl.style.display = 'none';
+                    noDetEl.textContent = 'ไม่สามารถโหลดรายละเอียดได้';
+                    noDetEl.style.display = '';
+                }
             } else {
                 listEl.innerHTML = '';
                 listEl.style.display = 'none';
                 noDetEl.textContent = 'อัปเกรดเป็น Monthly หรือ Yearly เพื่อดูรายละเอียดการจับคู่';
                 noDetEl.style.display = '';
             }
-
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            document.getElementById('score-modal-close').focus();
         }
 
         // ── ปิด Score Detail Modal ──
@@ -4532,56 +5056,278 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     // Server returns { subscription_plan, apps }
                     const subscriptionPlan = data.subscription_plan || null;
+                    const isPaidPlan = subscriptionPlan === 'monthly' || subscriptionPlan === 'yearly' || subscriptionPlan === 'pay_per_post';
                     const apps = Array.isArray(data.apps) ? data.apps : (Array.isArray(data) ? data : []);
 
-                    // เรียงซ้ำ client-side (safety net: server ควร sort แล้ว)
+                    // เรียง: paid → คะแนน, free → วันที่ล่าสุด
                     apps.sort((a, b) => {
-                        const diff = (b.match_score || 0) - (a.match_score || 0);
-                        return diff !== 0 ? diff : new Date(b.created_at) - new Date(a.created_at);
+                        if (isPaidPlan) {
+                            const diff = (b.match_score || 0) - (a.match_score || 0);
+                            return diff !== 0 ? diff : new Date(b.created_at) - new Date(a.created_at);
+                        }
+                        return new Date(b.created_at) - new Date(a.created_at);
                     });
 
-                    if (apps.length > 0) {
-                        applicantsList.innerHTML = apps.map(app => {
-                            const d = new Date(app.created_at);
-                            const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-                            const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear() + 543}`;
-                            const isUnread = app.status === 'pending';
-                            const nameWeight = isUnread ? '800' : '500';
-                            const dotIndicator = isUnread
-                                ? '<span style="color:#EF4444; margin-right:8px; font-size:12px;">●</span>'
-                                : '';
+                    // ── ฟังก์ชันสร้าง card ผู้สมัคร ──
+                    function buildApplicantCard(app) {
+                        const d = new Date(app.created_at);
+                        const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                        const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()+543}`;
+                        const isUnread = app.status === 'pending';
+                        const isStarred = app.is_starred == 1;
+                        const starColor = isStarred ? '#f59e0b' : '#cbd5e1';
+                        const starFill  = isStarred ? '#f59e0b' : 'none';
+                        const unreadDot = isUnread ? '<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:6px;flex-shrink:0;"></span>' : '';
 
-                            return `
-                                <div class="file-item applicant-item">
-                                    <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+                        return `
+                            <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                                <!-- avatar -->
+                                <div style="width:38px;height:38px;border-radius:50%;background:#e0e7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:15px;color:#4338ca;">
+                                    ${(app.first_name||'?').charAt(0).toUpperCase()}
+                                </div>
+                                <!-- ชื่อ + ตำแหน่ง -->
+                                <a href="profile-em3.html?appId=${app.application_id}&seekerId=${app.seeker_id}"
+                                   onclick="event.preventDefault(); window.markAsViewed(${app.application_id}, this.href);"
+                                   style="flex:1;min-width:0;text-decoration:none;display:flex;flex-direction:column;gap:2px;">
+                                    <div style="display:flex;align-items:center;gap:6px;">
+                                        ${unreadDot}
+                                        <span style="font-weight:${isUnread?'700':'600'};font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            ${app.first_name} ${app.last_name}
+                                        </span>
+                                    </div>
+                                    <span style="font-size:12px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        ${app.job_title}
+                                    </span>
+                                </a>
+                                <!-- คะแนน -->
+                                <div style="flex-shrink:0;">
+                                    ${buildScoreBadge(app, subscriptionPlan)}
+                                </div>
+                                <!-- ปุ่ม star -->
+                                <button class="star-btn" data-app-id="${app.application_id}" data-starred="${isStarred?'1':'0'}"
+                                    title="${isStarred?'ยกเลิก mark':'สนใจ / Mark ไว้ดูทีหลัง'}"
+                                    style="background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0;display:flex;align-items:center;opacity:${isStarred?'1':'0.4'};transition:opacity 0.2s;"
+                                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isStarred?'1':'0.4'}'"
+                                    aria-label="${isStarred?'ยกเลิก mark':'สนใจ / Mark ไว้ดูทีหลัง'}">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="${starFill}" stroke="${starColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                </button>
+                                <!-- วันที่ -->
+                                <div style="flex-shrink:0;text-align:right;min-width:76px;border-left:1px solid #f3f4f6;padding-left:12px;">
+                                    <div style="font-size:12px;color:#374151;font-weight:500;">${dateStr}</div>
+                                    <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${timeStr}</div>
+                                </div>
+                            </div>`;
+                    }
+
+                    if (apps.length > 0) {
+
+                        // ════════════════════════════════════════
+                        // FREE TIER — แสดงแค่รายชื่อ + วันที่ + Mark
+                        // ════════════════════════════════════════
+                        if (!isPaidPlan) {
+                            const freeCards = apps.map(app => {
+                                const d = new Date(app.created_at);
+                                const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()+543}`;
+                                const isUnread = app.status === 'pending';
+                                const isStarred = app.is_starred == 1;
+                                const starColor = isStarred ? '#f59e0b' : '#cbd5e1';
+                                const starFill  = isStarred ? '#f59e0b' : 'none';
+                                const unreadDot = isUnread ? '<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:6px;flex-shrink:0;"></span>' : '';
+                                return `
+                                    <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+                                        <div style="width:38px;height:38px;border-radius:50%;background:#e0e7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:15px;color:#4338ca;">
+                                            ${(app.first_name||'?').charAt(0).toUpperCase()}
+                                        </div>
                                         <a href="profile-em3.html?appId=${app.application_id}&seekerId=${app.seeker_id}"
                                            onclick="event.preventDefault(); window.markAsViewed(${app.application_id}, this.href);"
-                                           class="file-name"
-                                           style="text-decoration:none; color:#1E293B; font-weight:${nameWeight}; transition:color 0.2s;">
-                                            ${dotIndicator}${app.first_name} ${app.last_name}
+                                           style="flex:1;min-width:0;text-decoration:none;display:flex;flex-direction:column;gap:2px;">
+                                            <div style="display:flex;align-items:center;gap:6px;">
+                                                ${unreadDot}
+                                                <span style="font-weight:${isUnread?'700':'600'};font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${app.first_name} ${app.last_name}</span>
+                                            </div>
+                                            <span style="font-size:12px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${app.job_title}</span>
                                         </a>
-                                        <span style="font-size:14px; color:#64748B;">สมัครตำแหน่ง: ${app.job_title}</span>
-                                    </div>
+                                        <button class="star-btn" data-app-id="${app.application_id}" data-starred="${isStarred?'1':'0'}"
+                                            title="${isStarred?'ยกเลิก mark':'สนใจ / Mark ไว้ดูทีหลัง'}"
+                                            style="background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0;display:flex;align-items:center;opacity:${isStarred?'1':'0.4'};transition:opacity 0.2s;"
+                                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isStarred?'1':'0.4'}'"
+                                            aria-label="${isStarred?'ยกเลิก mark':'สนใจ / Mark ไว้ดูทีหลัง'}">
+                                            <svg width="17" height="17" viewBox="0 0 24 24" fill="${starFill}" stroke="${starColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                            </svg>
+                                        </button>
+                                        <div style="flex-shrink:0;text-align:right;min-width:76px;border-left:1px solid #f3f4f6;padding-left:12px;">
+                                            <div style="font-size:12px;color:#374151;font-weight:500;">${dateStr}</div>
+                                            <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${timeStr}</div>
+                                        </div>
+                                    </div>`;
+                            }).join('');
 
-                                    <div style="display:flex; align-items:flex-start; justify-content:center; min-width:180px;">
-                                        ${buildScoreBadge(app, subscriptionPlan)}
+                            // banner แจ้งอัปเกรด
+                            const upgradeBanner = `
+                                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <div style="flex:1;">
+                                        <div style="font-size:13px;font-weight:600;color:#1e40af;">อัปเกรดเพื่อดูคะแนนความเข้ากันและการจัดกลุ่มผู้สมัคร</div>
+                                        <div style="font-size:12px;color:#3b82f6;margin-top:2px;">แพ็คเกจ Monthly / Yearly จะแบ่งกลุ่มผ่าน/ไม่ผ่านเกณฑ์ให้อัตโนมัติ</div>
                                     </div>
+                                    <a href="payment.html" style="background:#1d4ed8;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">ดูแพ็คเกจ</a>
+                                </div>`;
 
-                                    <div style="text-align:right; flex-shrink:0;">
-                                        <div class="file-date">${dateStr}</div>
-                                        <div class="file-time">${timeStr}</div>
+                            applicantsList.innerHTML = upgradeBanner + freeCards;
+
+                            // ผูก star listener
+                            applicantsList.querySelectorAll('.star-btn').forEach(btn => {
+                                btn.addEventListener('click', async (e) => {
+                                    e.preventDefault();
+                                    const appId = btn.dataset.appId;
+                                    try {
+                                        const res = await fetch(`http://localhost:3000/api/toggle-star/${appId}`, { method: 'POST' });
+                                        const d2 = await res.json();
+                                        if (d2.success) {
+                                            const svg = btn.querySelector('svg');
+                                            const isNowStarred = d2.is_starred === 1;
+                                            svg.setAttribute('fill', isNowStarred ? '#f59e0b' : 'none');
+                                            svg.setAttribute('stroke', isNowStarred ? '#f59e0b' : '#cbd5e1');
+                                            btn.dataset.starred = isNowStarred ? '1' : '0';
+                                            btn.style.opacity = isNowStarred ? '1' : '0.4';
+                                            showToast(isNowStarred ? '⭐ Mark ผู้สมัครไว้แล้ว' : 'ยกเลิก mark แล้ว', 'success');
+                                        }
+                                    } catch(err) { console.error('star error:', err); }
+                                });
+                            });
+                            return; // หยุดที่นี่ ไม่ render paid section
+                        }
+
+                        // ════════════════════════════════════════
+                        // PAID TIER — full features
+                        // ════════════════════════════════════════
+                        // แบ่ง 2 กลุ่ม
+                        const highScore = apps.filter(a => (a.match_score || 0) >= 50);
+                        const lowScore  = apps.filter(a => (a.match_score || 0) < 50);
+
+                        const starredCount = apps.filter(a => a.is_starred == 1).length;
+
+                        // ── Summary stats ──
+                        const summaryBar = `
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+                                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                    <div style="width:44px;height:44px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:26px;font-weight:700;color:#111827;line-height:1;">${highScore.length}</div>
+                                        <div style="font-size:12px;color:#6b7280;margin-top:3px;font-weight:500;">ผ่านเกณฑ์คัดเลือก</div>
                                     </div>
                                 </div>
-                            `;
-                        }).join('');
+                                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                    <div style="width:44px;height:44px;border-radius:10px;background:#fffbeb;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:26px;font-weight:700;color:#111827;line-height:1;">${starredCount}</div>
+                                        <div style="font-size:12px;color:#6b7280;margin-top:3px;font-weight:500;">สนใจ / Mark แล้ว</div>
+                                    </div>
+                                </div>
+                                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                                    <div style="width:44px;height:44px;border-radius:10px;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:26px;font-weight:700;color:#111827;line-height:1;">${lowScore.length}</div>
+                                        <div style="font-size:12px;color:#6b7280;margin-top:3px;font-weight:500;">ไม่ผ่านเกณฑ์คัดเลือก</div>
+                                    </div>
+                                </div>
+                            </div>`;
 
-                        // ── ผูก click listener บน badge หลัง innerHTML ถูกเซ็ตแล้ว ──
+                        // ── Tabs ──
+                        const splitSection = `
+                            <div>
+                                <div style="display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:20px;gap:0;">
+                                    <button id="tab-high" onclick="switchTab('high')"
+                                        style="padding:12px 24px;border:none;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:#1e40af;border-bottom:2px solid #1e40af;margin-bottom:-2px;transition:all 0.2s;">
+                                        ผ่านเกณฑ์คัดเลือก
+                                        <span style="background:#1e40af;color:#fff;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700;margin-left:6px;">${highScore.length}</span>
+                                    </button>
+                                    <button id="tab-low" onclick="switchTab('low')"
+                                        style="padding:12px 24px;border:none;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:#9ca3af;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;">
+                                        ไม่ผ่านเกณฑ์คัดเลือก
+                                        <span style="background:#d1d5db;color:#fff;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700;margin-left:6px;">${lowScore.length}</span>
+                                    </button>
+                                </div>
+                                <div id="panel-high">
+                                    ${highScore.length > 0
+                                        ? highScore.map(buildApplicantCard).join('')
+                                        : '<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:14px;">ยังไม่มีผู้สมัครที่ผ่านเกณฑ์</div>'}
+                                </div>
+                                <div id="panel-low" style="display:none;">
+                                    ${lowScore.length > 0
+                                        ? lowScore.map(buildApplicantCard).join('')
+                                        : '<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:14px;">ยังไม่มีผู้สมัครในกลุ่มนี้</div>'}
+                                </div>
+                            </div>`;
+
+                        applicantsList.innerHTML = summaryBar + splitSection;
+
+                        // ── ผูก click listener badge ──
                         applicantsList.querySelectorAll('.score-clickable-badge').forEach(el => {
                             el.addEventListener('click', () => openScoreModal(el.dataset.appId));
                             el.addEventListener('keydown', e => {
                                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openScoreModal(el.dataset.appId); }
                             });
                         });
+
+                        // ── ผูก click listener star ──
+                        applicantsList.querySelectorAll('.star-btn').forEach(btn => {
+                            btn.addEventListener('click', async (e) => {
+                                e.preventDefault();
+                                const appId = btn.dataset.appId;
+                                try {
+                                    const res = await fetch(`http://localhost:3000/api/toggle-star/${appId}`, { method: 'POST' });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        const svg = btn.querySelector('svg');
+                                        const isNowStarred = data.is_starred === 1;
+                                        svg.setAttribute('fill', isNowStarred ? '#f59e0b' : 'none');
+                                        svg.setAttribute('stroke', isNowStarred ? '#f59e0b' : '#cbd5e1');
+                                        btn.dataset.starred = isNowStarred ? '1' : '0';
+                                        btn.title = isNowStarred ? 'ยกเลิก mark' : 'Mark ไว้ดูทีหลัง';
+                                        showToast(isNowStarred ? '⭐ Mark ผู้สมัครไว้แล้ว' : 'ยกเลิก mark แล้ว', 'success');
+                                    }
+                                } catch(err) { console.error('star toggle error:', err); }
+                            });
+                        });
+                        // ── switchTab function ──
+                        window.switchTab = function(tab) {
+                            const high = document.getElementById('panel-high');
+                            const low  = document.getElementById('panel-low');
+                            const btnH = document.getElementById('tab-high');
+                            const btnL = document.getElementById('tab-low');
+                            if (!high || !low || !btnH || !btnL) return;
+
+                            if (tab === 'high') {
+                                high.style.display = 'block';
+                                low.style.display  = 'none';
+                                btnH.style.color       = '#1e40af';
+                                btnH.style.borderBottomColor = '#1e40af';
+                                btnH.querySelector('span').style.background = '#1e40af';
+                                btnL.style.color       = '#9ca3af';
+                                btnL.style.borderBottomColor = 'transparent';
+                                btnL.querySelector('span').style.background = '#d1d5db';
+                            } else {
+                                high.style.display = 'none';
+                                low.style.display  = 'block';
+                                btnL.style.color       = '#1e40af';
+                                btnL.style.borderBottomColor = '#1e40af';
+                                btnL.querySelector('span').style.background = '#1e40af';
+                                btnH.style.color       = '#9ca3af';
+                                btnH.style.borderBottomColor = 'transparent';
+                                btnH.querySelector('span').style.background = '#d1d5db';
+                            }
+                        };
                     } else {
                         applicantsList.innerHTML = '<div style="text-align:center; padding:40px; color:#64748B;">ยังไม่มีเรซูเม่ส่งเข้ามาในขณะนี้</div>';
                     }
@@ -4597,53 +5343,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🌟 21. ฐานข้อมูลเรซูเม่ผู้หางานทั้งหมด (resume-database.html)
     // ==========================================
     if (window.location.pathname.includes('resume-database.html')) {
-        // ── ดึง URL สำหรับ CSS และ Google Fonts แบบ absolute (เพื่อใช้ใน iframe) ──
-        const _styleHref = (document.querySelector('link[rel="stylesheet"][href*="style.css"]') || {}).href || 'style.css';
-        const _fontHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap';
 
-        const rdbGrid = document.getElementById('resume-db-grid');
-        const rdbModal = document.getElementById('resume-db-modal');
-        const rdbPaper = document.getElementById('resume-db-paper');
-        const rdbClose = document.getElementById('resume-db-modal-close');
+        const rdbGrid    = document.getElementById('resume-db-grid');
+        const rdbModal   = document.getElementById('resume-db-modal');
+        const rdbPaper   = document.getElementById('resume-db-paper');
+        const rdbClose   = document.getElementById('resume-db-modal-close');
+        const rdbSearch  = document.getElementById('rdb-search');
+        const rdbType    = document.getElementById('rdb-filter-type');
+        const rdbDis     = document.getElementById('rdb-filter-disability');
+        const rdbClear   = document.getElementById('rdb-clear');
+        const rdbCount   = document.getElementById('resume-db-count');
 
-        // ── สร้าง full HTML document สำหรับเขียนลง iframe ──
-        function buildIframeHtml(data, theme) {
-            const templateSource = document.getElementById(`tpl-${theme}`);
-            if (!templateSource) return '';
-            // clone และ render ข้อมูลจริงลงใน element ที่แยกออกมา (detached)
-            const clone = templateSource.cloneNode(true);
-            clone.classList.add('active');
-            renderRealDataToTemplate(clone, data); // ใช้ tpl.id ภายในฟังก์ชันนี้
-            const renderedHtml = clone.outerHTML;
-            return `<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${_fontHref}" rel="stylesheet">
-<link rel="stylesheet" href="${_styleHref}">
-<style>
-  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 794px; height: 1123px; overflow: hidden; background: #fff; }
-</style>
-</head>
-<body>
-<div class="preview-paper" style="width:794px;height:1123px;overflow:hidden;position:relative;">
-${renderedHtml}
-</div>
-</body>
-</html>`;
-        }
+        const JOB_TYPE_LBL = {
+            fulltime: 'พนักงานประจำ', parttime: 'พาร์ทไทม์',
+            freelance: 'ฟรีแลนซ์', contract: 'สัญญาจ้าง'
+        };
+        const DIS_LBL = {
+            visual: 'ทางการมองเห็น', hearing: 'ทางการได้ยิน',
+            physical: 'ทางกายหรือการเคลื่อนไหว'
+        };
+        const DIS_COLOR = {
+            visual:   { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+            hearing:  { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
+            physical: { bg: '#fff7ed', color: '#ea580c', border: '#fed7aa' }
+        };
 
-        // ── ตรวจสิทธิ์ subscription ก่อนแสดงข้อมูล ──
+        let _allResumes = [];
+
+        // ── User Icon SVG (เหมือนกันทุก card) ──
+        const USER_ICON_SVG = `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="32" cy="32" r="32" fill="#e2e8f0"/>
+            <circle cx="32" cy="26" r="11" fill="#94a3b8"/>
+            <ellipse cx="32" cy="52" rx="18" ry="11" fill="#94a3b8"/>
+        </svg>`;
+
+        // ── ตรวจสิทธิ์ subscription ──
         if (loggedInId) {
             fetch(`http://localhost:3000/api/employer-subscription/${loggedInId}`)
                 .then(r => r.json())
                 .then(sub => {
                     const plan = sub.subscription_plan;
                     if (plan !== 'monthly' && plan !== 'yearly') {
-                        if (rdbGrid) rdbGrid.innerHTML = '<div class="resume-db-empty">คุณต้องมีแพ็คเกจรายเดือนหรือรายปีจึงจะสามารถดูเรซูเม่ผู้หางานได้</div>';
+                        if (rdbGrid) rdbGrid.innerHTML = `
+                            <div class="resume-db-empty">
+                                <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+                                <p style="font-weight:600;color:#0f172a;margin-bottom:6px;">ต้องการแพ็คเกจรายเดือนหรือรายปี</p>
+                                <p style="color:#64748b;font-size:13px;">เพื่อเข้าถึงฐานข้อมูลเรซูเม่ผู้หางานทั้งหมด</p>
+                                <a href="payment.html" style="margin-top:16px;display:inline-block;padding:10px 24px;background:#3b82f6;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">เลือกแพ็คเกจ →</a>
+                            </div>`;
                         return;
                     }
                     loadAllResumes();
@@ -4653,64 +5400,108 @@ ${renderedHtml}
                 });
         }
 
+        function renderCards(list) {
+            if (!rdbGrid) return;
+            if (list.length === 0) {
+                rdbGrid.innerHTML = '<div class="resume-db-empty">ไม่พบเรซูเม่ที่ตรงกับเงื่อนไข</div>';
+                if (rdbCount) rdbCount.textContent = '';
+                return;
+            }
+            if (rdbCount) rdbCount.textContent = `พบ ${list.length} เรซูเม่`;
+            rdbGrid.innerHTML = '';
+            list.forEach(item => {
+                const name     = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'ไม่ระบุชื่อ';
+                const position = item.job_position || 'ไม่ระบุตำแหน่ง';
+                const jobType  = JOB_TYPE_LBL[item.job_type] || item.job_type || '';
+                const disKey   = (item.disability_type || '').toLowerCase();
+                const disLabel = DIS_LBL[disKey] || item.disability_type || '';
+                const disColor = DIS_COLOR[disKey] || { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
+
+                const jobTypeBadge = jobType
+                    ? `<span class="rdb-badge" style="background:#eff6ff;color:#2563eb;border-color:#bfdbfe;">${jobType}</span>`
+                    : '';
+                const disBadge = disLabel
+                    ? `<span class="rdb-badge" style="background:${disColor.bg};color:${disColor.color};border-color:${disColor.border};">${disLabel}</span>`
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = 'rdb-card';
+                card.setAttribute('role', 'listitem');
+                card.dataset.seekerId   = item.seeker_id;
+                card.dataset.name       = name.toLowerCase();
+                card.dataset.position   = position.toLowerCase();
+                card.dataset.jobType    = item.job_type || '';
+                card.dataset.disability = disKey;
+
+                card.innerHTML = `
+                    <div class="rdb-card-avatar">${USER_ICON_SVG}</div>
+                    <div class="rdb-card-info">
+                        <div class="rdb-card-name">${name}</div>
+                        <div class="rdb-card-position">${position}</div>
+                        <div class="rdb-card-badges">${jobTypeBadge}${disBadge}</div>
+                    </div>
+                    <button class="rdb-card-btn" type="button" aria-label="ดูเรซูเม่ของ ${name}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        ดูเรซูเม่
+                    </button>
+                `;
+                card.querySelector('.rdb-card-btn').addEventListener('click', () => openResumeModal(item.seeker_id));
+                rdbGrid.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const q   = (rdbSearch?.value || '').toLowerCase().trim();
+            const typ = rdbType?.value || '';
+            const dis = rdbDis?.value || '';
+            const filtered = _allResumes.filter(item => {
+                const name     = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+                const position = (item.job_position || '').toLowerCase();
+                const matchQ   = !q || name.includes(q) || position.includes(q);
+                const matchTyp = !typ || item.job_type === typ;
+                const matchDis = !dis || (item.disability_type || '').toLowerCase() === dis;
+                return matchQ && matchTyp && matchDis;
+            });
+            renderCards(filtered);
+        }
+
         function loadAllResumes() {
-            fetch('http://localhost:3000/api/all-resumes')
+            fetch(`http://localhost:3000/api/all-resumes?employerId=${loggedInId}`)
                 .then(r => r.json())
                 .then(list => {
                     if (!rdbGrid) return;
+                    if (list && list.error === 'subscription_required') {
+                        rdbGrid.innerHTML = `
+                            <div style="text-align:center;padding:60px 20px;">
+                                <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+                                <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">ต้องการ Subscription</h3>
+                                <p style="font-size:14px;color:#64748b;margin:0 0 20px;">การดูฐานข้อมูลเรซูเม่ทั้งหมดต้องการแพ็คเกจ Monthly หรือ Yearly</p>
+                                <a href="payment.html" style="background:#1d4ed8;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">ดูแพ็คเกจ →</a>
+                            </div>`;
+                        return;
+                    }
                     if (!list || list.length === 0) {
                         rdbGrid.innerHTML = '<div class="resume-db-empty">ยังไม่มีเรซูเม่ผู้หางานในระบบ</div>';
                         return;
                     }
-                    rdbGrid.innerHTML = '';
-                    list.forEach(item => {
-                        const theme = item.selected_template || 'minimal';
-                        const name = `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'ไม่ระบุชื่อ';
+                    _allResumes = list;
+                    renderCards(list);
 
-                        const card = document.createElement('div');
-                        card.className = 'resume-db-card';
-                        card.setAttribute('role', 'listitem');
-                        card.dataset.seekerId = item.seeker_id;
-                        card.innerHTML = `
-                            <div class="resume-db-thumb" aria-hidden="true"></div>
-                            <button type="button" class="resume-db-name">${name}</button>
-                        `;
-                        // click handler ผูกที่ปุ่มชื่อ ไม่ใช่ card ทั้งใบ
-                        card.querySelector('.resume-db-name').addEventListener('click', () => openResumeModal(item.seeker_id));
+                    // ── Auto-open ถ้ามาจากกระดิ่ง ?seeker=X ──
+                    const _autoSeekerId = new URLSearchParams(window.location.search).get('seeker');
+                    if (_autoSeekerId) {
+                        setTimeout(() => openResumeModal(parseInt(_autoSeekerId)), 300);
+                    }
 
-                        // append ก่อนเพื่อให้ layout เกิดขึ้น แล้วค่อยอ่าน offsetWidth
-                        rdbGrid.appendChild(card);
-
-                        const thumbOuter = card.querySelector('.resume-db-thumb');
-                        const thumbWidth = thumbOuter.offsetWidth || 200;
-                        const scaleRatio = thumbWidth / 794;
-
-                        // ตั้ง height ของ wrapper ให้พอดีกับ iframe หลัง scale (A4 height = 1123px)
-                        thumbOuter.style.height = `${Math.round(1123 * scaleRatio)}px`;
-
-                        // สร้าง iframe ขนาด A4 จริง แล้วย่อด้วย transform
-                        const iframeEl = document.createElement('iframe');
-                        iframeEl.scrolling = 'no';
-                        iframeEl.tabIndex = -1;
-                        iframeEl.setAttribute('aria-hidden', 'true');
-                        iframeEl.style.cssText = `width:794px;height:1123px;border:none;display:block;transform:scale(${scaleRatio});transform-origin:top left;`;
-                        thumbOuter.appendChild(iframeEl);
-
-                        // หลังจาก about:blank โหลด → fetch เรซูเม่ → เขียน HTML ลง iframe
-                        iframeEl.onload = () => {
-                            iframeEl.onload = null; // ป้องกัน re-trigger หลัง contentDocument.write()
-                            fetch(`http://localhost:3000/api/get-resume/${item.seeker_id}`)
-                                .then(r => r.json())
-                                .then(data => {
-                                    if (!data || !data.first_name) return;
-                                    const html = buildIframeHtml(data, theme);
-                                    iframeEl.contentDocument.open();
-                                    iframeEl.contentDocument.write(html);
-                                    iframeEl.contentDocument.close();
-                                })
-                                .catch(() => { });
-                        };
-                        iframeEl.src = 'about:blank'; // trigger initial load
+                    // ── ผูก filter events ──
+                    if (rdbSearch) rdbSearch.addEventListener('input', applyFilters);
+                    if (rdbType)   rdbType.addEventListener('change', applyFilters);
+                    if (rdbDis)    rdbDis.addEventListener('change', applyFilters);
+                    if (rdbClear)  rdbClear.addEventListener('click', () => {
+                        if (rdbSearch) rdbSearch.value = '';
+                        if (rdbType)   rdbType.value = '';
+                        if (rdbDis)    rdbDis.value = '';
+                        renderCards(_allResumes);
                     });
                 })
                 .catch(() => {
@@ -4720,11 +5511,7 @@ ${renderedHtml}
 
         function openResumeModal(seekerId) {
             if (!rdbModal || !rdbPaper) return;
-
-            // รีเซ็ต template ก่อน
             rdbPaper.querySelectorAll('.resume-theme-content').forEach(t => t.classList.remove('active'));
-
-            // แสดง modal (loading state)
             rdbModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
 
@@ -4736,7 +5523,7 @@ ${renderedHtml}
                         return;
                     }
                     const savedTheme = data.selected_template || 'minimal';
-                    const targetTpl = rdbPaper.querySelector(`#tpl-${savedTheme}`);
+                    const targetTpl  = rdbPaper.querySelector(`#tpl-${savedTheme}`);
                     if (targetTpl) {
                         targetTpl.classList.add('active');
                         renderRealDataToTemplate(targetTpl, data);
@@ -4748,11 +5535,7 @@ ${renderedHtml}
         }
 
         function closeResumeModal() {
-            if (!rdbModal) return;
-            rdbModal.style.display = 'none';
-            document.body.style.overflow = '';
-            // รีเซ็ต template เพื่อ next open
-            if (rdbPaper) rdbPaper.querySelectorAll('.resume-theme-content').forEach(t => t.classList.remove('active'));
+            if (rdbModal) { rdbModal.style.display = 'none'; document.body.style.overflow = ''; }
         }
 
         if (rdbClose) rdbClose.addEventListener('click', closeResumeModal);
@@ -4902,6 +5685,69 @@ ${renderedHtml}
         if (btnPass) btnPass.addEventListener('click', () => setInterviewResult('approved'));
         if (btnFail) btnFail.addEventListener('click', () => setInterviewResult('rejected'));
     }
+
+
+/* =========================================
+   === SECTION 22: ABOUT US PAGE (aboutus.html) ===
+   - Scroll-reveal for [data-au-reveal] elements
+   - Animated number counters for .au-stat-num
+========================================= */
+(function () {
+    if (!document.querySelector('.au-hero')) return; // only run on aboutus.html
+
+    /* ── 1. Scroll Reveal ── */
+    const revealEls = document.querySelectorAll('[data-au-reveal]');
+    if (revealEls.length) {
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, idx) => {
+                if (entry.isIntersecting) {
+                    // stagger siblings in the same parent
+                    const siblings = [...entry.target.parentElement.querySelectorAll('[data-au-reveal]')];
+                    const i = siblings.indexOf(entry.target);
+                    setTimeout(() => {
+                        entry.target.classList.add('au-visible');
+                    }, i * 120);
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        revealEls.forEach(el => revealObserver.observe(el));
+    }
+
+    /* ── 2. Number Counter Animation ── */
+    function animateCount(el, target, duration) {
+        let start = 0;
+        const step = target / (duration / 16);
+        const tick = () => {
+            start = Math.min(start + step, target);
+            el.textContent = Math.floor(start).toLocaleString('th-TH');
+            if (start < target) requestAnimationFrame(tick);
+            else el.textContent = target.toLocaleString('th-TH');
+        };
+        requestAnimationFrame(tick);
+    }
+
+    const statNums = document.querySelectorAll('.au-stat-num[data-count]');
+    if (statNums.length) {
+        const countObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const target = parseInt(el.dataset.count, 10);
+                    animateCount(el, target, 1800);
+                    countObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.4 });
+
+        statNums.forEach(el => countObserver.observe(el));
+    }
+
+    /* ── 3. Active nav link ── */
+    const aboutLinks = document.querySelectorAll('a[href="aboutus.html"]');
+    aboutLinks.forEach(a => a.style.color = '#013c58');
+})();
 
 
 

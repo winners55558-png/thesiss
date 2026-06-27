@@ -56,7 +56,7 @@
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <ul class="dropdown-menu" id="about-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                        <li role="none"><a role="menuitem" href="aboutus.html">เกี่ยวกับเรา</a></li>
                     </ul>
                 </li>
 
@@ -69,6 +69,17 @@
                     </ul>
                 </li>
             </ul>
+            <div class="font-size-ctrl" role="group" aria-label="ปรับขนาดตัวอักษร">
+                <button class="fsz-toggle" aria-haspopup="listbox" aria-expanded="false" aria-label="ปรับขนาดตัวอักษร: กลาง">
+                    <span class="fsz-toggle__icon" aria-hidden="true">A</span>
+                    <svg class="fsz-toggle__arrow" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul class="fsz-dropdown" role="listbox" aria-label="เลือกขนาดตัวอักษร">
+                    <li role="none"><button class="fsz-option" role="option" data-size="sm" aria-checked="false" aria-label="ตัวอักษรขนาดเล็ก"><span class="fsz-option__sample" aria-hidden="true">A</span>เล็ก</button></li>
+                    <li role="none"><button class="fsz-option fsz-active" role="option" data-size="md" aria-checked="true" aria-label="ตัวอักษรขนาดปกติ"><span class="fsz-option__sample" aria-hidden="true">A</span>กลาง</button></li>
+                    <li role="none"><button class="fsz-option" role="option" data-size="lg" aria-checked="false" aria-label="ตัวอักษรขนาดใหญ่"><span class="fsz-option__sample" aria-hidden="true">A</span>ใหญ่</button></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -90,7 +101,7 @@
                         </div>
                         <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจ Free Trial">
                             <li class="pricing-feature pricing-feature--yes">โพสต์ได้ 3 โพสต์</li>
-                            <li class="pricing-feature pricing-feature--yes">โพสต์มีอายุ 30 วัน</li>
+                            <li class="pricing-feature pricing-feature--yes">โพสต์มีอายุ 15 วัน</li>
                             <li class="pricing-feature pricing-feature--no">ดู score matching ไม่ได้</li>
                             <li class="pricing-feature pricing-feature--no">ดูเรซูเม่ทั้งหมดในแพลตฟอร์มไม่ได้</li>
                         </ul>
@@ -100,19 +111,20 @@
                     <!-- การ์ดที่ 2: Pay Per Post -->
                     <div class="pricing-card" role="listitem">
                         <div class="pricing-card__header">
-                            <div class="pricing-card__price">฿199 <span class="pricing-card__price-unit">/ 15 วัน</span></div>
-                            <div class="pricing-card__price-alt">หรือ ฿349 / 30 วัน</div>
+                            <div class="pricing-card__price">฿299 <span class="pricing-card__price-unit">/ 30 วัน</span></div>
                         </div>
                         <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจ Pay Per Post">
                             <li class="pricing-feature pricing-feature--yes">โพสต์ทีละ 1 ตำแหน่งงาน</li>
+                            <li class="pricing-feature pricing-feature--yes">โพสต์มีอายุ 30 วัน</li>
                             <li class="pricing-feature pricing-feature--yes">ดู score matching ได้</li>
                             <li class="pricing-feature pricing-feature--no">ดูเรซูเม่ทั้งหมดในแพลตฟอร์มไม่ได้</li>
                         </ul>
-                        <a href="payment.html?plan=pay_per_post_15" class="pricing-card__btn" aria-label="เลือกแพ็คเกจ Pay Per Post">เลือกแพ็คเกจนี้</a>
+                        <a href="payment.html?plan=pay_per_post_30" class="pricing-card__btn" aria-label="เลือกแพ็คเกจ Pay Per Post">เลือกแพ็คเกจนี้</a>
                     </div>
 
                     <!-- การ์ดที่ 3: รายเดือน (ไฮไลต์) -->
                     <div class="pricing-card pricing-card--highlight" role="listitem">
+                        <span class="badge-recommended" aria-label="แนะนำ">⭐ Recommended</span>
                         <div class="pricing-card__header pricing-card__header--dark">
                             <h3 class="pricing-card__name">รายเดือน</h3>
                             <div class="pricing-card__price">฿499 <span class="pricing-card__price-unit">/ เดือน</span></div>
@@ -132,11 +144,10 @@
                         <div class="pricing-card__header pricing-card__header--dark">
                             <h3 class="pricing-card__name">รายปี</h3>
                             <div class="pricing-card__price">฿3,990 <span class="pricing-card__price-unit">/ ปี</span></div>
-                            <div class="pricing-card__price-alt">ประหยัดกว่ารายเดือนเกือบ ฿3,000</div>
                         </div>
                         <ul class="pricing-card__features" aria-label="รายละเอียดแพ็คเกจรายปี">
                             <li class="pricing-feature pricing-feature--yes">ทุกอย่างเหมือนรายเดือน</li>
-                            <li class="pricing-feature pricing-feature--yes">เทียบเท่าฟรีเกือบ 4 เดือน</li>
+                            <li class="pricing-feature pricing-feature--yes">เทียบเท่าฟรี 4 เดือน</li>
                             <li class="pricing-feature pricing-feature--yes">badge "Verified Inclusive Employer"</li>
                         </ul>
                         <a href="payment.html?plan=yearly" class="pricing-card__btn pricing-card__btn--light" aria-label="เลือกแพ็คเกจรายปี">เลือกแพ็คเกจนี้</a>
@@ -148,7 +159,7 @@
 
         <section class="employer-cta-section" aria-labelledby="cta-title">
             <div class="employer-cta-container">
-                <h2 class="cta-title" id="cta-title">ปลดล็อกศักยภาพองค์กรด้วยความหลากหลาย</h2>
+                <h2 class="cta-title" id="cta-title">ปลดล็อกศักยภาพองค์กร<br>ด้วยความหลากหลาย</h2>
                 <p class="cta-desc">ร่วมสร้างสรรค์สังคมการทำงานที่เท่าเทียมไปกับเรา ค้นหาบุคลากรผู้พิการที่มีศักยภาพและพร้อมทุ่มเท เพื่อนำมุมมองใหม่ๆ มาช่วยขับเคลื่อนธุรกิจของคุณให้เติบโตอย่างยั่งยืน</p>
                 <a href="post-employer.html" class="cta-btn" aria-label="ไปที่หน้าโพสต์ประกาศงาน">โพสต์ประกาศงานเลย!</a>
             </div>

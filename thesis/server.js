@@ -93,6 +93,7 @@ db.connect(err => {
                     ensureColumn('employers', 'created_at', "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", function () {
                         ensureColumn('applications', 'match_score', "INT DEFAULT 0", function () {
                             ensureColumn('applications', 'match_details', "TEXT DEFAULT NULL", function () {
+                                ensureColumn('applications', 'is_starred', "TINYINT(1) DEFAULT 0", function () {
                                 ensureColumn('jobs_post', 'work_mode', "VARCHAR(50) DEFAULT NULL", function () {
                                     ensureColumn('jobs_post', 'req_education', "VARCHAR(100) DEFAULT NULL", function () {
                                         ensureColumn('jobs_post', 'age_min', "INT DEFAULT NULL", function () {
@@ -110,7 +111,28 @@ db.connect(err => {
                                             if (err) console.error('saved_jobs table error:', err.message);
                                             else console.log('✅ saved_jobs table พร้อมใช้งาน');
                                         });
+
+                                        // ── Auto-create match_analysis table ──
+                                        db.query(`CREATE TABLE IF NOT EXISTS match_analysis (
+                                            id INT AUTO_INCREMENT PRIMARY KEY,
+                                            seeker_id INT NOT NULL,
+                                            job_id INT NOT NULL,
+                                            match_score INT DEFAULT 0,
+                                            reasons JSON,
+                                            ai_narrative TEXT DEFAULT NULL,
+                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                            UNIQUE KEY uk_seeker_job (seeker_id, job_id)
+                                        )`, (err) => {
+                                            if (err) console.error('match_analysis table error:', err.message);
+                                            else {
+                                                console.log('✅ match_analysis table พร้อมใช้งาน');
+                                                // เพิ่ม column ai_narrative ถ้ายังไม่มี (กรณี table มีอยู่แล้ว)
+                                                ensureColumn('match_analysis', 'ai_narrative', 'TEXT DEFAULT NULL', () => {});
+                                            }
+                                        });
                                     });
+                                }); // is_starred
                                                 });
                                             });
                                         });
@@ -146,8 +168,62 @@ const safeJson = (val) => {
 };
 
 // ==========================================
-// 🧮 Rule-Based Match Score (5 หมวด รวม 100 คะแนน)
+// 🧮 Rule-Based Match Score (6 หมวด รวม 100 คะแนน)
 // ==========================================
+
+// ── โหลดพิกัดจังหวัดและอำเภอไทย ──
+const PROVINCES = require('./provinces.json');
+const DISTRICTS = require('./districts.json');
+
+// ── ค้นหาพิกัดระดับอำเภอ (จังหวัด + อำเภอ) ──
+function getDistrictCoords(province, district) {
+    if (!province || !district) return null;
+    const provKey = Object.keys(DISTRICTS).find(p =>
+        province.includes(p) || p.includes(province)
+    );
+    if (!provKey) return null;
+    const distData = DISTRICTS[provKey];
+    const distKey  = Object.keys(distData).find(d =>
+        district.includes(d) || d.includes(district)
+    );
+    return distKey ? distData[distKey] : null;
+}
+
+// ── ค้นหาพิกัดระดับจังหวัด ──
+function getProvinceCoords(text) {
+    if (!text) return null;
+    const t = text.trim();
+    for (const [name, coords] of Object.entries(PROVINCES)) {
+        if (t.includes(name) || name.includes(t)) return coords;
+    }
+    return null;
+}
+
+// ── ค้นหาพิกัดแบบ Smart: ลองอำเภอก่อน → fallback จังหวัด ──
+function getLocationCoords(province, district) {
+    const byDistrict = getDistrictCoords(province, district);
+    if (byDistrict) return byDistrict;
+    return getProvinceCoords(province);
+}
+
+// ── Haversine Distance (คำนวณระยะทางระหว่าง 2 พิกัด หน่วย km) ──
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── Helper: เช็คว่า subscription ยังไม่หมดอายุ ──
+function isSubActive(employer) {
+    if (!employer.subscription_plan) return false;
+    if (!employer.subscription_expires_at) return false;
+    return new Date(employer.subscription_expires_at) > new Date();
+}
+
 function calcMatchScore(resume, job) {
     let score   = 0;
     let reasons = [];
@@ -158,87 +234,272 @@ function calcMatchScore(resume, job) {
         try { return JSON.parse(val); } catch (e) { return []; }
     };
 
+    // ── Synonym Map ทักษะไทย-อังกฤษ ──
+    const SKILL_SYNONYMS = {
+        'graphic design':   ['การออกแบบกราฟิก','ออกแบบกราฟิก','กราฟิก','กราฟิกดีไซน์'],
+        'excel':            ['microsoft excel','ms excel','โปรแกรม excel','สเปรดชีต'],
+        'word':             ['microsoft word','ms word','โปรแกรม word'],
+        'powerpoint':       ['microsoft powerpoint','ms powerpoint','นำเสนองาน'],
+        'accounting':       ['บัญชี','การบัญชี','งานบัญชี'],
+        'programming':      ['เขียนโปรแกรม','โปรแกรมเมอร์','coding','พัฒนาโปรแกรม'],
+        'javascript':       ['js','nodejs','node.js','react','vue'],
+        'data entry':       ['กรอกข้อมูล','บันทึกข้อมูล','ป้อนข้อมูล'],
+        'customer service': ['บริการลูกค้า','ดูแลลูกค้า','ต้อนรับ'],
+        'photoshop':        ['adobe photoshop','ps','ตกแต่งภาพ'],
+        'illustrator':      ['adobe illustrator','ai','งานเวกเตอร์'],
+        'sewing':           ['เย็บผ้า','ตัดเย็บ','งานฝีมือ'],
+        'driving':          ['ขับรถ','ใบขับขี่','driver'],
+    };
+
+    function skillMatch(mySkillsText, reqSkill) {
+        if (mySkillsText.includes(reqSkill)) return true;
+        for (const [eng, thaiList] of Object.entries(SKILL_SYNONYMS)) {
+            const group = [eng, ...thaiList];
+            if (group.some(s => reqSkill.includes(s) || s.includes(reqSkill))) {
+                if (group.some(s => mySkillsText.includes(s))) return true;
+            }
+        }
+        return false;
+    }
+
+    // ── ตารางลำดับวุฒิการศึกษา ──
+    const EDU_RANK = {
+        'ต่ำกว่ามัธยม': 1, 'ประถม': 1,
+        'มัธยม': 2, 'ม.6': 2, 'ปวช': 2, 'ปวช.': 2,
+        'ปวส': 3, 'ปวส.': 3, 'อนุปริญญา': 3,
+        'ปริญญาตรี': 4, 'ป.ตรี': 4,
+        'ปริญญาโท': 5, 'ป.โท': 5,
+        'ปริญญาเอก': 6, 'ป.เอก': 6,
+    };
+
+    function getEduRank(text) {
+        if (!text) return 0;
+        const t = text.toLowerCase();
+        for (const [key, rank] of Object.entries(EDU_RANK)) {
+            if (t.includes(key.toLowerCase())) return rank;
+        }
+        return 0;
+    }
+
+    // ── แปลงข้อความปีประสบการณ์เป็นตัวเลข ──
+    function parseExpYears(text) {
+        if (!text) return 0;
+        const m = text.match(/(\d+)/);
+        return m ? parseInt(m[1]) : 0;
+    }
+
+    // ── นับปีประสบการณ์รวมจาก work_experience ──
+    function countTotalExpYears(workExpArr) {
+        let total = 0;
+        workExpArr.forEach(exp => {
+            const dur = exp.duration || exp.period || '';
+            const yrs = parseExpYears(dur);
+            total += yrs;
+        });
+        return total > 0 ? total : workExpArr.length; // fallback: นับเป็นจำนวนงาน
+    }
+
+    // ══════════════════════════════════════════
     // ── 1. Disability Fit — 20 คะแนน ──
+    // ══════════════════════════════════════════
     const reqDisType = job.disability_type || '';
     const myDisType  = resume.disability_type || '';
-    if (reqDisType.includes('รับทุกประเภท') || (myDisType && reqDisType.includes(myDisType))) {
+    if (!reqDisType || reqDisType.includes('รับทุกประเภท')) {
+        score += 20;
+        reasons.push('✔️ ตำแหน่งนี้เปิดรับผู้พิการทุกประเภท (+20)');
+    } else if (myDisType && reqDisType.includes(myDisType)) {
         score += 20;
         reasons.push('✔️ สภาพแวดล้อมรองรับความพิการของคุณ (+20)');
     } else {
         reasons.push('⚠️ สภาพแวดล้อมอาจยังไม่รองรับโดยตรง (0)');
     }
 
-    // ── 2. Skills Match — 25 คะแนน ──
+    // ══════════════════════════════════════════
+    // ── 2. Skills Match — 20 คะแนน ──
+    //    [แก้ไข] เพิ่ม Synonym Map ไทย-อังกฤษ
+    // ══════════════════════════════════════════
     const mySkills     = (resume.skills || '').toLowerCase();
     const reqSkillsArr = (job.req_skills || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
     if (reqSkillsArr.length > 0 && mySkills) {
         let matchCount = 0;
-        reqSkillsArr.forEach(req => { if (mySkills.includes(req)) matchCount++; });
-        const skillScore = Math.floor((matchCount / reqSkillsArr.length) * 25);
+        reqSkillsArr.forEach(req => { if (skillMatch(mySkills, req)) matchCount++; });
+        const skillScore = Math.floor((matchCount / reqSkillsArr.length) * 20);
         score += skillScore;
         if (skillScore > 0) reasons.push(`💡 มีทักษะตรงตามที่ตำแหน่งงานต้องการ ${matchCount} ทักษะ (+${skillScore})`);
+        else reasons.push('💡 ทักษะยังไม่ตรงกับที่ตำแหน่งงานต้องการ (0)');
+
+        // Bonus: มีทักษะครบ + มีทักษะเพิ่มเติมนอกเหนือจากที่กำหนด
+        const mySkillsArr = mySkills.split(',').map(s => s.trim()).filter(Boolean);
+        if (matchCount === reqSkillsArr.length && mySkillsArr.length > reqSkillsArr.length) {
+            score += 2;
+            reasons.push(`💡 มีทักษะเพิ่มเติมนอกเหนือจากที่กำหนด (+2)`);
+        }
     } else if (reqSkillsArr.length === 0) {
-        score += 25;
+        score += 20;
+        reasons.push('💡 ตำแหน่งงานไม่ได้กำหนดทักษะเฉพาะ (+20)');
     }
 
-    // ── 3. Experience & Activities — 30 คะแนน ──
+    // ══════════════════════════════════════════
+    // ── 3. Experience & Activities — 20 คะแนน ──
+    //    [แก้ไข] ใช้ req_experience เปรียบเทียบปีจริง
+    // ══════════════════════════════════════════
     let expScore = 0;
     let hasExp   = false;
     const workExp   = safeParseJSON(resume.work_experience);
     const internExp = safeParseJSON(resume.intern_experience);
     const actExp    = safeParseJSON(resume.activities);
 
-    if (workExp.length > 0)        { expScore += 15; hasExp = true; }
-    else if (internExp.length > 0) { expScore += 10; hasExp = true; }
-    else if (actExp.length > 0)    { expScore +=  5; }
+    const jobTitle  = (job.job_title    || '').toLowerCase();
+    const jobCat    = (job.job_category || '').toLowerCase();
+    const reqExpTxt = (job.req_experience || '').toLowerCase();
+    const reqExpYrs = parseExpYears(reqExpTxt);
 
-    const jobTitle   = (job.job_title    || '').toLowerCase();
-    const jobCat     = (job.job_category || '').toLowerCase();
-    let isRelevant   = false;
-
+    // ตรวจว่าประสบการณ์ตรงกับตำแหน่งไหม
+    let isRelevant = false;
     const checkRelevance = (arr) => {
         arr.forEach(exp => {
             const title = (exp.title || exp.name || '').toLowerCase();
-            if (title && (jobTitle.includes(title) || title.includes(jobTitle) || jobCat.includes(title.split(' ')[0]))) {
-                isRelevant = true;
-            }
+            if (title && (jobTitle.includes(title) || title.includes(jobTitle) ||
+                jobCat.includes(title.split(' ')[0]))) isRelevant = true;
         });
     };
     checkRelevance(workExp);
     checkRelevance(internExp);
 
-    if (isRelevant) {
-        expScore += 15;
-        reasons.push(`💼 มีประวัติการทำงาน/ฝึกงาน ที่เกี่ยวข้องกับตำแหน่งนี้โดยตรง (+${expScore})`);
-    } else if (hasExp) {
-        expScore += 5;
-        reasons.push(`💼 มีประสบการณ์การทำงานขั้นพื้นฐาน (+${expScore})`);
+    if (workExp.length > 0) {
+        hasExp = true;
+        const totalYrs = countTotalExpYears(workExp);
+        if (reqExpYrs > 0) {
+            // นายจ้างกำหนดปี → เปรียบเทียบ
+            if (totalYrs >= reqExpYrs) {
+                expScore += 10;
+                reasons.push(`💼 มีประสบการณ์ ${totalYrs} ปี ตรงตามที่กำหนด (${reqExpYrs} ปี) (+10)`);
+            } else {
+                expScore += 5;
+                reasons.push(`💼 มีประสบการณ์ ${totalYrs} ปี (ต้องการ ${reqExpYrs} ปี) (+5)`);
+            }
+        } else {
+            expScore += 10;
+            reasons.push(`💼 มีประสบการณ์การทำงาน (+10)`);
+        }
+    } else if (internExp.length > 0) {
+        hasExp = true;
+        expScore += 7;
+        reasons.push('💼 มีประสบการณ์ฝึกงาน (+7)');
+    } else if (actExp.length > 0) {
+        expScore += 3;
+        reasons.push('💼 มีกิจกรรม/อาสาสมัคร (+3)');
+    }
+
+    if (isRelevant && hasExp) {
+        expScore = Math.min(expScore + 10, 20);
+        reasons.push(`💼 ประสบการณ์เกี่ยวข้องกับตำแหน่งนี้โดยตรง (+รวม ${expScore})`);
     }
     score += expScore;
 
+    // ══════════════════════════════════════════
     // ── 4. Education Match — 15 คะแนน ──
+    //    [แก้ไข] ใช้ req_education + หาวุฒิสูงสุด
+    // ══════════════════════════════════════════
     let eduScore = 0;
-    const eduHist = safeParseJSON(resume.education_history);
+    const eduHist    = safeParseJSON(resume.education_history);
+    const reqEduTxt  = (job.req_education || '').toLowerCase();
+    const reqEduRank = getEduRank(reqEduTxt);
+
     if (eduHist.length > 0) {
-        eduScore += 8;
-        const major = (eduHist[0].major || '').toLowerCase();
-        if (major && (jobCat.includes(major) || major.includes(jobCat.split('/')[0]))) {
-            eduScore += 7;
-            reasons.push(`🎓 สาขาวิชาที่จบการศึกษาตรงกับหมวดหมู่งาน (+${eduScore})`);
+        // หาวุฒิสูงสุดจากทุกรายการ (ไม่ใช่แค่ชิ้นแรก)
+        let highestRank = 0;
+        let highestMajor = '';
+        eduHist.forEach(edu => {
+            const lvl   = edu.level || edu.degree || '';
+            const major = edu.major || edu.field  || '';
+            const rank  = getEduRank(lvl) || getEduRank(major);
+            if (rank > highestRank) { highestRank = rank; highestMajor = major.toLowerCase(); }
+        });
+
+        // เปรียบเทียบวุฒิกับที่งานต้องการ
+        if (reqEduRank === 0 || highestRank >= reqEduRank) {
+            eduScore += 8; // ผ่านเกณฑ์วุฒิ
         } else {
-            reasons.push(`🎓 มีวุฒิการศึกษาขั้นพื้นฐานตามเกณฑ์ (+${eduScore})`);
+            eduScore += 0; // วุฒิต่ำกว่าที่กำหนด → 0 คะแนน
+            reasons.push(`🎓 วุฒิการศึกษาต่ำกว่าที่ตำแหน่งนี้กำหนด (0)`);
+        }
+
+        // เช็คสาขาตรง
+        if (highestMajor && eduScore >= 8 &&
+            (jobCat.includes(highestMajor) || highestMajor.includes(jobCat.split('/')[0]))) {
+            eduScore += 7;
+            reasons.push(`🎓 สาขาวิชาตรงกับหมวดหมู่งาน (+${eduScore})`);
+        } else if (eduScore >= 8) {
+            reasons.push(`🎓 มีวุฒิการศึกษาตามเกณฑ์ที่กำหนด (+${eduScore})`);
         }
     }
     score += eduScore;
 
-    // ── 5. Attitude / Summary — 10 คะแนน ──
-    let attScore = 0;
-    const summary = resume.summary || '';
-    if (summary.length > 30) attScore += 5;
-    const positiveWords = ['ตั้งใจ', 'พัฒนา', 'เรียนรู้', 'พยายาม', 'รับผิดชอบ', 'พร้อม', 'อดทน', 'สามารถ', 'มุ่งมั่น'];
-    if (positiveWords.some(w => summary.includes(w))) attScore += 5;
-    score += attScore;
-    if (attScore > 0) reasons.push(`✨ มีทัศนคติเชิงบวกและแสดงความตั้งใจในเรซูเม่ (+${attScore})`);
+    // ══════════════════════════════════════════
+    // ── 5. Work Mode Match — 10 คะแนน ──
+    // ══════════════════════════════════════════
+    let workModeScore = 0;
+    const seekerMode = (resume.preferred_work_mode || '').trim();
+    const jobMode    = (job.work_mode || '').trim();
+
+    if (seekerMode && jobMode) {
+        if (jobMode === 'ตามตกลง') {
+            workModeScore = 10;
+            reasons.push('🏢 รูปแบบการทำงานยืดหยุ่น ตามตกลงได้ (+10)');
+        } else if (seekerMode === jobMode) {
+            workModeScore = 10;
+            reasons.push(`🏢 รูปแบบการทำงานตรงกัน: ${jobMode} (+10)`);
+        } else if (seekerMode === 'ตามตกลง') {
+            workModeScore = 8;
+            reasons.push('🏢 ผู้หางานยืดหยุ่นด้านรูปแบบการทำงาน (+8)');
+        } else if (
+            (seekerMode === 'ทำงานที่ออฟฟิศ'           && jobMode === 'ทำที่ออฟฟิศสลับทำที่บ้าน') ||
+            (seekerMode === 'ทำงานที่บ้าน'              && jobMode === 'ทำที่ออฟฟิศสลับทำที่บ้าน') ||
+            (seekerMode === 'ทำที่ออฟฟิศสลับทำที่บ้าน' && jobMode === 'ทำงานที่ออฟฟิศ') ||
+            (seekerMode === 'ทำที่ออฟฟิศสลับทำที่บ้าน' && jobMode === 'ทำงานที่บ้าน')
+        ) {
+            workModeScore = 5;
+            reasons.push('🏢 รูปแบบการทำงานใกล้เคียงกัน (+5)');
+        } else {
+            workModeScore = 0;
+            reasons.push('🏢 รูปแบบการทำงานไม่ตรงกัน (0)');
+        }
+    }
+    score += workModeScore;
+
+    // ══════════════════════════════════════════
+    // ── 6. Location Distance — 15 คะแนน ──
+    //    [แก้ไข] งาน Remote → ได้เต็มโดยไม่คิดระยะทาง
+    // ══════════════════════════════════════════
+    let locationScore = 0;
+    const currentJobMode = (job.work_mode || '').trim();
+
+    if (currentJobMode === 'ทำงานที่บ้าน') {
+        // Remote ไม่มีข้อจำกัดระยะทาง
+        locationScore = 15;
+        reasons.push('📍 งาน Remote ทำจากที่ไหนก็ได้ (+15)');
+    } else {
+        // ลองหาพิกัดระดับอำเภอก่อน → fallback จังหวัด
+        const seekerCoords = getLocationCoords(resume.province, resume.district);
+        const jobCoords    = getProvinceCoords(job.job_location);
+
+        if (seekerCoords && jobCoords) {
+            const dist = haversineDistance(
+                seekerCoords.lat, seekerCoords.lng,
+                jobCoords.lat,    jobCoords.lng
+            );
+            if      (dist <= 10)  { locationScore = 15; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — ใกล้มาก (+15)`); }
+            else if (dist <= 20)  { locationScore = 12; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — ใกล้ (+12)`); }
+            else if (dist <= 30)  { locationScore =  9; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — พอเดินทางได้ (+9)`); }
+            else if (dist <= 40)  { locationScore =  6; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — ค่อนข้างไกล (+6)`); }
+            else if (dist <= 50)  { locationScore =  3; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — ไกลพอสมควร (+3)`); }
+            else                  { locationScore =  0; reasons.push(`📍 ระยะทาง ${dist.toFixed(0)} km — ไกลเกินไป (0)`); }
+        } else {
+            reasons.push('📍 ยังไม่มีข้อมูลจังหวัด (ไม่นับคะแนนส่วนนี้)');
+        }
+    }
+    score += locationScore;
 
     return { score: Math.min(score, 100), reasons };
 }
@@ -339,13 +600,16 @@ app.post('/api/save-resume', (req, res) => {
                     dob=?, disability_type=?, disability_level_visual=?, disability_level_hearing=?, disability_level_physical=?, address=?, sub_district=?, district=?, province=?, zipcode=?,
                     summary=?, skills=?, education_history=?, work_experience=?, intern_experience=?, activities=?, portfolio_url=?,
                     education_level=?, experience=?, portfolio=?, selected_template=?, job_position=?, job_type=?, expected_salary=?, preferred_work_mode=?,
+                    lat=COALESCE(NULLIF(?, ''), lat), lng=COALESCE(NULLIF(?, ''), lng),
                     profile_pic=COALESCE(NULLIF(?, ''), profile_pic)
                     WHERE seeker_id=?`;
 
+                const { lat: seekerLat, lng: seekerLng } = req.body;
                 db.query(updateResume, [
                     safeDob, safeStr(disability_type), safeStr(disability_level_visual), safeStr(disability_level_hearing), safeStr(disability_level_physical), safeStr(address), safeStr(sub_district), safeStr(district), safeStr(province), safeStr(zipcode),
                     safeStr(summary), safeStr(skills), eduStr, workStr, internStr, actStr, safeStr(portfolio_url),
                     safeStr(highestEdu), expStr, '', safeStr(selected_template), safeStr(job_position), safeStr(job_type), safeStr(expected_salary), safeStr(preferred_work_mode),
+                    seekerLat || '', seekerLng || '',
                     safeStr(profile_pic),
                     seeker_id
                 ], (err) => {
@@ -356,13 +620,14 @@ app.post('/api/save-resume', (req, res) => {
                 const insertResume = `INSERT INTO resumes (
                     seeker_id, dob, disability_type, disability_level_visual, disability_level_hearing, disability_level_physical, address, sub_district, district, province, zipcode,
                     summary, skills, education_history, work_experience, intern_experience, activities, portfolio_url,
-                    education_level, experience, portfolio, selected_template, job_position, job_type, expected_salary, preferred_work_mode, profile_pic
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    education_level, experience, portfolio, selected_template, job_position, job_type, expected_salary, preferred_work_mode, lat, lng, profile_pic
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
                 db.query(insertResume, [
                     seeker_id, safeDob, safeStr(disability_type), safeStr(disability_level_visual), safeStr(disability_level_hearing), safeStr(disability_level_physical), safeStr(address), safeStr(sub_district), safeStr(district), safeStr(province), safeStr(zipcode),
                     safeStr(summary), safeStr(skills), eduStr, workStr, internStr, actStr, safeStr(portfolio_url),
-                    safeStr(highestEdu), expStr, '', safeStr(selected_template), safeStr(job_position), safeStr(job_type), safeStr(expected_salary), safeStr(preferred_work_mode), safeStr(profile_pic)
+                    safeStr(highestEdu), expStr, '', safeStr(selected_template), safeStr(job_position), safeStr(job_type), safeStr(expected_salary), safeStr(preferred_work_mode),
+                    seekerLat || null, seekerLng || null, safeStr(profile_pic)
                 ], (err) => {
                      if (err) return res.status(500).json({ error: err.message });
                      res.json({ success: true, message: "บันทึกข้อมูลเรซูเม่และเทมเพลตสำเร็จ!" });
@@ -490,6 +755,17 @@ app.post('/api/save-job', (req, res) => {
 
     const combined_job_desc = `รายละเอียดงาน:\n${job_description}\n\nคุณสมบัติผู้สมัคร:\n${job_qualifications}`;
 
+    // ── Step 0: ตรวจสอบ KYC ก่อนทุกอย่าง ──
+    db.query('SELECT verification_status FROM employers WHERE id = ?', [employer_id], (kycErr, kycRows) => {
+        if (kycErr || kycRows.length === 0) return res.status(500).json({ success: false, error: 'ไม่พบข้อมูลนายจ้าง' });
+        if (kycRows[0].verification_status !== 'approved') {
+            return res.status(403).json({ success: false, error: 'KYC_PENDING', message: 'บัญชีของคุณยังไม่ผ่านการยืนยันตัวตน (KYC) กรุณารอแอดมินอนุมัติก่อนโพสต์งาน' });
+        }
+        continuePostJob();
+    });
+
+    function continuePostJob() {
+
     // ── Step 1: ดึงข้อมูล employer เพื่อตรวจสิทธิ์การโพสต์ ──
     db.query(
         'SELECT subscription_plan, subscription_expires_at, created_at FROM employers WHERE id = ?',
@@ -519,7 +795,7 @@ app.post('/api/save-job', (req, res) => {
                     if (cntErr) return res.status(500).json({ success: false, error: cntErr.message });
                     const postCount = cntRows[0].cnt;
                     if (postCount < 3) {
-                        doInsert(new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000));
+                        doInsert(new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000)); // Free Trial: 15 วัน
                     } else {
                         res.json({ success: false, error: 'ครบโควต้า Free Trial แล้ว (3/3 โพสต์) กรุณาซื้อแพ็คเกจเพื่อโพสต์งานต่อ' });
                     }
@@ -533,12 +809,13 @@ app.post('/api/save-job', (req, res) => {
     );
 
     function doInsert(expires_at) {
+        const { lat: jobLat, lng: jobLng } = req.body;
         const sql = `
             INSERT INTO jobs_post
             (employer_id, job_title, job_category, job_type, disability_type, disability_level,
              salary, job_location, accommodation, job_desc, req_skills, req_experience,
-             req_portfolio, status, expires_at, work_mode, req_education, age_min, age_max)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             req_portfolio, status, expires_at, work_mode, req_education, age_min, age_max, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         db.query(sql, [
             employer_id,
@@ -559,7 +836,9 @@ app.post('/api/save-job', (req, res) => {
             safeStr(work_mode || 'onsite'),
             safeStr(req_education || 'any'),
             age_min ? parseInt(age_min) : null,
-            age_max ? parseInt(age_max) : null
+            age_max ? parseInt(age_max) : null,
+            jobLat || null,
+            jobLng || null
         ], (err, results) => {
             if (err) {
                 console.error("Database Error:", err);
@@ -568,6 +847,7 @@ app.post('/api/save-job', (req, res) => {
             res.json({ success: true, message: "โพสต์ประกาศงานสำเร็จ", job_id: results.insertId });
         });
     }
+    } // end continuePostJob
 });
 
 // ==========================================
@@ -636,8 +916,254 @@ app.post('/api/get-ai-feedback', async (req, res) => {
 });
 
 // ==========================================
+// ==========================================
+// 📊 API วิเคราะห์ความเหมาะสม + บันทึก DB
+// GET /api/match-analysis/:seekerId/:jobId
+// ==========================================
+app.get('/api/match-analysis/:seekerId/:jobId', async (req, res) => {
+    const { seekerId, jobId } = req.params;
+
+    // ── ดึงจาก cache ใน DB ก่อน ──
+    db.query(
+        'SELECT match_score, reasons, ai_narrative FROM match_analysis WHERE seeker_id = ? AND job_id = ?',
+        [seekerId, jobId],
+        async (cErr, cRows) => {
+            if (!cErr && cRows.length > 0 && cRows[0].ai_narrative) {
+                const cached = cRows[0];
+                const reasons = typeof cached.reasons === 'string'
+                    ? JSON.parse(cached.reasons) : (cached.reasons || []);
+                return res.json({ score: cached.match_score, reasons, ai_narrative: cached.ai_narrative, cached: true });
+            }
+
+            // ── ไม่มี cache → คำนวณใหม่ ──
+            db.query('SELECT * FROM resumes WHERE seeker_id = ?', [seekerId], async (rErr, rRows) => {
+                if (rErr) return res.status(500).json({ error: rErr.message });
+                if (!rRows.length) return res.json({ error: 'no_resume' });
+
+                db.query(
+                    'SELECT j.*, e.company_name FROM jobs_post j JOIN employers e ON j.employer_id = e.id WHERE j.id = ?',
+                    [jobId],
+                    async (jErr, jRows) => {
+                        if (jErr) return res.status(500).json({ error: jErr.message });
+                        if (!jRows.length) return res.json({ error: 'no_job' });
+
+                        const job = jRows[0];
+                        const { score, reasons } = calcMatchScore(rRows[0], job);
+
+                        // ── สร้าง narrative จาก template (ใช้เสมอเป็น fallback) ──
+                        function buildNarrative(score, reasons, jobTitle, companyName) {
+                            const strengths = reasons.filter(r => r.includes('(+') && !r.includes('(+0)') && !r.includes('(0)'));
+                            const weaknesses = reasons.filter(r => r.includes('(0)') || r.includes('อาจยังไม่') || r.includes('ไม่ตรง') || r.includes('ต่ำกว่า'));
+
+                            const level = score >= 75 ? 'สูงมาก' : score >= 50 ? 'ดี' : score >= 25 ? 'ปานกลาง' : 'น้อย';
+
+                            const strengthTexts = {
+                                '✔️': 'สภาพแวดล้อมการทำงานรองรับคุณได้เป็นอย่างดี',
+                                '💡': 'ทักษะของคุณตรงกับความต้องการของตำแหน่งนี้',
+                                '💼': 'ประสบการณ์ที่มีสอดคล้องกับงานนี้',
+                                '🎓': 'วุฒิการศึกษาของคุณเป็นที่ยอมรับสำหรับตำแหน่งนี้',
+                                '🏢': 'รูปแบบการทำงานตรงกับที่คุณต้องการ',
+                                '📍': 'ที่ตั้งงานสะดวกสำหรับคุณ',
+                            };
+
+                            let strengthSentence = '';
+                            const matchedStrengths = [];
+                            for (const [emoji, text] of Object.entries(strengthTexts)) {
+                                if (strengths.some(r => r.startsWith(emoji))) matchedStrengths.push(text);
+                            }
+                            if (matchedStrengths.length > 0) {
+                                strengthSentence = matchedStrengths.slice(0, 2).join(' และ');
+                            }
+
+                            let intro = '';
+                            if (score >= 75) intro = `คุณมีความเหมาะสมกับตำแหน่ง ${jobTitle} ที่ ${companyName} ในระดับสูงมาก`;
+                            else if (score >= 50) intro = `คุณมีคุณสมบัติที่เหมาะสมกับตำแหน่ง ${jobTitle} ที่ ${companyName}`;
+                            else intro = `คุณมีศักยภาพสำหรับตำแหน่ง ${jobTitle} ที่ ${companyName} แต่ยังมีบางด้านที่ควรพัฒนาเพิ่มเติม`;
+
+                            let body = strengthSentence ? ` โดยเฉพาะด้าน${strengthSentence}` : '';
+
+                            let suggest = '';
+                            if (weaknesses.length > 0 && score < 75) {
+                                suggest = ' อย่างไรก็ตาม ควรพิจารณาเพิ่มเติมในบางด้านเพื่อเพิ่มโอกาสในการได้รับการคัดเลือก';
+                            } else if (score >= 75) {
+                                suggest = ' ขอให้โชคดีกับการสมัครงานครั้งนี้';
+                            }
+
+                            return intro + body + suggest + '.';
+                        }
+
+                        // ── เรียก AI สร้าง narrative (ถ้า AI ไม่ได้ ใช้ template แทน) ──
+                        let ai_narrative = '';
+                        try {
+                            const aiRes = await axios.post('http://127.0.0.1:8000/api/ai/analyze-match', {
+                                job_title: job.job_title || '',
+                                company_name: job.company_name || '',
+                                match_score: score,
+                                reasons: reasons
+                            }, { timeout: 10000 });
+                            ai_narrative = aiRes.data?.narrative || '';
+                        } catch (aiErr) {
+                            console.warn('AI analyze-match skipped, using template:', aiErr.message.split('\n')[0]);
+                        }
+
+                        // ถ้า AI ไม่ตอบหรือตอบว่าง → ใช้ template
+                        if (!ai_narrative) {
+                            ai_narrative = buildNarrative(score, reasons, job.job_title || '', job.company_name || '');
+                        }
+
+                        // ── บันทึก cache ลง DB (เฉพาะเมื่อมี narrative) ──
+                        if (ai_narrative) {
+                            db.query(
+                                `INSERT INTO match_analysis (seeker_id, job_id, match_score, reasons, ai_narrative)
+                                 VALUES (?, ?, ?, ?, ?)
+                                 ON DUPLICATE KEY UPDATE match_score=VALUES(match_score), reasons=VALUES(reasons), ai_narrative=VALUES(ai_narrative), updated_at=NOW()`,
+                                [seekerId, jobId, score, JSON.stringify(reasons), ai_narrative],
+                                (insErr) => { if (insErr) console.error('match_analysis insert error:', insErr.message); }
+                            );
+                        }
+
+                        res.json({ score, reasons, ai_narrative, cached: false });
+                    }
+                );
+            });
+        }
+    );
+});
+
+// ==========================================
+// 🏆 API จัดอันดับงานทั้งหมดด้วย calcMatchScore (server-side)
+// GET /api/rank-jobs/:seekerId
+// ==========================================
+app.get('/api/rank-jobs/:seekerId', (req, res) => {
+    const { seekerId } = req.params;
+    db.query('SELECT * FROM resumes WHERE seeker_id = ?', [seekerId], (err, rRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rRows.length) return res.json({ error: 'no_resume' });
+        const resume = rRows[0];
+
+        const sql = `SELECT j.*, e.company_name FROM jobs_post j JOIN employers e ON j.employer_id = e.id WHERE (j.status = 'open' OR j.status IS NULL) AND (j.expires_at > NOW() OR j.expires_at IS NULL)`;
+        db.query(sql, (err2, jobs) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+
+            const ranked = jobs.map(job => {
+                const { score, reasons } = calcMatchScore(resume, job);
+                return {
+                    id: job.id,
+                    job_title: job.job_title,
+                    company_name: job.company_name,
+                    job_type: job.job_type,
+                    job_location: job.job_location,
+                    salary: cleanSalary(job.salary),
+                    disability_type: job.disability_type,
+                    work_mode: job.work_mode,
+                    matchScore: score,
+                    matchDetails: reasons
+                };
+            });
+
+            ranked.sort((a, b) => b.matchScore - a.matchScore);
+            res.json(ranked.slice(0, 10));
+        });
+    });
+});
+
 // 12. API โหลดข้อมูลประกาศงานแบบเจาะจง (1 งาน)
 // ==========================================
+// ==========================================
+// 🧮 API คำนวณ Match Score แบบ Preview (ไม่บันทึก DB)
+// GET /api/preview-match/:seekerId/:jobId
+// ==========================================
+app.get('/api/preview-match/:seekerId/:jobId', (req, res) => {
+    const { seekerId, jobId } = req.params;
+    db.query('SELECT * FROM resumes WHERE seeker_id = ?', [seekerId], (err, rRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rRows.length) return res.json({ error: 'no_resume' });
+        const resume = rRows[0];
+
+        db.query('SELECT j.*, e.company_name FROM jobs_post j JOIN employers e ON j.employer_id = e.id WHERE j.id = ?', [jobId], (err2, jRows) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            if (!jRows.length) return res.json({ error: 'no_job' });
+            const job = jRows[0];
+
+            const { score, reasons } = calcMatchScore(resume, job);
+
+            // สร้างคำแนะนำถ้าคะแนน < 50
+            const EDU_LABEL_MAP = { any:'ไม่จำกัด', highschool:'ม.6', vocational:'ปวช.', diploma:'ปวส. (ประกาศนียบัตรวิชาชีพชั้นสูง)', bachelor:'ปริญญาตรี', master:'ปริญญาโทขึ้นไป' };
+            const suggestions = [];
+            if (score < 50) {
+                // 1. ประเภทความพิการ
+                if (job.disability_type && !job.disability_type.includes('รับทุกประเภท') &&
+                    resume.disability_type && !job.disability_type.includes(resume.disability_type)) {
+                    suggestions.push(`♿ ตำแหน่งนี้รับเฉพาะผู้พิการประเภท "${job.disability_type}" — ตรวจสอบข้อมูลความพิการในเรซูเม่ของคุณ`);
+                }
+                // 2. ระดับความพิการ
+                if (job.disability_level) {
+                    const myDisType = (resume.disability_type || '').toLowerCase();
+                    const myLevel = myDisType.includes('visual') ? resume.disability_level_visual
+                                  : myDisType.includes('hearing') ? resume.disability_level_hearing
+                                  : resume.disability_level_physical || '';
+                    if (myLevel && job.disability_level !== myLevel) {
+                        suggestions.push(`📋 ตำแหน่งนี้ระบุระดับความพิการ "${job.disability_level}" — คุณระบุ "${myLevel}"`);
+                    }
+                }
+                // 3. การศึกษา
+                if (job.req_education && job.req_education !== 'any') {
+                    const eduLabel = EDU_LABEL_MAP[job.req_education] || job.req_education;
+                    suggestions.push(`🎓 ต้องการวุฒิการศึกษาระดับ "${eduLabel}" ขึ้นไป — เพิ่มประวัติการศึกษาในเรซูเม่ให้ครบถ้วน`);
+                }
+                // 4. ประสบการณ์
+                if (job.req_experience) {
+                    suggestions.push(`💼 ต้องการประสบการณ์ทำงาน/ฝึกงาน "${job.req_experience}" — เพิ่มประวัติการทำงานหรือฝึกงานในเรซูเม่`);
+                }
+                // 5. ทักษะที่ขาด
+                if (job.req_skills) {
+                    const mySkillsLow = (resume.skills || '').toLowerCase();
+                    const reqArr = job.req_skills.split(',').map(s => s.trim()).filter(Boolean);
+                    const missing = reqArr.filter(s => !mySkillsLow.includes(s.toLowerCase()));
+                    if (missing.length > 0) {
+                        suggestions.push(`💡 ทักษะที่ควรเพิ่มในเรซูเม่: ${missing.join(', ')}`);
+                    }
+                }
+                // 6. รูปแบบการทำงาน
+                if (job.work_mode && resume.preferred_work_mode &&
+                    job.work_mode !== 'ตามตกลง' && resume.preferred_work_mode !== 'ตามตกลง' &&
+                    job.work_mode !== resume.preferred_work_mode) {
+                    suggestions.push(`🏢 งานนี้เป็นรูปแบบ "${job.work_mode}" แต่คุณเลือก "${resume.preferred_work_mode}" — ลองค้นหางานที่ตรงกับรูปแบบที่คุณต้องการ`);
+                }
+            }
+
+            // หางานที่เหมาะสมกว่า (score >= 50) ถ้าคะแนน < 50
+            if (score < 50) {
+                db.query(
+                    `SELECT j.*, e.company_name
+                     FROM jobs_post j JOIN employers e ON j.employer_id = e.id
+                     WHERE j.status = 'open' AND j.id != ? LIMIT 30`,
+                    [jobId],
+                    (err3, allJobs) => {
+                        if (err3 || !allJobs.length) {
+                            return res.json({ score, reasons, suggestions, recommended_jobs: [] });
+                        }
+                        const scored = allJobs.map(j => ({
+                            id: j.id,
+                            job_title: j.job_title,
+                            company_name: j.company_name,
+                            job_location: j.job_location,
+                            matchScore: calcMatchScore(resume, j).score
+                        }))
+                        .filter(j => j.matchScore >= 50)
+                        .sort((a, b) => b.matchScore - a.matchScore)
+                        .slice(0, 5);
+
+                        res.json({ score, reasons, suggestions, recommended_jobs: scored });
+                    }
+                );
+            } else {
+                res.json({ score, reasons, suggestions, recommended_jobs: [] });
+            }
+        });
+    });
+});
+
 app.get('/api/get-job/:jobId', (req, res) => {
     const sql = `SELECT j.*, e.company_name FROM jobs_post j JOIN employers e ON j.employer_id = e.id WHERE j.id = ?`;
     db.query(sql, [req.params.jobId], (err, results) => {
@@ -815,17 +1341,20 @@ app.get('/api/my-applications/:seekerId', (req, res) => {
 app.get('/api/employer-applications/:employerId', (req, res) => {
     const empId = req.params.employerId;
 
-    // ดึง subscription_plan ของนายจ้างก่อน
+    // ดึง subscription_plan + expiry ของนายจ้างก่อน
     db.query(
-        'SELECT subscription_plan FROM employers WHERE id = ?',
+        'SELECT subscription_plan, subscription_expires_at FROM employers WHERE id = ?',
         [empId],
         (empErr, empRows) => {
             if (empErr) return res.status(500).json({ error: empErr.message });
-            const subscription_plan = empRows.length > 0 ? empRows[0].subscription_plan : null;
+            const emp = empRows.length > 0 ? empRows[0] : {};
+            // ถ้า subscription หมดอายุ → treat as free tier (null)
+            const subscription_plan = isSubActive(emp) ? emp.subscription_plan : null;
 
             const sql = `
                 SELECT a.id AS application_id, a.job_id, a.seeker_id,
                        a.match_score, a.match_details, a.status, a.created_at,
+                       a.is_starred,
                        s.first_name, s.last_name,
                        j.job_title
                 FROM applications a
@@ -895,6 +1424,20 @@ app.get('/api/employer-unread-count/:employerId', (req, res) => {
 // ==========================================
 // 🌟 18. API อัปเดตสถานะใบสมัครเป็น "เปิดอ่านแล้ว" (viewed)
 // ==========================================
+// ── Toggle Star (HR mark ผู้สมัครไว้ดูทีหลัง) ──
+app.post('/api/toggle-star/:appId', (req, res) => {
+    const { appId } = req.params;
+    db.query('SELECT is_starred FROM applications WHERE id = ?', [appId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows.length) return res.status(404).json({ error: 'not found' });
+        const newVal = rows[0].is_starred ? 0 : 1;
+        db.query('UPDATE applications SET is_starred = ? WHERE id = ?', [newVal, appId], (err2) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json({ success: true, is_starred: newVal });
+        });
+    });
+});
+
 app.post('/api/mark-application-viewed', (req, res) => {
     const { application_id } = req.body;
     // อัปเดตเป็น viewed เฉพาะอันที่ยังเป็น pending อยู่
@@ -995,9 +1538,17 @@ app.post('/api/payment/omise', async (req, res) => {
     const { token, plan, employer_id } = req.body;
     if (!plan || !employer_id) return res.status(400).json({ error: 'ข้อมูลไม่ครบถ้วน' });
 
+    // ── KYC guard ──
+    const [kycRows] = await new Promise((resolve, reject) =>
+        db.query('SELECT verification_status FROM employers WHERE id = ?', [employer_id], (e, r) => e ? reject(e) : resolve([r]))
+    ).catch(() => [[]]);
+    if (!kycRows || kycRows.length === 0) return res.status(404).json({ error: 'ไม่พบข้อมูลนายจ้าง' });
+    if (kycRows[0].verification_status !== 'approved') {
+        return res.status(403).json({ success: false, error: 'KYC_PENDING', message: 'บัญชีของคุณยังไม่ผ่านการยืนยันตัวตน (KYC) กรุณารอแอดมินอนุมัติก่อนซื้อแพ็คเกจ' });
+    }
+
     const planConfig = {
-        pay_per_post_15: { satang: 19900,  subscriptionPlan: 'pay_per_post', days: 15  },
-        pay_per_post_30: { satang: 34900,  subscriptionPlan: 'pay_per_post', days: 30  },
+        pay_per_post_30: { satang: 29900,  subscriptionPlan: 'pay_per_post', days: 30  },
         monthly:         { satang: 59900,  subscriptionPlan: 'monthly',      days: 30  },
         yearly:          { satang: 499000, subscriptionPlan: 'yearly',       days: 365 }
     };
@@ -1110,15 +1661,105 @@ app.get('/api/employer-subscription/:employerId', (req, res) => {
 // 🌟 22. ดึงรายชื่อเรซูเม่ผู้หางานทั้งหมด (สำหรับ monthly/yearly)
 // ==========================================
 app.get('/api/all-resumes', (req, res) => {
-    const sql = `
-        SELECT r.seeker_id, js.first_name, js.last_name, r.selected_template
-        FROM resumes r
-        JOIN job_seekers js ON r.seeker_id = js.id
-        ORDER BY js.first_name, js.last_name
-    `;
-    db.query(sql, (err, results) => {
+    const employerId = req.query.employerId;
+    if (!employerId) return res.status(403).json({ error: 'forbidden' });
+
+    // เช็ค subscription ของนายจ้างก่อน
+    db.query('SELECT subscription_plan, subscription_expires_at FROM employers WHERE id = ?', [employerId], (err, empRows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+        const emp = empRows.length > 0 ? empRows[0] : {};
+        if (!isSubActive(emp) || (emp.subscription_plan !== 'monthly' && emp.subscription_plan !== 'yearly')) {
+            return res.status(403).json({ error: 'subscription_required' });
+        }
+
+        const sql = `
+            SELECT r.seeker_id, js.first_name, js.last_name, r.selected_template,
+                   r.job_position, r.job_type, r.disability_type
+            FROM resumes r
+            JOIN job_seekers js ON r.seeker_id = js.id
+            ORDER BY js.first_name, js.last_name
+        `;
+        db.query(sql, (err2, results) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json(results);
+        });
+    });
+});
+
+// ==========================================
+// 🌟 22b. ระบบแจ้งเตือนเรซูเม่ที่ตรงกับงานของนายจ้าง
+// ==========================================
+app.get('/api/employer-match-notifications/:employerId', (req, res) => {
+    const employerId = req.params.employerId;
+
+    // ตรวจสอบ subscription ต้องเป็น monthly หรือ yearly และยังไม่หมดอายุ
+    db.query('SELECT subscription_plan, subscription_expires_at FROM employers WHERE id = ?', [employerId], (err, empRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!empRows.length) return res.json({ allowed: false, count: 0, seekers: [] });
+
+        const emp = empRows[0];
+        const plan = emp.subscription_plan;
+        // หมดอายุหรือไม่ใช่ monthly/yearly → ไม่อนุญาต
+        if (!isSubActive(emp) || (plan !== 'monthly' && plan !== 'yearly')) {
+            return res.json({ allowed: false, count: 0, seekers: [] });
+        }
+
+        // ดึง job_title และ disability_type จากงานที่นายจ้างโพสต์ไว้
+        db.query(
+            'SELECT DISTINCT job_title, disability_type FROM jobs_post WHERE employer_id = ?',
+            [employerId],
+            (err, jobRows) => {
+                if (err) return res.status(500).json({ error: err.message });
+
+                const jobTitles       = jobRows.map(r => r.job_title).filter(Boolean);
+                const disabilityTypes = [...new Set(jobRows.map(r => r.disability_type).filter(Boolean))];
+
+                let sql, params = [];
+
+                if (jobTitles.length > 0 || disabilityTypes.length > 0) {
+                    // มีประกาศงาน → หาเรซูเม่ที่ job_position ตรงกับ job_title หรือ disability_type ตรงกัน
+                    const conditions = [];
+
+                    // match ด้วย job_position LIKE %job_title% (ตำแหน่งที่ต้องการตรงกับประกาศงาน)
+                    if (jobTitles.length > 0) {
+                        const titleConds = jobTitles.map(() => `r.job_position LIKE ?`).join(' OR ');
+                        conditions.push(`(${titleConds})`);
+                        jobTitles.forEach(t => params.push(`%${t}%`));
+                    }
+
+                    // match ด้วย disability_type (ประเภทความพิการตรงกับที่ประกาศรับ)
+                    if (disabilityTypes.length > 0) {
+                        conditions.push(`r.disability_type IN (${disabilityTypes.map(() => '?').join(',')})`);
+                        params.push(...disabilityTypes);
+                    }
+
+                    sql = `
+                        SELECT DISTINCT r.seeker_id, js.first_name, js.last_name,
+                               r.job_position, r.job_type, r.disability_type
+                        FROM resumes r
+                        JOIN job_seekers js ON r.seeker_id = js.id
+                        WHERE ${conditions.join(' OR ')}
+                        ORDER BY js.first_name, js.last_name
+                        LIMIT 10
+                    `;
+                } else {
+                    // ยังไม่มีประกาศงาน → ส่งเรซูเม่ล่าสุด 10 อัน
+                    sql = `
+                        SELECT r.seeker_id, js.first_name, js.last_name,
+                               r.job_position, r.job_type, r.disability_type
+                        FROM resumes r
+                        JOIN job_seekers js ON r.seeker_id = js.id
+                        ORDER BY r.seeker_id DESC
+                        LIMIT 10
+                    `;
+                }
+
+                db.query(sql, params, (err, seekers) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.json({ allowed: true, count: seekers.length, seekers });
+                });
+            }
+        );
     });
 });
 
@@ -1127,13 +1768,81 @@ app.get('/api/all-resumes', (req, res) => {
 // ==========================================
 
 // 22.1 ดึงสถิติภาพรวม (Dashboard Stats)
+// ── Auto-create user_sessions table ──
+db.query(`CREATE TABLE IF NOT EXISTS user_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    user_type ENUM('seeker','employer') NOT NULL,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_user (user_id, user_type)
+)`, err => { if (err) console.error('user_sessions error:', err.message); else console.log('✅ user_sessions table พร้อม'); });
+
+// ── Track activity ──
+app.post('/api/track-activity', (req, res) => {
+    const { user_id, user_type } = req.body;
+    if (!user_id || !user_type) return res.json({ ok: false });
+    db.query(`INSERT INTO user_sessions (user_id, user_type, last_seen) VALUES (?,?,NOW())
+              ON DUPLICATE KEY UPDATE last_seen=NOW()`, [user_id, user_type], err => {
+        if (err) return res.json({ ok: false });
+        res.json({ ok: true });
+    });
+});
+
+// ── Active users (last 5 min) ──
+app.get('/api/admin/active-users', (req, res) => {
+    db.query(`SELECT COUNT(*) AS count FROM user_sessions WHERE last_seen >= NOW() - INTERVAL 5 MINUTE`, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ active: rows[0].count || 0 });
+    });
+});
+
+// ── User growth (daily/monthly/yearly) ──
+app.get('/api/admin/user-growth', (req, res) => {
+    const type = req.query.type || 'monthly'; // daily | monthly | yearly
+    let fmt, interval;
+    if (type === 'daily')   { fmt = '%Y-%m-%d'; interval = 'INTERVAL 30 DAY'; }
+    else if (type === 'yearly') { fmt = '%Y'; interval = 'INTERVAL 5 YEAR'; }
+    else                    { fmt = '%Y-%m'; interval = 'INTERVAL 12 MONTH'; }
+
+    const sql = `
+        SELECT DATE_FORMAT(created_at, '${fmt}') AS period, COUNT(*) AS count
+        FROM (
+            SELECT created_at FROM job_seekers WHERE created_at >= NOW() - ${interval}
+            UNION ALL
+            SELECT created_at FROM employers WHERE created_at >= NOW() - ${interval}
+        ) combined
+        GROUP BY period ORDER BY period ASC`;
+    db.query(sql, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// ── Revenue from subscriptions ──
+app.get('/api/admin/revenue', (req, res) => {
+    const prices = { pay_per_post: 299, monthly: 599, yearly: 4990 };
+    db.query(`SELECT subscription_plan, COUNT(*) AS count FROM employers
+              WHERE subscription_plan IS NOT NULL AND subscription_plan != ''
+              GROUP BY subscription_plan`, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        let total = 0;
+        const breakdown = {};
+        rows.forEach(r => {
+            const price = prices[r.subscription_plan] || 0;
+            const subtotal = price * r.count;
+            breakdown[r.subscription_plan] = { count: r.count, price, subtotal };
+            total += subtotal;
+        });
+        res.json({ total, breakdown });
+    });
+});
+
 app.get('/api/admin/stats', (req, res) => {
     const queries = {
         total_seekers:      'SELECT COUNT(*) AS count FROM job_seekers',
         total_employers:    'SELECT COUNT(*) AS count FROM employers',
         total_jobs:         'SELECT COUNT(*) AS count FROM jobs_post',
         total_applications: 'SELECT COUNT(*) AS count FROM applications',
-        // 🌟 เพิ่มใหม่ 2 ตัว
         total_pending_apps: "SELECT COUNT(*) AS count FROM applications WHERE status = 'pending'",
         total_hired:        "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'"
     };
@@ -1194,6 +1903,18 @@ app.post('/api/admin/login', (req, res) => {
         // ถ้ารหัสผิด
         res.status(401).json({ success: false, message: "ข้อมูลไม่ถูกต้อง" });
     }
+});
+
+// ==========================================
+// 🌟 22.4 API ดึง KYC status สำหรับ employer (frontend check)
+// ==========================================
+app.get('/api/employer/kyc-status', (req, res) => {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'missing id' });
+    db.query('SELECT verification_status FROM employers WHERE id = ?', [id], (err, rows) => {
+        if (err || rows.length === 0) return res.status(404).json({ error: 'not found' });
+        res.json({ verification_status: rows[0].verification_status });
+    });
 });
 
 // ==========================================

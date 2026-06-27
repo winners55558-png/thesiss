@@ -51,7 +51,7 @@
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <ul class="dropdown-menu" id="about-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                        <li role="none"><a role="menuitem" href="aboutus.html">เกี่ยวกับเรา</a></li>
                     </ul>
                 </li>
 
@@ -64,6 +64,17 @@
                     </ul>
                 </li>
             </ul>
+            <div class="font-size-ctrl" role="group" aria-label="ปรับขนาดตัวอักษร">
+                <button class="fsz-toggle" aria-haspopup="listbox" aria-expanded="false" aria-label="ปรับขนาดตัวอักษร: กลาง">
+                    <span class="fsz-toggle__icon" aria-hidden="true">A</span>
+                    <svg class="fsz-toggle__arrow" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul class="fsz-dropdown" role="listbox" aria-label="เลือกขนาดตัวอักษร">
+                    <li role="none"><button class="fsz-option" role="option" data-size="sm" aria-checked="false" aria-label="ตัวอักษรขนาดเล็ก"><span class="fsz-option__sample" aria-hidden="true">A</span>เล็ก</button></li>
+                    <li role="none"><button class="fsz-option fsz-active" role="option" data-size="md" aria-checked="true" aria-label="ตัวอักษรขนาดปกติ"><span class="fsz-option__sample" aria-hidden="true">A</span>กลาง</button></li>
+                    <li role="none"><button class="fsz-option" role="option" data-size="lg" aria-checked="false" aria-label="ตัวอักษรขนาดใหญ่"><span class="fsz-option__sample" aria-hidden="true">A</span>ใหญ่</button></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -190,6 +201,30 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!-- ทางสติปัญญาหรือการเรียนรู้ (ประเภทที่ 5) -->
+                        <div class="disability-card" id="dis-card-cognitive">
+                            <label class="disability-card-header" aria-label="รองรับความพิการทางสติปัญญาหรือการเรียนรู้">
+                                <input type="checkbox" class="disability-main-check" id="dis-cognitive" value="cognitive" onchange="toggleDisabilityLevel('cognitive')">
+                                <span class="disability-name">ทางสติปัญญาหรือการเรียนรู้</span>
+                                <span class="disability-check-indicator" aria-hidden="true"></span>
+                            </label>
+                            <div class="disability-level-section" id="level-cognitive" style="display:none;">
+                                <label class="form-label" for="level-select-cognitive">ระดับสูงสุดที่บริษัทรองรับได้</label>
+                                <select id="level-select-cognitive" class="form-input custom-select disability-level-select" aria-describedby="cognitive-employer-hint">
+                                    <option value="" disabled selected hidden>เลือกระดับสูงสุดที่รองรับ</option>
+                                    <option value="cognitive_1">ระดับ 1 — I.Q. = 80–90 (ปัญญาทึบ)</option>
+                                    <option value="cognitive_2">ระดับ 2 — I.Q. = 70–79 (ปัญญาอ่อนเค้าเส้น)</option>
+                                    <option value="cognitive_3">ระดับ 3 — I.Q. = 50–69 (ปัญญาอ่อนระดับน้อย / สมองเสื่อม)</option>
+                                    <option value="cognitive_4">ระดับ 4 — I.Q. = 35–49 (ปัญญาอ่อนระดับปานกลาง / สมองเสื่อม)</option>
+                                    <option value="cognitive_5">ระดับ 5 — I.Q. &lt; 35 (ปัญญาอ่อนระดับรุนแรง / สมองเสื่อม)</option>
+                                </select>
+                                <p id="cognitive-employer-hint" class="card-hint" style="margin-top:8px;font-size:0.8rem;">
+                                    ระดับ 3–5 อาจเกี่ยวข้องกับภาวะสมองเสื่อม ตามประกาศกระทรวงสาธารณสุข
+                                </p>
+                            </div>
+                        </div>
+
 
                     </div>
 

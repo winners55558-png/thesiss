@@ -93,7 +93,7 @@
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <ul class="dropdown-menu" id="about-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                        <li role="none"><a role="menuitem" href="aboutus.html">เกี่ยวกับเรา</a></li>
                     </ul>
                 </li>
 
@@ -106,6 +106,17 @@
                     </ul>
                 </li>
             </ul>
+            <div class="font-size-ctrl" role="group" aria-label="ปรับขนาดตัวอักษร">
+                <button class="fsz-toggle" aria-haspopup="listbox" aria-expanded="false" aria-label="ปรับขนาดตัวอักษร: กลาง">
+                    <span class="fsz-toggle__icon" aria-hidden="true">A</span>
+                    <svg class="fsz-toggle__arrow" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul class="fsz-dropdown" role="listbox" aria-label="เลือกขนาดตัวอักษร">
+                    <li role="none"><button class="fsz-option" role="option" data-size="sm" aria-checked="false" aria-label="ตัวอักษรขนาดเล็ก"><span class="fsz-option__sample" aria-hidden="true">A</span>เล็ก</button></li>
+                    <li role="none"><button class="fsz-option fsz-active" role="option" data-size="md" aria-checked="true" aria-label="ตัวอักษรขนาดปกติ"><span class="fsz-option__sample" aria-hidden="true">A</span>กลาง</button></li>
+                    <li role="none"><button class="fsz-option" role="option" data-size="lg" aria-checked="false" aria-label="ตัวอักษรขนาดใหญ่"><span class="fsz-option__sample" aria-hidden="true">A</span>ใหญ่</button></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -222,10 +233,46 @@
                 </div>
 
                 <!-- Apply Button -->
-                <div class="job-action-footer">
-                    <button class="btn-submit-job btn-apply-job" id="btn-apply-job" aria-label="สมัครงานตำแหน่งนี้">
+                <div class="job-action-footer" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn-submit-job" id="btn-calc-match"
+                        style="background:#fff;color:#3b82f6;border:2px solid #3b82f6;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;"
+                        aria-label="คำนวณคะแนนความเข้ากัน">
+                        🎯 คำนวณคะแนน
+                    </button>
+                    <button class="btn-submit-job btn-apply-job" id="btn-apply-job" aria-label="สมัครงานตำแหน่งนี้" style="flex:1;">
                         สมัครงานตำแหน่งนี้
                     </button>
+                </div>
+
+                <!-- Match Score Modal -->
+                <div id="match-score-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:9999;padding:16px;overflow-y:auto;align-items:flex-start;justify-content:center;" role="dialog" aria-modal="true" aria-labelledby="modal-score-title">
+                    <div style="background:#fff;border-radius:20px;padding:32px 28px;width:100%;max-width:520px;margin:40px auto;box-shadow:0 24px 60px rgba(0,0,0,0.25);position:relative;">
+                        <button id="modal-close-btn" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;" aria-label="ปิด">✕</button>
+
+                        <div style="text-align:center;margin-bottom:24px;">
+                            <div id="modal-score-ring" style="width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;font-weight:800;border:8px solid #e2e8f0;">-</div>
+                            <h2 id="modal-score-title" style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 4px;">คะแนนความเข้ากัน</h2>
+                            <p id="modal-score-label" style="font-size:14px;color:#64748b;margin:0;"></p>
+                        </div>
+
+                        <div id="modal-reasons" style="margin-bottom:20px;"></div>
+
+                        <div id="modal-suggestions-wrap" style="display:none;">
+                            <div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:16px;margin-bottom:20px;">
+                                <p style="font-size:14px;font-weight:700;color:#C2410C;margin:0 0 10px;">💡 สิ่งที่ควรเพิ่มเติมเพื่อเพิ่มคะแนน</p>
+                                <ul id="modal-suggestions-list" style="margin:0;padding-left:18px;font-size:13px;color:#7C2D12;line-height:1.8;"></ul>
+                            </div>
+                        </div>
+
+                        <div id="modal-recommended-wrap" style="display:none;">
+                            <p style="font-size:14px;font-weight:700;color:#1e40af;margin:0 0 10px;">🌟 งานที่เหมาะสมกับคุณมากกว่า</p>
+                            <div id="modal-recommended-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                        </div>
+
+                        <div id="modal-block-notice" style="display:none;background:#FEE2E2;border:1.5px solid #FECACA;border-radius:12px;padding:14px;margin-top:16px;text-align:center;">
+                            <p style="font-size:13px;color:#991B1B;font-weight:600;margin:0;">⚠️ คะแนนต่ำกว่า 50% — ไม่สามารถส่งใบสมัครงานนี้ได้</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

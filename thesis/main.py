@@ -20,7 +20,7 @@ app.add_middleware(
 RAW_API_KEY = os.getenv("GEMINI_API_KEY", "")
 CLEAN_API_KEY = "".join(RAW_API_KEY.split())
 genai.configure(api_key=CLEAN_API_KEY, transport="rest")
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 class ResumeData(BaseModel):
     content: str
@@ -34,6 +34,12 @@ class MatchData(BaseModel):
     experience_and_activities: str
     skills_and_custom_skills: str
     inspiration_message: str
+
+class MatchAnalysisData(BaseModel):
+    job_title: str
+    company_name: str
+    match_score: int
+    reasons: list[str]
 
 @app.post("/api/ai/coach")
 async def ai_coach(data: ResumeData):
@@ -88,6 +94,52 @@ async def ai_match_job(data: MatchData):
     except Exception as e:
         print(f"🔥 AI Match Error: {e}")
         return {"match_reasons": []}
+
+@app.post("/api/ai/analyze-match")
+async def ai_analyze_match(data: MatchAnalysisData):
+    try:
+        if not CLEAN_API_KEY:
+            print("🔥 No API Key")
+            return {"narrative": ""}
+
+        # กรองเฉพาะข้อความที่เข้าใจง่าย (ตัด emoji และวงเล็บคะแนนออก)
+        def clean_reason(r):
+            import re
+            r = re.sub(r'\([+-]?\d+\)', '', r)  # ลบ (+20) (-5) ออก
+            r = re.sub(r'[\U00010000-\U0010ffff]', '', r)  # ลบ emoji
+            r = re.sub(r'[✔️⚠️💡💼🎓🏢📍]', '', r)
+            return r.strip(' -')
+
+        reasons_clean = [clean_reason(r) for r in data.reasons if clean_reason(r)]
+        reasons_text = "\n".join(f"- {r}" for r in reasons_clean)
+        level = "ดีมาก" if data.match_score >= 75 else "ผ่านเกณฑ์" if data.match_score >= 50 else "ยังไม่ถึงเกณฑ์"
+
+        prompt = (
+            f'คุณคือที่ปรึกษาด้านการจัดหางาน '
+            f'ผู้หางานกำลังดูตำแหน่ง {data.job_title} ที่ {data.company_name} '
+            f'ระดับความเหมาะสมโดยรวม: {level} '
+            f'ผลวิเคราะห์จากระบบ: {reasons_text} '
+            f'เขียนบทสรุปความเหมาะสม 2-3 ประโยค ภาษาไทย ให้กำลังใจ '
+            f'ไม่ต้องพูดถึงตัวเลข ตอบเป็นข้อความธรรมดาเท่านั้น'
+        )
+
+        print(f"📤 Calling Gemini for {data.job_title}...")
+        response = model.generate_content(prompt)
+        print(f"📥 Gemini response candidates: {len(response.candidates) if response.candidates else 0}")
+
+        # ดึง text จาก candidates โดยตรง (ป้องกัน safety block)
+        narrative = ""
+        if response.candidates and len(response.candidates) > 0:
+            candidate = response.candidates[0]
+            if candidate.content and candidate.content.parts:
+                narrative = candidate.content.parts[0].text.strip()
+
+        print(f"✅ Narrative length: {len(narrative)}")
+        return {"narrative": narrative}
+
+    except Exception as e:
+        print(f"🔥 AI Analyze Match Error: {type(e).__name__}: {e}")
+        return {"narrative": ""}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

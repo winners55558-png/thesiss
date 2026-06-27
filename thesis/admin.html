@@ -1,632 +1,923 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="asset/Logbook.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobNble</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>JobNble Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="admin-style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
     <script>
-        if (sessionStorage.getItem('isAdmin') !== 'true') {
-            window.location.href = 'admin-login.html';
-        }
-        function logout() {
-            sessionStorage.removeItem('isAdmin');
-            window.location.href = 'admin-login.html';
-        }
+        if (sessionStorage.getItem('isAdmin') !== 'true') window.location.href = 'admin-login.html';
+        function logout() { sessionStorage.removeItem('isAdmin'); window.location.href = 'admin-login.html'; }
     </script>
+    <style>
+        /* ── CSS Variables ── */
+        :root {
+            --bg: #f0f4f8;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --topbar-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-light: #f8fafc;
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --blue-light: #eff6ff;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.10);
+            --radius: 12px;
+            --sidebar-width: 252px;
+        }
+        [data-theme="dark"] {
+            --bg: #0b1120;
+            --sidebar-bg: #111827;
+            --card-bg: #1a2236;
+            --topbar-bg: #111827;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e2d45;
+            --border-light: #162032;
+            --blue-light: #1e3a5f;
+            --shadow: 0 1px 4px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; transition: background .25s, color .25s; font-family: 'Noto Sans Thai','Inter',sans-serif; }
+        *:not(.fa):not(.fas):not(.far):not(.fal):not(.fab):not([class*="fa-"]) { font-family: 'Noto Sans Thai','Inter',sans-serif; }
+
+        /* ── Sidebar ── */
+        .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; transition: background .25s, border-color .25s; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+        .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; box-shadow: 0 4px 10px rgba(37,99,235,0.35); }
+        .brand-name { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .brand-sub { font-size: 10px; background: var(--blue-light); color: var(--blue); border-radius: 5px; padding: 2px 7px; margin-left: 6px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        .sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+        .nav-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 10px 6px; }
+        .nav-item { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 9px; border: none; background: transparent; color: var(--text-secondary); font-size: 13.5px; font-weight: 500; cursor: pointer; width: 100%; text-align: left; transition: all .15s; margin-bottom: 2px; position: relative; }
+        .nav-item:hover { background: var(--border-light); color: var(--text-primary); }
+        .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+        .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--blue); border-radius: 0 3px 3px 0; }
+        .nav-item i { width: 18px; text-align: center; font-size: 13.5px; }
+
+        .sidebar-footer { padding: 6px 12px 16px; border-top: 1px solid var(--border); }
+        .sidebar-divider-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 10px 6px; }
+        .sidebar-bottom { display: flex; flex-direction: column; gap: 2px; }
+        .sidebar-bottom button, .sidebar-bottom a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 9px; border: none; background: transparent; color: var(--text-secondary); font-size: 13.5px; font-weight: 500; cursor: pointer; width: 100%; text-decoration: none; transition: all .15s; }
+        .sidebar-bottom button:hover, .sidebar-bottom a:hover { background: var(--border-light); color: var(--text-primary); }
+        .btn-logout:hover { background: #fff1f2 !important; color: #e11d48 !important; }
+        [data-theme="dark"] .btn-logout:hover { background: #3f0f1a !important; color: #fb7185 !important; }
+
+        /* ── Main ── */
+        .admin-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+        .topbar { height: 62px; background: var(--topbar-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; transition: background .25s; }
+        .topbar-left { display: flex; flex-direction: column; gap: 1px; }
+        .topbar-title { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .topbar-datetime { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+        .topbar-right { display: flex; align-items: center; gap: 14px; }
+
+        /* Dark mode toggle */
+        .theme-toggle { display: flex; align-items: center; gap: 8px; }
+        .toggle-track { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; cursor: pointer; transition: background .2s; border: none; padding: 0; }
+        .toggle-track.on { background: var(--blue); }
+        .toggle-thumb { width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+        .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+
+        .topbar-divider { width: 1px; height: 28px; background: var(--border); }
+        .topbar-admin { display: flex; align-items: center; gap: 9px; }
+        .topbar-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); }
+        .topbar-admin-info { display: flex; flex-direction: column; }
+        .topbar-name { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+        .topbar-role { font-size: 11px; color: var(--text-muted); }
+
+        /* ── Main Content ── */
+        .admin-main { flex: 1; overflow-y: auto; padding: 26px 28px; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Page header */
+        .page-header { margin-bottom: 22px; }
+        .page-header-title { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .page-header-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+        /* ── Stat Grid ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: var(--shadow); transition: box-shadow .2s, transform .2s, background .25s; cursor: default; }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+        .stat-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .stat-icon.blue   { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
+        .stat-icon.indigo { background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
+        .stat-icon.green  { background: linear-gradient(135deg, #34d399, #10b981); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.35); }
+        .stat-icon.amber  { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
+        .stat-icon.red    { background: linear-gradient(135deg, #f87171, #ef4444); color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.35); }
+        .stat-icon.purple { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
+        .stat-icon.teal   { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: #fff; box-shadow: 0 4px 12px rgba(13,148,136,0.35); }
+
+        .stat-info { min-width: 0; flex: 1; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; display: block; }
+        .stat-value { font-size: 26px; font-weight: 800; color: var(--text-primary); display: block; line-height: 1.15; margin-top: 4px; letter-spacing: -0.03em; }
+        .stat-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 600; border-radius: 20px; padding: 2px 8px; margin-top: 6px; }
+        .stat-trend.up   { background: #f0fdf4; color: #16a34a; }
+        .stat-trend.down { background: #fef2f2; color: #dc2626; }
+        .stat-trend.live { background: #f0fdf4; color: #16a34a; }
+        [data-theme="dark"] .stat-trend.up   { background: #14331a; }
+        [data-theme="dark"] .stat-trend.down { background: #2d0f0f; }
+        [data-theme="dark"] .stat-trend.live { background: #14331a; }
+
+        /* Active users pulse */
+        .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; animation: livepulse 2s infinite; }
+        @keyframes livepulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.5); } 50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(16,185,129,0); } }
+
+        /* ── Charts Row ── */
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr 1.7fr; gap: 14px; margin-bottom: 16px; }
+        .chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); transition: background .25s; }
+        .chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+        .chart-title { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+        .chart-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+        /* donut */
+        .donut-wrap { position: relative; width: 148px; height: 148px; margin: 0 auto 16px; }
+        .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+        .donut-total { font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.03em; }
+        .donut-unit { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+        .chart-legend { display: flex; flex-direction: column; gap: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 9px; }
+        .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .legend-label { font-size: 12.5px; color: var(--text-secondary); flex: 1; }
+        .legend-pct { font-size: 11px; color: var(--text-muted); margin-right: 4px; }
+        .legend-val { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+        /* chart tabs */
+        .chart-tabs { display: flex; gap: 3px; background: var(--border-light); border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
+        .chart-tab { padding: 4px 11px; border-radius: 6px; border: none; background: transparent; font-size: 11.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all .15s; }
+        .chart-tab.active { background: var(--card-bg); color: var(--blue); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .bar-chart-wrap { height: 150px; margin-top: 8px; }
+
+        /* Revenue card */
+        .revenue-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        .revenue-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+        .revenue-title { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+        .revenue-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+        .revenue-total-label { font-size: 11px; color: var(--text-muted); text-align: right; }
+        .revenue-total-val { font-size: 26px; font-weight: 800; color: var(--blue); letter-spacing: -0.03em; line-height: 1.1; }
+        .revenue-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .rev-item { background: var(--border-light); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); }
+        [data-theme="dark"] .rev-item { background: #1e2d45; }
+        .rev-plan { font-size: 11.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rev-amount { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-top: 6px; letter-spacing: -0.02em; }
+        .rev-count { font-size: 11.5px; color: var(--text-secondary); margin-top: 3px; }
+
+        /* ── Data Card (table) ── */
+        .data-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; transition: background .25s; }
+        .data-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .data-title { font-size: 14px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 9px; letter-spacing: -0.01em; }
+        .title-accent { width: 3px; height: 18px; background: var(--blue); border-radius: 3px; flex-shrink: 0; }
+        .btn-action { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-secondary); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+        .btn-action:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; background: var(--border-light); border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 13px 16px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:nth-child(even) td { background: rgba(0,0,0,0.012); }
+        tbody tr:hover td { background: var(--blue-light) !important; }
+        [data-theme="dark"] th { background: #1e2d45; }
+        [data-theme="dark"] tbody tr:nth-child(even) td { background: rgba(255,255,255,0.025); }
+        [data-theme="dark"] tbody tr:hover td { background: #1e3a5f !important; }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-seeker  { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .badge-employer{ background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .badge-open    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        [data-theme="dark"] .badge-seeker   { background: #1e3a5f; border-color: #1e4d87; }
+        [data-theme="dark"] .badge-employer { background: #14331a; border-color: #1a4726; }
+        [data-theme="dark"] .badge-open     { background: #14331a; border-color: #1a4726; }
+
+        /* Action buttons */
+        .btn-approve { padding: 5px 13px; border-radius: 7px; border: 1px solid #bbf7d0; background: #f0fdf4; color: #16a34a; font-size: 12px; font-weight: 600; cursor: pointer; margin-right: 6px; transition: all .15s; }
+        .btn-approve:hover { background: #dcfce7; border-color: #86efac; }
+        .btn-reject-delete, .btn-delete { padding: 5px 13px; border-radius: 7px; border: 1px solid #fecdd3; background: #fff1f2; color: #e11d48; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+        .btn-reject-delete:hover, .btn-delete:hover { background: #fee2e2; border-color: #fca5a5; }
+        [data-theme="dark"] .btn-approve { background: #14331a; border-color: #1a4726; }
+        [data-theme="dark"] .btn-approve:hover { background: #1c4323; }
+        [data-theme="dark"] .btn-reject-delete, [data-theme="dark"] .btn-delete { background: #2d0f0f; border-color: #5c1a1a; }
+        [data-theme="dark"] .btn-reject-delete:hover, [data-theme="dark"] .btn-delete:hover { background: #3f1515; }
+
+        .tax-id-badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: monospace; }
+        .loading-cell { text-align: center; color: var(--text-muted); padding: 32px; font-size: 13px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+        /* ── Admin Responsive ── */
+
+        /* Mobile sidebar toggle */
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 49;
+        }
+        .sidebar-overlay.open { display: block; }
+        .topbar-menu-btn {
+            display: none;
+            background: none; border: none; cursor: pointer;
+            color: var(--text-secondary); padding: 6px; border-radius: 8px;
+            font-size: 18px; margin-right: 8px;
+        }
+        .topbar-menu-btn:hover { background: var(--border-light); color: var(--text-primary); }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-row { grid-template-columns: 1fr 1fr; }
+            .charts-row .chart-card:last-child { grid-column: span 2; }
+            .revenue-row { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            /* Sidebar slides in as drawer */
+            .sidebar {
+                position: fixed;
+                top: 0; left: -100%;
+                z-index: 50;
+                transition: left .25s ease;
+                height: 100dvh;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            }
+            .sidebar.open { left: 0; }
+            .admin-body { width: 100%; }
+            .topbar-menu-btn { display: flex; align-items: center; }
+            .topbar { padding: 0 16px; }
+            .admin-main { padding: 16px; }
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; gap: 10px; }
+            .stat-icon { width: 40px; height: 40px; font-size: 15px; }
+            .stat-value { font-size: 20px; }
+            .stat-label { font-size: 11px; }
+            .stat-trend { font-size: 10.5px; padding: 2px 6px; }
+
+            .charts-row { grid-template-columns: 1fr; }
+            .charts-row .chart-card:last-child { grid-column: span 1; }
+            .bar-chart-wrap { height: 180px; }
+            .donut-wrap { width: 130px; height: 130px; }
+
+            .revenue-row { grid-template-columns: 1fr; gap: 10px; }
+            .revenue-header { flex-direction: column; gap: 8px; }
+            .revenue-total-val { font-size: 22px; text-align: left; }
+
+            .data-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            table { font-size: 12px; }
+            th { padding: 9px 10px; font-size: 10px; }
+            td { padding: 10px 10px; }
+
+            .topbar-datetime { display: none; }
+            .topbar-role { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 12px; gap: 8px; }
+            .stat-icon { width: 36px; height: 36px; font-size: 14px; }
+            .stat-value { font-size: 18px; }
+            .stat-trend { display: none; }
+
+            .admin-main { padding: 12px; }
+            .chart-card { padding: 14px; }
+            .revenue-card { padding: 14px; }
+
+            .topbar-name { font-size: 12px; }
+            .topbar-avatar { width: 28px; height: 28px; }
+        }
+    </style>
 </head>
-<body class="admin-dashboard">
+<body>
 
     <!-- ===== SIDEBAR ===== -->
-    <aside class="admin-sidebar">
-
-        <!-- Brand -->
+    <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="fas fa-shield-alt"></i></div>
             <span class="brand-name">JobNble <span class="brand-sub">Admin</span></span>
         </div>
 
-        <!-- Admin Profile -->
-        <div class="sidebar-profile">
-            <img src="https://ui-avatars.com/api/?name=AD&background=3B82F6&color=fff&rounded=true" alt="Admin" class="sidebar-avatar">
-            <div class="sidebar-profile-info">
-                <span class="sidebar-profile-name">System Admin</span>
-                <span class="sidebar-profile-role">Super Administrator</span>
-            </div>
-        </div>
-
-        <!-- Nav Menu -->
-        <div class="sidebar-section-label">เมนูหลัก</div>
-        <nav class="sidebar-nav" role="tablist" aria-label="เมนูแดชบอร์ด">
-            <button class="sidebar-nav-item active" data-tab="overview" role="tab" aria-selected="true">
-                <i class="fas fa-border-all"></i>
-                <span>หน้าหลักภาพรวม</span>
-            </button>
-            <button class="sidebar-nav-item" data-tab="kyc" role="tab" aria-selected="false">
-                <i class="fas fa-building"></i>
-                <span>ยืนยันตัวตนนายจ้าง</span>
-            </button>
-            <button class="sidebar-nav-item" data-tab="users" role="tab" aria-selected="false">
-                <i class="fas fa-users"></i>
-                <span>รายชื่อผู้ใช้</span>
-            </button>
-            <button class="sidebar-nav-item" data-tab="jobs" role="tab" aria-selected="false">
-                <i class="fas fa-briefcase"></i>
-                <span>ประกาศงาน</span>
-            </button>
+        <nav class="sidebar-nav">
+            <div class="nav-label">Main Menu</div>
+            <button class="nav-item active" data-tab="overview"><i class="fas fa-border-all"></i> Overview</button>
+            <button class="nav-item" data-tab="kyc"><i class="fas fa-building-shield"></i> KYC Verification</button>
+            <button class="nav-item" data-tab="users"><i class="fas fa-users"></i> Users</button>
+            <button class="nav-item" data-tab="jobs"><i class="fas fa-briefcase"></i> Job Listings</button>
         </nav>
 
-        <!-- Bottom actions -->
-        <div class="sidebar-bottom">
-            <a href="Index.html" target="_blank" class="sidebar-view-site">
-                <i class="fas fa-external-link-alt"></i>
-                <span>ดูเว็บไซต์</span>
-            </a>
-            <button class="sidebar-logout" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>ออกจากระบบ</span>
-            </button>
+        <div class="sidebar-footer">
+            <div class="sidebar-divider-label">System</div>
+            <div class="sidebar-bottom">
+                <a href="Index.html" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> View Website</a>
+                <button class="btn-logout" onclick="logout()"><i class="fas fa-right-from-bracket"></i> Sign Out</button>
+            </div>
         </div>
-
     </aside>
 
-    <!-- ===== MAIN AREA ===== -->
+    <!-- ===== MAIN ===== -->
     <div class="admin-body">
 
-        <!-- Top bar -->
-        <header class="admin-topbar">
-            <h1 class="topbar-title" id="topbar-title">หน้าหลักภาพรวม</h1>
+        <!-- Sidebar overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button class="topbar-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-left">
+                    <h1 class="topbar-title" id="topbar-title">Overview</h1>
+                    <span class="topbar-datetime" id="topbar-datetime"></span>
+                </div>
+            </div>
             <div class="topbar-right">
-                <img src="https://ui-avatars.com/api/?name=AD&background=3B82F6&color=fff&rounded=true" alt="Admin" class="topbar-avatar">
-                <span class="topbar-name">System Admin</span>
+                <div class="theme-toggle">
+                    <i class="fas fa-sun" style="font-size:13px;color:var(--text-muted);"></i>
+                    <button class="toggle-track" id="theme-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                        <div class="toggle-thumb"></div>
+                    </button>
+                    <i class="fas fa-moon" style="font-size:13px;color:var(--text-muted);"></i>
+                </div>
+                <div class="topbar-divider"></div>
+                <div class="topbar-admin">
+                    <img src="https://ui-avatars.com/api/?name=AD&background=2563EB&color=fff&rounded=true&bold=true" alt="Admin" class="topbar-avatar">
+                    <div class="topbar-admin-info">
+                        <span class="topbar-name">System Admin</span>
+                        <span class="topbar-role">Administrator</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- ===== TAB PANELS ===== -->
         <main class="admin-main">
 
-            <!-- ── TAB: หน้าหลักภาพรวม ── -->
-            <section id="tab-overview" class="tab-panel active" role="tabpanel">
+            <!-- ── TAB: ภาพรวม ── -->
+            <section id="tab-overview" class="tab-panel active">
 
-                <!-- Stat Cards -->
+                    <!-- Stat cards row 1 -->
                 <div class="stats-grid">
-                    <div class="stat-card card-blue">
-                        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-user-graduate"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">ผู้หางานทั้งหมด</span>
-                            <h3 class="stat-value" id="stat-seekers">—</h3>
+                            <span class="stat-label">Total Job Seekers</span>
+                            <span class="stat-value" id="stat-seekers">—</span>
+                            <span class="stat-trend up"><i class="fas fa-arrow-trend-up"></i> Registered users</span>
                         </div>
                     </div>
-                    <div class="stat-card card-blue-mid">
-                        <div class="stat-icon"><i class="fas fa-building"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-icon indigo"><i class="fas fa-building"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">บริษัท / นายจ้าง</span>
-                            <h3 class="stat-value" id="stat-employers">—</h3>
+                            <span class="stat-label">Companies / Employers</span>
+                            <span class="stat-value" id="stat-employers">—</span>
+                            <span class="stat-trend up"><i class="fas fa-arrow-trend-up"></i> Employers</span>
                         </div>
                     </div>
-                    <div class="stat-card card-blue-dark">
-                        <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-briefcase"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">ประกาศงานทั้งหมด</span>
-                            <h3 class="stat-value" id="stat-jobs">—</h3>
+                            <span class="stat-label">Total Job Listings</span>
+                            <span class="stat-value" id="stat-jobs">—</span>
+                            <span class="stat-trend up"><i class="fas fa-arrow-trend-up"></i> Open positions</span>
                         </div>
                     </div>
-                    <div class="stat-card card-navy">
-                        <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-icon amber"><i class="fas fa-paper-plane"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">ใบสมัครที่ส่งแล้ว</span>
-                            <h3 class="stat-value" id="stat-apps">—</h3>
+                            <span class="stat-label">Total Applications</span>
+                            <span class="stat-value" id="stat-apps">—</span>
+                            <span class="stat-trend up"><i class="fas fa-arrow-trend-up"></i> Applications</span>
                         </div>
                     </div>
-                    <!-- 🌟 เพิ่มใหม่ 2 card -->
-                    <div class="stat-card card-amber">
-                        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                </div>
+
+                <!-- Stat cards row 2 -->
+                <div class="stats-grid" style="margin-bottom:20px;">
+                    <div class="stat-card" style="grid-column:span 2;">
+                        <div class="stat-icon teal"><i class="fas fa-signal"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">รอการพิจารณา</span>
-                            <h3 class="stat-value" id="stat-pending-apps">—</h3>
+                            <span class="stat-label">Active Users Now (last 5 min)</span>
+                            <span class="stat-value" id="stat-active">—</span>
+                            <span class="stat-trend live" id="active-updated"><span class="live-dot"></span> Updates every 30s</span>
                         </div>
                     </div>
-                    <div class="stat-card card-green">
-                        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">ผู้หางานที่ได้งานแล้ว</span>
-                            <h3 class="stat-value" id="stat-hired">—</h3>
+                            <span class="stat-label">Pending KYC Review</span>
+                            <span class="stat-value" id="stat-pending">—</span>
+                            <span class="stat-trend down"><i class="fas fa-hourglass-half"></i> Awaiting approval</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-user-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">Successfully Hired</span>
+                            <span class="stat-value" id="stat-hired">—</span>
+                            <span class="stat-trend up"><i class="fas fa-trophy"></i> Placed candidates</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Charts Row -->
-                <div class="charts-grid">
-                    <!-- Chart 1: User Distribution -->
+                <div class="charts-row">
+
+                    <!-- Chart 1: Donut users -->
                     <div class="chart-card">
-                        <div class="chart-card-header">
-                            <h2 class="chart-title">สัดส่วนผู้ใช้งาน</h2>
-                            <span class="chart-subtitle">ผู้หางาน vs นายจ้าง</span>
-                        </div>
-                        <div class="chart-body">
-                            <div class="donut-wrap">
-                                <canvas id="chart-users" width="180" height="180"></canvas>
-                                <div class="donut-center">
-                                    <span class="donut-total-label">ทั้งหมด</span>
-                                    <span class="donut-total-value" id="donut-total-users">—</span>
-                                    <span class="donut-total-unit">คน</span>
-                                </div>
+                        <div class="chart-header">
+                            <div>
+                                <div class="chart-title">User Distribution</div>
+                                <div class="chart-sub">Job Seekers vs Employers</div>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item">
-                                    <span class="legend-dot" style="background:#3B82F6;"></span>
-                                    <div class="legend-text">
-                                        <span class="legend-name">ผู้หางาน</span>
-                                        <span class="legend-value" id="legend-seekers">—</span>
-                                    </div>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot" style="background:#93C5FD;"></span>
-                                    <div class="legend-text">
-                                        <span class="legend-name">นายจ้าง</span>
-                                        <span class="legend-value" id="legend-employers">—</span>
-                                    </div>
-                                </div>
+                        </div>
+                        <div class="donut-wrap">
+                            <canvas id="chart-users"></canvas>
+                            <div class="donut-center">
+                                <span class="donut-total" id="donut-total-users">—</span>
+                                <span class="donut-unit">users</span>
+                            </div>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#3b82f6;"></span>
+                                <span class="legend-label">Job Seekers</span>
+                                <span class="legend-val" id="legend-seekers">—</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#93c5fd;"></span>
+                                <span class="legend-label">Employers</span>
+                                <span class="legend-val" id="legend-employers">—</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chart 2: Jobs vs Applications -->
+                    <!-- Chart 2: Donut activity -->
                     <div class="chart-card">
-                        <div class="chart-card-header">
-                            <h2 class="chart-title">กิจกรรมในระบบ</h2>
-                            <span class="chart-subtitle">ประกาศงาน vs ใบสมัคร</span>
-                        </div>
-                        <div class="chart-body">
-                            <div class="donut-wrap">
-                                <canvas id="chart-activity" width="180" height="180"></canvas>
-                                <div class="donut-center">
-                                    <span class="donut-total-label">ทั้งหมด</span>
-                                    <span class="donut-total-value" id="donut-total-activity">—</span>
-                                    <span class="donut-total-unit">รายการ</span>
-                                </div>
+                        <div class="chart-header">
+                            <div>
+                                <div class="chart-title">Platform Activity</div>
+                                <div class="chart-sub">Job Listings vs Applications</div>
                             </div>
-                            <div class="chart-legend">
-                                <div class="legend-item">
-                                    <span class="legend-dot" style="background:#1D4ED8;"></span>
-                                    <div class="legend-text">
-                                        <span class="legend-name">ประกาศงาน</span>
-                                        <span class="legend-value" id="legend-jobs">—</span>
-                                    </div>
-                                </div>
-                                <div class="legend-item">
-                                    <span class="legend-dot" style="background:#BFDBFE;"></span>
-                                    <div class="legend-text">
-                                        <span class="legend-name">ใบสมัคร</span>
-                                        <span class="legend-value" id="legend-apps">—</span>
-                                    </div>
-                                </div>
+                        </div>
+                        <div class="donut-wrap">
+                            <canvas id="chart-activity"></canvas>
+                            <div class="donut-center">
+                                <span class="donut-total" id="donut-total-act">—</span>
+                                <span class="donut-unit">records</span>
+                            </div>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#1d4ed8;"></span>
+                                <span class="legend-label">Job Listings</span>
+                                <span class="legend-val" id="legend-jobs">—</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot" style="background:#bfdbfe;"></span>
+                                <span class="legend-label">Applications</span>
+                                <span class="legend-val" id="legend-apps">—</span>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Chart 3: User growth bar -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <div class="chart-title">New User Growth</div>
+                            </div>
+                            <div class="chart-tabs">
+                                <button class="chart-tab active" onclick="loadGrowth('daily',this)">Daily</button>
+                                <button class="chart-tab" onclick="loadGrowth('monthly',this)">Monthly</button>
+                                <button class="chart-tab" onclick="loadGrowth('yearly',this)">Yearly</button>
+                            </div>
+                        </div>
+                        <div class="bar-chart-wrap">
+                            <canvas id="chart-growth"></canvas>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- KYC Quick View -->
-                <div class="data-card">
-                    <div class="data-card-header">
-                        <div class="data-card-title">
-                            <span class="title-dot"></span>
-                            <h2>รอการยืนยันตัวตนนายจ้าง (KYC Pending)</h2>
+                <!-- Revenue Card -->
+                <div class="revenue-card">
+                    <div class="revenue-header">
+                        <div>
+                            <div class="revenue-title">Subscription Revenue</div>
+                            <div class="revenue-sub">Calculated from employer subscription packages</div>
                         </div>
-                        <button class="btn-action" onclick="switchTab('kyc')">
-                            ดูทั้งหมด <i class="fas fa-arrow-right"></i>
-                        </button>
+                        <div style="text-align:right;">
+                            <div class="revenue-total-label">Total Revenue</div>
+                            <div class="revenue-total-val" id="revenue-total">฿—</div>
+                        </div>
                     </div>
-                    <div class="table-scroll">
+                    <div class="revenue-row">
+                        <div class="rev-item">
+                            <div class="rev-plan">Pay Per Post</div>
+                            <div class="rev-amount" id="rev-payperpost">฿—</div>
+                            <div class="rev-count" id="rev-payperpost-count">— companies · ฿299/post</div>
+                        </div>
+                        <div class="rev-item">
+                            <div class="rev-plan">Monthly Plan</div>
+                            <div class="rev-amount" id="rev-monthly">฿—</div>
+                            <div class="rev-count" id="rev-monthly-count">— companies · ฿599/mo</div>
+                        </div>
+                        <div class="rev-item">
+                            <div class="rev-plan">Yearly Plan</div>
+                            <div class="rev-amount" id="rev-yearly">฿—</div>
+                            <div class="rev-count" id="rev-yearly-count">— companies · ฿4,990/yr</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KYC quick table -->
+                <div class="data-card">
+                    <div class="data-header">
+                        <div class="data-title"><span class="title-accent"></span> KYC Pending Verification</div>
+                        <button class="btn-action" onclick="switchTab('kyc')">View All <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="table-wrap">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>ชื่อบริษัท</th>
-                                    <th>อีเมล</th>
-                                    <th>เลขผู้เสียภาษี (Tax ID)</th>
-                                    <th>การจัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pending-table-body-overview">
-                                <tr><td colspan="5" class="loading-cell">กำลังโหลดข้อมูล...</td></tr>
-                            </tbody>
+                            <thead><tr><th>ID</th><th>Company Name</th><th>Email</th><th>Tax ID</th><th>Actions</th></tr></thead>
+                            <tbody id="pending-body-overview"><tr><td colspan="5" class="loading-cell">Loading...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- ── TAB: ยืนยันตัวตนนายจ้าง ── -->
-            <section id="tab-kyc" class="tab-panel" role="tabpanel">
+            <!-- ── TAB: KYC ── -->
+            <section id="tab-kyc" class="tab-panel">
                 <div class="data-card">
-                    <div class="data-card-header">
-                        <div class="data-card-title">
-                            <span class="title-dot"></span>
-                            <h2>รายการรอการอนุมัติ (KYC Pending)</h2>
-                        </div>
-                        <button class="btn-action" onclick="loadPendingEmployers()">
-                            <i class="fas fa-sync-alt"></i> รีเฟรช
-                        </button>
+                    <div class="data-header">
+                        <div class="data-title"><span class="title-accent"></span> KYC Approval Queue</div>
+                        <button class="btn-action" onclick="loadPending()"><i class="fas fa-rotate-right"></i> Refresh</button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-wrap">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>ชื่อบริษัท</th>
-                                    <th>อีเมล</th>
-                                    <th>เลขผู้เสียภาษี (Tax ID)</th>
-                                    <th>การจัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pending-table-body">
-                                <tr><td colspan="5" class="loading-cell">กำลังโหลดข้อมูล...</td></tr>
-                            </tbody>
+                            <thead><tr><th>ID</th><th>Company Name</th><th>Email</th><th>Tax ID</th><th>Actions</th></tr></thead>
+                            <tbody id="pending-body"><tr><td colspan="5" class="loading-cell">Loading...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- ── TAB: รายชื่อผู้ใช้ ── -->
-            <section id="tab-users" class="tab-panel" role="tabpanel">
+            <!-- ── TAB: Users ── -->
+            <section id="tab-users" class="tab-panel">
                 <div class="data-card">
-                    <div class="data-card-header">
-                        <div class="data-card-title">
-                            <span class="title-dot"></span>
-                            <h2>ผู้ใช้งานในระบบทั้งหมด</h2>
-                        </div>
-                        <button class="btn-action" onclick="loadUsers()">
-                            <i class="fas fa-sync-alt"></i> รีเฟรช
-                        </button>
+                    <div class="data-header">
+                        <div class="data-title"><span class="title-accent"></span> All Users</div>
+                        <button class="btn-action" onclick="loadUsers()"><i class="fas fa-rotate-right"></i> Refresh</button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-wrap">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>ประเภท</th>
-                                    <th>ชื่อ / ชื่อบริษัท</th>
-                                    <th>อีเมล</th>
-                                    <th>เบอร์โทรศัพท์</th>
-                                </tr>
-                            </thead>
-                            <tbody id="user-table-body">
-                                <tr><td colspan="5" class="loading-cell">กำลังโหลดข้อมูล...</td></tr>
-                            </tbody>
+                            <thead><tr><th>ID</th><th>Role</th><th>Name / Company</th><th>Email</th><th>Phone</th></tr></thead>
+                            <tbody id="user-body"><tr><td colspan="5" class="loading-cell">Loading...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- ── TAB: ประกาศงาน ── -->
-            <section id="tab-jobs" class="tab-panel" role="tabpanel">
+            <!-- ── TAB: Jobs ── -->
+            <section id="tab-jobs" class="tab-panel">
                 <div class="data-card">
-                    <div class="data-card-header">
-                        <div class="data-card-title">
-                            <span class="title-dot"></span>
-                            <h2>ประกาศงานทั้งหมดในระบบ</h2>
-                        </div>
-                        <button class="btn-action" onclick="loadJobs()">
-                            <i class="fas fa-sync-alt"></i> รีเฟรช
-                        </button>
+                    <div class="data-header">
+                        <div class="data-title"><span class="title-accent"></span> All Job Listings</div>
+                        <button class="btn-action" onclick="loadJobs()"><i class="fas fa-rotate-right"></i> Refresh</button>
                     </div>
-                    <div class="table-scroll">
+                    <div class="table-wrap">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>Job ID</th>
-                                    <th>บริษัท</th>
-                                    <th>ตำแหน่งงาน</th>
-                                    <th>สถานะ</th>
-                                    <th>การจัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="job-table-body">
-                                <tr><td colspan="5" class="loading-cell">กำลังโหลดข้อมูล...</td></tr>
-                            </tbody>
+                            <thead><tr><th>ID</th><th>Company</th><th>Job Title</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="job-body"><tr><td colspan="5" class="loading-cell">Loading...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
         </main>
-    </div><!-- end .admin-body -->
+    </div>
 
-    <script>
-        // ============================================================
-        // Tab titles map
-        // ============================================================
-        const TAB_TITLES = {
-            overview: 'หน้าหลักภาพรวม',
-            kyc:      'ยืนยันตัวตนนายจ้าง',
-            users:    'รายชื่อผู้ใช้งาน',
-            jobs:     'ประกาศงาน'
-        };
+<script>
+// ============================================================
+// Mobile Sidebar Toggle
+// ============================================================
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+}
+// ปิด sidebar เมื่อกด nav item บน mobile
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) closeSidebar();
+    });
+});
 
-        // ============================================================
-        // Tab Switching
-        // ============================================================
-        function switchTab(tabName) {
-            document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
-                const active = btn.dataset.tab === tabName;
-                btn.classList.toggle('active', active);
-                btn.setAttribute('aria-selected', active);
-            });
-            document.querySelectorAll('.tab-panel').forEach(panel => {
-                panel.classList.toggle('active', panel.id === 'tab-' + tabName);
-            });
-            const titleEl = document.getElementById('topbar-title');
-            if (titleEl) titleEl.textContent = TAB_TITLES[tabName] || '';
-        }
+// ============================================================
+// Datetime Clock
+// ============================================================
+function updateDatetime() {
+    const el = document.getElementById('topbar-datetime');
+    if (!el) return;
+    const now = new Date();
+    const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const d = days[now.getDay()];
+    const date = now.getDate();
+    const month = months[now.getMonth()];
+    const year = now.getFullYear() + 543;
+    const time = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    el.textContent = `วัน${d}ที่ ${date} ${month} ${year} · ${time}`;
+}
+updateDatetime();
+setInterval(updateDatetime, 1000);
 
-        document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-        });
+// ============================================================
+// Dark Mode
+// ============================================================
+const savedTheme = localStorage.getItem('admin-theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+if (savedTheme === 'dark') document.getElementById('theme-btn')?.classList.add('on');
 
-        // ============================================================
-        // Charts (blue palette only)
-        // ============================================================
-        let chartUsers = null;
-        let chartActivity = null;
-        Chart.defaults.font.family = "'Inter', 'Noto Sans Thai', sans-serif";
+function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('admin-theme', newTheme);
+    document.getElementById('theme-btn').classList.toggle('on', !isDark);
+    // re-render charts with new colors
+    if (window._lastStats) initDonutCharts(window._lastStats.s, window._lastStats.e, window._lastStats.j, window._lastStats.a);
+    if (window._growthChart) window._growthChart.update();
+}
 
-        function initCharts(seekers, employers, jobs, apps) {
-            const baseOpts = {
-                cutout: '72%',
+// ============================================================
+// Tab Switching
+// ============================================================
+const TAB_TITLES = { overview:'Overview', kyc:'KYC Verification', users:'Users', jobs:'Job Listings' };
+function switchTab(name) {
+    document.querySelectorAll('.nav-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === name);
+        b.setAttribute('aria-selected', b.dataset.tab === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-'+name));
+    document.getElementById('topbar-title').textContent = TAB_TITLES[name] || '';
+}
+document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+// ============================================================
+// Charts
+// ============================================================
+Chart.defaults.font.family = "'Noto Sans Thai','Inter',sans-serif";
+let _chartUsers, _chartAct, _chartGrowth;
+
+function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function gridColor() { return isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'; }
+function textColor() { return isDark() ? '#94a3b8' : '#6b7280'; }
+
+function initDonutCharts(s, e, j, a) {
+    const base = { cutout:'74%', plugins:{ legend:{ display:false } }, animation:{ duration:600 } };
+
+    if (_chartUsers) _chartUsers.destroy();
+    _chartUsers = new Chart(document.getElementById('chart-users').getContext('2d'), {
+        type:'doughnut',
+        data:{ labels:['ผู้หางาน','นายจ้าง'], datasets:[{ data:[s||1,e||0], backgroundColor:['#3b82f6','#93c5fd'], borderWidth:0, hoverOffset:6 }] },
+        options:{ ...base, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()} คน` } } } }
+    });
+
+    if (_chartAct) _chartAct.destroy();
+    _chartAct = new Chart(document.getElementById('chart-activity').getContext('2d'), {
+        type:'doughnut',
+        data:{ labels:['ประกาศงาน','ใบสมัคร'], datasets:[{ data:[j||1,a||0], backgroundColor:['#1d4ed8','#bfdbfe'], borderWidth:0, hoverOffset:6 }] },
+        options:{ ...base, plugins:{ ...base.plugins, tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()} รายการ` } } } }
+    });
+
+    document.getElementById('donut-total-users').textContent = (s+e).toLocaleString();
+    document.getElementById('donut-total-act').textContent   = (j+a).toLocaleString();
+    document.getElementById('legend-seekers').textContent    = s.toLocaleString();
+    document.getElementById('legend-employers').textContent  = e.toLocaleString();
+    document.getElementById('legend-jobs').textContent       = j.toLocaleString();
+    document.getElementById('legend-apps').textContent       = a.toLocaleString();
+}
+
+async function loadGrowth(type='daily', btn) {
+    document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    try {
+        const res  = await fetch(`http://localhost:3000/api/admin/user-growth?type=${type}`);
+        const data = await res.json();
+        const labels = data.map(r => r.period);
+        const values = data.map(r => r.count);
+
+        if (_chartGrowth) _chartGrowth.destroy();
+        _chartGrowth = new Chart(document.getElementById('chart-growth').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets:[{
+                    label: 'ผู้ใช้ใหม่',
+                    data: values,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.12)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                animation: { duration: 700, easing: 'easeInOutQuart' }
-            };
-
-            // Chart 1 — Seekers vs Employers
-            if (chartUsers) chartUsers.destroy();
-            chartUsers = new Chart(
-                document.getElementById('chart-users').getContext('2d'),
-                {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['ผู้หางาน', 'นายจ้าง'],
-                        datasets: [{
-                            data: [seekers || 1, employers || 0],
-                            backgroundColor: ['#3B82F6', '#93C5FD'],
-                            hoverBackgroundColor: ['#2563EB', '#60A5FA'],
-                            borderWidth: 0,
-                            hoverOffset: 6
-                        }]
-                    },
-                    options: {
-                        ...baseOpts,
-                        plugins: {
-                            ...baseOpts.plugins,
-                            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()} คน` } }
-                        }
-                    }
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: textColor(), font: { size: 10 } } },
+                    y: { grid: { color: gridColor() }, ticks: { color: textColor(), font: { size: 10 }, precision: 0 }, beginAtZero: true }
                 }
-            );
-
-            // Chart 2 — Jobs vs Applications
-            if (chartActivity) chartActivity.destroy();
-            chartActivity = new Chart(
-                document.getElementById('chart-activity').getContext('2d'),
-                {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['ประกาศงาน', 'ใบสมัคร'],
-                        datasets: [{
-                            data: [jobs || 1, apps || 0],
-                            backgroundColor: ['#1D4ED8', '#BFDBFE'],
-                            hoverBackgroundColor: ['#1E40AF', '#93C5FD'],
-                            borderWidth: 0,
-                            hoverOffset: 6
-                        }]
-                    },
-                    options: {
-                        ...baseOpts,
-                        plugins: {
-                            ...baseOpts.plugins,
-                            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()} รายการ` } }
-                        }
-                    }
-                }
-            );
-
-            // Update center + legend
-            document.getElementById('donut-total-users').textContent     = (seekers + employers).toLocaleString();
-            document.getElementById('donut-total-activity').textContent  = (jobs + apps).toLocaleString();
-            document.getElementById('legend-seekers').textContent        = seekers.toLocaleString();
-            document.getElementById('legend-employers').textContent      = employers.toLocaleString();
-            document.getElementById('legend-jobs').textContent           = jobs.toLocaleString();
-            document.getElementById('legend-apps').textContent           = apps.toLocaleString();
-        }
-
-        // ============================================================
-        // DOMContentLoaded
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res   = await fetch('http://localhost:3000/api/admin/stats');
-                const stats = await res.json();
-                const s = parseInt(stats.total_seekers)      || 0;
-                const e = parseInt(stats.total_employers)    || 0;
-                const j = parseInt(stats.total_jobs)         || 0;
-                const a = parseInt(stats.total_applications) || 0;
-
-                document.getElementById('stat-seekers').textContent  = s.toLocaleString();
-                document.getElementById('stat-employers').textContent = e.toLocaleString();
-                document.getElementById('stat-jobs').textContent      = j.toLocaleString();
-                document.getElementById('stat-apps').textContent      = a.toLocaleString();
-                // 🌟 เพิ่มใหม่ 2 ค่า
-                document.getElementById('stat-pending-apps').textContent = (parseInt(stats.total_pending_apps) || 0).toLocaleString();
-                document.getElementById('stat-hired').textContent        = (parseInt(stats.total_hired)        || 0).toLocaleString();
-
-                initCharts(s, e, j, a);
-            } catch (err) {
-                console.error('Error fetching stats:', err);
-                initCharts(0, 0, 0, 0);
             }
-
-            loadPendingEmployers();
-            loadUsers();
-            loadJobs();
         });
+        window._growthChart = _chartGrowth;
+    } catch(e) { console.error('growth error',e); }
+}
 
-        // ============================================================
-        // KYC Pending
-        // ============================================================
-        async function loadPendingEmployers() {
-            const emptyRow = '<tr><td colspan="5" style="text-align:center;color:#22c55e;font-weight:600;padding:20px;">✅ ไม่มีบริษัทที่รอการอนุมัติค้างอยู่</td></tr>';
-            try {
-                const res       = await fetch('http://localhost:3000/api/admin/pending-employers');
-                const employers = await res.json();
-                const t1 = document.getElementById('pending-table-body');
-                const t2 = document.getElementById('pending-table-body-overview');
+async function loadRevenue() {
+    try {
+        const res  = await fetch('http://localhost:3000/api/admin/revenue');
+        const data = await res.json();
+        document.getElementById('revenue-total').textContent = '฿' + (data.total||0).toLocaleString();
+        const b = data.breakdown || {};
+        const pp = b.pay_per_post || { subtotal:0, count:0 };
+        const mo = b.monthly      || { subtotal:0, count:0 };
+        const yr = b.yearly       || { subtotal:0, count:0 };
+        document.getElementById('rev-payperpost').textContent       = '฿' + pp.subtotal.toLocaleString();
+        document.getElementById('rev-payperpost-count').textContent = pp.count + ' บริษัท';
+        document.getElementById('rev-monthly').textContent          = '฿' + mo.subtotal.toLocaleString();
+        document.getElementById('rev-monthly-count').textContent    = mo.count + ' บริษัท';
+        document.getElementById('rev-yearly').textContent           = '฿' + yr.subtotal.toLocaleString();
+        document.getElementById('rev-yearly-count').textContent     = yr.count + ' บริษัท';
+    } catch(e) { console.error('revenue error',e); }
+}
 
-                if (employers.length === 0) {
-                    t1.innerHTML = emptyRow;
-                    t2.innerHTML = emptyRow;
-                    return;
-                }
+async function loadActiveUsers() {
+    try {
+        const res  = await fetch('http://localhost:3000/api/admin/active-users');
+        const data = await res.json();
+        document.getElementById('stat-active').textContent = (data.active||0).toLocaleString();
+        const now = new Date();
+        document.getElementById('active-updated').textContent = `อัปเดตล่าสุด ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    } catch(e) {}
+}
 
-                let rows = '';
-                employers.forEach(em => {
-                    // 🌟 เปลี่ยน Tax ID เป็นปุ่มกดได้ → คัดลอก + เปิดเว็บสรรพากร
-                const taxId = em.tax_id
-                        ? `<button onclick="verifyTaxId('${em.tax_id}')" class="tax-id-badge" style="border:1px solid #bfdbfe;cursor:pointer;color:#2563eb;display:inline-flex;align-items:center;gap:6px;background:#eff6ff;" title="คลิกเพื่อคัดลอกและตรวจสอบที่เว็บสรรพากร"><i class="fas fa-external-link-alt" style="font-size:10px;"></i> ${em.tax_id}</button>`
-                        : '<span style="color:#ef4444;font-weight:600;">ยังไม่ระบุ</span>';
-                    rows += `
-                        <tr>
-                            <td>#${em.id}</td>
-                            <td style="font-weight:600;">${em.company_name}</td>
-                            <td>${em.email}</td>
-                            <td><span class="tax-id-badge">${taxId}</span></td>
-                            <td>
-                                <button class="btn-approve" onclick="approveEmployer(${em.id})">
-                                    <i class="fas fa-check"></i> อนุมัติ
-                                </button>
-                                <button class="btn-reject-delete" onclick="deleteEmployer(${em.id}, '${em.company_name.replace(/'/g,"\\'")}')">
-                                    <i class="fas fa-trash"></i> ปฏิเสธ + ลบ
-                                </button>
-                            </td>
-                        </tr>`;
-                });
-                t1.innerHTML = rows;
-                t2.innerHTML = rows;
-            } catch (err) { console.error(err); }
-        }
+// ============================================================
+// Stats + Init
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res   = await fetch('http://localhost:3000/api/admin/stats');
+        const stats = await res.json();
+        const s = parseInt(stats.total_seekers)      || 0;
+        const e = parseInt(stats.total_employers)    || 0;
+        const j = parseInt(stats.total_jobs)         || 0;
+        const a = parseInt(stats.total_applications) || 0;
+        window._lastStats = { s, e, j, a };
 
-        async function approveEmployer(id) {
-            if (!confirm('✅ ยืนยันว่า Tax ID ของบริษัทนี้ถูกต้อง และต้องการอนุมัติใช่หรือไม่?')) return;
-            try {
-                const res  = await fetch(`http://localhost:3000/api/admin/verify-employer/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'approved' })
-                });
-                const data = await res.json();
-                if (data.success) { alert('✅ อนุมัติบริษัทเรียบร้อยแล้ว!'); loadPendingEmployers(); }
-            } catch { alert('เกิดข้อผิดพลาด'); }
-        }
+        document.getElementById('stat-seekers').textContent   = s.toLocaleString();
+        document.getElementById('stat-employers').textContent = e.toLocaleString();
+        document.getElementById('stat-jobs').textContent      = j.toLocaleString();
+        document.getElementById('stat-apps').textContent      = a.toLocaleString();
+        document.getElementById('stat-pending').textContent   = (parseInt(stats.total_pending_apps)||0).toLocaleString();
+        document.getElementById('stat-hired').textContent     = (parseInt(stats.total_hired)||0).toLocaleString();
 
-        async function deleteEmployer(id, name) {
-            if (!confirm(`⚠️ Tax ID ของ "${name}" ไม่ถูกต้อง\n\nจะลบแอคเค้าน์และประกาศงานทั้งหมดถาวร\n\nแน่ใจหรือไม่?`)) return;
-            try {
-                const res  = await fetch(`http://localhost:3000/api/admin/delete-employer/${id}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.success) {
-                    alert(`🗑️ ลบแอคเค้าน์ "${name}" เรียบร้อยแล้ว`);
-                    loadPendingEmployers();
-                    loadUsers();
-                    const el = document.getElementById('stat-employers');
-                    if (el) el.textContent = Math.max(0, parseInt(el.textContent.replace(/,/g,'')) - 1).toLocaleString();
-                }
-            } catch { alert('เกิดข้อผิดพลาดในการลบแอคเค้าน์'); }
-        }
+        initDonutCharts(s, e, j, a);
+    } catch(err) { console.error(err); initDonutCharts(0,0,0,0); }
 
-        // ============================================================
-        // Users
-        // ============================================================
-        async function loadUsers() {
-            try {
-                const res   = await fetch('http://localhost:3000/api/admin/users');
-                const users = await res.json();
-                const tbody = document.getElementById('user-table-body');
-                tbody.innerHTML = '';
-                users.forEach(u => {
-                    const badge = u.role === 'Seeker'
-                        ? '<span class="badge badge-seeker">ผู้หางาน</span>'
-                        : '<span class="badge badge-employer">นายจ้าง</span>';
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>#${u.id}</td>
-                            <td>${badge}</td>
-                            <td style="font-weight:500;">${u.name}</td>
-                            <td>${u.email}</td>
-                            <td>${u.phone}</td>
-                        </tr>`;
-                });
-            } catch (err) { console.error(err); }
-        }
+    loadGrowth('daily');
+    loadRevenue();
+    loadActiveUsers();
+    loadPending();
+    loadUsers();
+    loadJobs();
 
-        // ============================================================
-        // Jobs
-        // ============================================================
-        async function loadJobs() {
-            try {
-                const res  = await fetch('http://localhost:3000/api/jobs');
-                const jobs = await res.json();
-                const tbody = document.getElementById('job-table-body');
-                tbody.innerHTML = '';
-                jobs.forEach(j => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>#${j.id}</td>
-                            <td style="font-weight:500;">${j.company_name}</td>
-                            <td>${j.job_title}</td>
-                            <td><span class="badge badge-open">เปิดรับสมัคร</span></td>
-                            <td>
-                                <!-- 🌟 เพิ่มปุ่มดูประกาศ -->
-                                <a href="job-detail.html?id=${j.id}&admin=true" target="_blank"
-                                   style="display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;background:#eff6ff;border:1px solid #bfdbfe;color:#3b82f6;font-size:12px;font-weight:600;text-decoration:none;margin-right:6px;transition:background .15s;"
-                                   onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
-                                    <i class="fas fa-eye"></i> ดูประกาศ
-                                </a>
-                                <button class="btn-delete" onclick="deleteJob(${j.id})">
-                                    <i class="fas fa-trash"></i> ลบประกาศ
-                                </button>
-                            </td>
-                        </tr>`;
-                });
-            } catch (err) { console.error(err); }
-        }
+    // Auto-refresh active users ทุก 30 วินาที
+    setInterval(loadActiveUsers, 30000);
+});
 
-        // ============================================================
-        // 🌟 verifyTaxId — คัดลอกเลขผู้เสียภาษี + เปิดเว็บสรรพากร
-        // ============================================================
-        function verifyTaxId(taxId) {
-            navigator.clipboard.writeText(taxId).then(() => {
-                alert(`📋 คัดลอกเลขผู้เสียภาษี "${taxId}" เรียบร้อยแล้ว!\n\nระบบจะเปิดหน้าเว็บกรมสรรพากร ให้วาง (Paste) ในช่องค้นหาได้เลย`);
-                window.open('https://vsinter.rd.go.th/rd-webcontent-web/#/vatsearch', '_blank');
-            }).catch(() => {
-                window.open('https://vsinter.rd.go.th/rd-webcontent-web/#/vatsearch', '_blank');
-            });
-        }
+// ============================================================
+// KYC Pending
+// ============================================================
+async function loadPending() {
+    const empty = '<tr><td colspan="5" style="text-align:center;color:#16a34a;font-weight:600;padding:20px;">✅ No companies pending approval</td></tr>';
+    try {
+        const res  = await fetch('http://localhost:3000/api/admin/pending-employers');
+        const list = await res.json();
+        let rows = '';
+        if (!list.length) { rows = empty; }
+        else list.forEach(em => {
+            const taxId = em.tax_id
+                ? `<button onclick="verifyTaxId('${em.tax_id}')" class="tax-id-badge" style="border:1px solid #bfdbfe;cursor:pointer;color:#2563eb;background:#eff6ff;border-radius:6px;padding:4px 10px;font-family:monospace;font-size:12px;"><i class="fas fa-external-link-alt" style="font-size:10px;margin-right:4px;"></i>${em.tax_id}</button>`
+                : '<span style="color:#dc2626;font-weight:600;">ยังไม่ระบุ</span>';
+            rows += `<tr>
+                <td>#${em.id}</td>
+                <td style="font-weight:600;">${em.company_name}</td>
+                <td>${em.email}</td>
+                <td>${taxId}</td>
+                <td>
+                    <button class="btn-approve" onclick="approveEmployer(${em.id})"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn-reject-delete" onclick="deleteEmployer(${em.id},'${em.company_name.replace(/'/g,"\\'")}')"><i class="fas fa-trash"></i> Reject</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('pending-body').innerHTML = rows;
+        document.getElementById('pending-body-overview').innerHTML = rows;
+    } catch(err) { console.error(err); }
+}
 
-        async function deleteJob(id) {
-            if (!confirm('⚠️ แน่ใจหรือไม่ว่าต้องการลบประกาศงานนี้ออกจากระบบ?')) return;
-            try {
-                const res    = await fetch(`http://localhost:3000/api/admin/delete-job/${id}`, { method: 'DELETE' });
-                const result = await res.json();
-                if (result.success) {
-                    loadJobs();
-                    const el = document.getElementById('stat-jobs');
-                    if (el) el.textContent = Math.max(0, parseInt(el.textContent.replace(/,/g,'')) - 1).toLocaleString();
-                }
-            } catch { alert('เกิดข้อผิดพลาดในการลบงาน'); }
-        }
-    </script>
+function verifyTaxId(taxId) {
+    navigator.clipboard.writeText(taxId).catch(()=>{});
+    alert(`📋 Copied Tax ID "${taxId}"\nOpening Revenue Department verification page...`);
+    window.open('https://vsinter.rd.go.th/rd-webcontent-web/#/vatsearch','_blank');
+}
+
+async function approveEmployer(id) {
+    if (!confirm('Approve this company?')) return;
+    const res = await fetch(`http://localhost:3000/api/admin/verify-employer/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:'approved'}) });
+    const d   = await res.json();
+    if (d.success) { alert('✅ Company approved successfully'); loadPending(); }
+}
+
+async function deleteEmployer(id, name) {
+    if (!confirm(`Permanently delete account "${name}"?`)) return;
+    const res = await fetch(`http://localhost:3000/api/admin/delete-employer/${id}`, { method:'DELETE' });
+    const d   = await res.json();
+    if (d.success) { alert('Account deleted'); loadPending(); loadUsers(); }
+}
+
+// ============================================================
+// Users
+// ============================================================
+async function loadUsers() {
+    try {
+        const res   = await fetch('http://localhost:3000/api/admin/users');
+        const users = await res.json();
+        const tbody = document.getElementById('user-body');
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>#${u.id}</td>
+                <td>${u.role==='Seeker'?'<span class="badge badge-seeker">Job Seeker</span>':'<span class="badge badge-employer">Employer</span>'}</td>
+                <td style="font-weight:500;">${u.name}</td>
+                <td>${u.email}</td>
+                <td>${u.phone||'-'}</td>
+            </tr>`).join('');
+    } catch(e) { console.error(e); }
+}
+
+// ============================================================
+// Jobs
+// ============================================================
+async function loadJobs() {
+    try {
+        const res  = await fetch('http://localhost:3000/api/jobs');
+        const jobs = await res.json();
+        document.getElementById('job-body').innerHTML = jobs.map(j => `
+            <tr>
+                <td>#${j.id}</td>
+                <td style="font-weight:500;">${j.company_name}</td>
+                <td>${j.job_title}</td>
+                <td><span class="badge badge-open">Open</span></td>
+                <td>
+                    <a href="job-detail.html?id=${j.id}&admin=true" target="_blank"
+                       style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;background:var(--blue-light);border:1px solid #bfdbfe;color:var(--blue);font-size:12px;font-weight:600;text-decoration:none;margin-right:6px;">
+                       <i class="fas fa-eye"></i> View</a>
+                    <button class="btn-delete" onclick="deleteJob(${j.id})"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>`).join('');
+    } catch(e) { console.error(e); }
+}
+
+async function deleteJob(id) {
+    if (!confirm('Delete this job listing?')) return;
+    const res = await fetch(`http://localhost:3000/api/admin/delete-job/${id}`, { method:'DELETE' });
+    const d   = await res.json();
+    if (d.success) loadJobs();
+}
+</script>
 </body>
 </html>

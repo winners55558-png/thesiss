@@ -71,7 +71,7 @@
                         </svg>
                     </button>
                     <ul class="dropdown-menu" id="about-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                        <li role="none"><a role="menuitem" href="aboutus.html">เกี่ยวกับเรา</a></li>
                     </ul>
                 </li>
 
@@ -85,6 +85,17 @@
                     </ul>
                 </li>
             </ul>
+            <div class="font-size-ctrl" role="group" aria-label="ปรับขนาดตัวอักษร">
+                <button class="fsz-toggle" aria-haspopup="listbox" aria-expanded="false" aria-label="ปรับขนาดตัวอักษร: กลาง">
+                    <span class="fsz-toggle__icon" aria-hidden="true">A</span>
+                    <svg class="fsz-toggle__arrow" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul class="fsz-dropdown" role="listbox" aria-label="เลือกขนาดตัวอักษร">
+                    <li role="none"><button class="fsz-option" role="option" data-size="sm" aria-checked="false" aria-label="ตัวอักษรขนาดเล็ก"><span class="fsz-option__sample" aria-hidden="true">A</span>เล็ก</button></li>
+                    <li role="none"><button class="fsz-option fsz-active" role="option" data-size="md" aria-checked="true" aria-label="ตัวอักษรขนาดปกติ"><span class="fsz-option__sample" aria-hidden="true">A</span>กลาง</button></li>
+                    <li role="none"><button class="fsz-option" role="option" data-size="lg" aria-checked="false" aria-label="ตัวอักษรขนาดใหญ่"><span class="fsz-option__sample" aria-hidden="true">A</span>ใหญ่</button></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -116,6 +127,19 @@
         </aside>
 
         <section class="template-preview-area">
+
+            <!-- ปุ่มย้อนกลับไปหน้ากรอกข้อมูล (มุมซ้ายบนของกระดาษ) -->
+            <div class="resume2-back-bar" role="navigation" aria-label="ย้อนกลับ">
+                <a href="resume.html"
+                   class="btn-back-resume"
+                   aria-label="ย้อนกลับไปหน้ากรอกข้อมูลเรซูเม่">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    ย้อนกลับ — แก้ไขข้อมูล
+                </a>
+            </div>
 
             <div class="preview-paper" id="resume-preview-container">
 

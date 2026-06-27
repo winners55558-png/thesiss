@@ -59,7 +59,7 @@
                         <svg class="dropdown-arrow" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <ul class="dropdown-menu" id="index-about-menu" role="menu">
-                        <li role="none"><a role="menuitem" href="contact.html">ติดต่อเรา</a></li>
+                        <li role="none"><a role="menuitem" href="aboutus.html">เกี่ยวกับเรา</a></li>
                     </ul>
                 </li>
 
@@ -88,66 +88,47 @@
                     </ul>
                 </li>
             </ul>
+            <div class="font-size-ctrl" role="group" aria-label="ปรับขนาดตัวอักษร">
+                <button class="fsz-toggle" aria-haspopup="listbox" aria-expanded="false" aria-label="ปรับขนาดตัวอักษร: กลาง">
+                    <span class="fsz-toggle__icon" aria-hidden="true">A</span>
+                    <svg class="fsz-toggle__arrow" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul class="fsz-dropdown" role="listbox" aria-label="เลือกขนาดตัวอักษร">
+                    <li role="none"><button class="fsz-option" role="option" data-size="sm" aria-checked="false" aria-label="ตัวอักษรขนาดเล็ก"><span class="fsz-option__sample" aria-hidden="true">A</span>เล็ก</button></li>
+                    <li role="none"><button class="fsz-option fsz-active" role="option" data-size="md" aria-checked="true" aria-label="ตัวอักษรขนาดปกติ"><span class="fsz-option__sample" aria-hidden="true">A</span>กลาง</button></li>
+                    <li role="none"><button class="fsz-option" role="option" data-size="lg" aria-checked="false" aria-label="ตัวอักษรขนาดใหญ่"><span class="fsz-option__sample" aria-hidden="true">A</span>ใหญ่</button></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
     <main id="main-content" role="main">
-        <section class="intro-section" aria-labelledby="intro-heading">
-            <div class="intro-container">
-                <div class="intro-text">
-                    <h1 id="intro-heading">JobNble</h1>
-                    <p>แพลตฟอร์มหางานที่สร้างขึ้นเพื่อทุกคน เชื่อมโยงผู้พิการที่มีศักยภาพเข้ากับองค์กรที่เปิดรับความหลากหลาย เรามุ่งมั่นที่จะเป็นส่วนหนึ่งในการสร้างโอกาสทางอาชีพที่เท่าเทียม พร้อมขับเคลื่อนสังคมแห่งการทำงานที่ยั่งยืนและเปิดกว้างสำหรับทุกความสามารถ</p>
-                </div>
-                <div class="intro-image">
-                    <img src="asset/disable-pic.jpg" alt="ภาพตัวแทนผู้พิการทำงานร่วมกันในองค์กรอย่างมีความสุข" class="disable-pic">
-                </div>
-            </div>
-        </section>
 
-        <section class="news-section" aria-labelledby="news-title">
-            <div class="news-container">
-                <h2 class="news-title" id="news-title">ข่าวสาร</h2>
+        <section class="stats-section" aria-labelledby="stats-title">
+            <h2 class="stats-title" id="stats-title">ยินดีต้อนรับเข้าสู่ JobNble</h2>
 
-                <div class="carousel-wrapper" role="region" aria-label="สไลด์ข่าวสาร">
-                    <button class="carousel-btn left-btn" aria-label="ข่าวสารก่อนหน้า">
-                        <svg width="20" height="30" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </button>
-
-                    <div class="carousel-track-container">
-                        <ul class="carousel-track" role="list">
-                            <li class="carousel-slide current-slide" role="listitem">
-                                <img src="asset/news1.jpg" alt="ข่าวการจ้างงานผู้พิการ" class="news-image">
-                                <div class="news-info">
-                                    <p class="news-text"><strong>รัฐบาลหนุนสถานประกอบการจ้างงานผู้พิการ:</strong> กระทรวงแรงงานเร่งส่งเสริมนายจ้างปฏิบัติตามกฎหมายจ้างงานผู้พิการ (มาตรา 33) เพื่อสร้างโอกาส ลดความเหลื่อมล้ำ พร้อมเสนอมาตรการลดหย่อนภาษีเพื่อเป็นแรงจูงใจให้องค์กรต่างๆ เปิดรับความหลากหลายมากขึ้น</p>
-                                    <a href="https://www.mol.go.th/" target="_blank" class="news-read-more" aria-label="อ่านข่าวรัฐบาลหนุนสถานประกอบการเพิ่มเติม">ดูเพิ่มเติม</a>
-                                </div>
-                            </li>
-                            <li class="carousel-slide" role="listitem">
-                                <img src="asset/news2.jpg" alt="ข่าว ก.ล.ต." class="news-image">
-                                <div class="news-info">
-                                    <p class="news-text"><strong>ก.ล.ต. ขับเคลื่อนการจ้างงานคนพิการในตลาดทุนไทย:</strong> โครงการนำร่องที่มุ่งสร้างพื้นที่ทำงานที่เปิดกว้าง สนับสนุนบริษัทจดทะเบียนในไทยรับคนพิการเข้าทำงานในสายงานที่เหมาะสมกับศักยภาพ เพื่อมุ่งสู่การเติบโตอย่างยั่งยืนขององค์กร (ESG)</p>
-                                    <a href="https://www.sec.or.th/TH/Pages/Sustainability_Award_for_the_Disabilities.aspx" target="_blank" class="news-read-more" aria-label="อ่านข่าว ก.ล.ต. เพิ่มเติม">ดูเพิ่มเติม</a>
-                                </div>
-                            </li>
-                            <li class="carousel-slide" role="listitem">
-                                <img src="asset/news3.jpg" alt="ข่าวโมเดลบริษัทเอกชน" class="news-image">
-                                <div class="news-info">
-                                    <p class="news-text"><strong>ภาคเอกชนชูโมเดล 'Inclusive Workplace':</strong> หลายองค์กรชั้นนำในไทยเริ่มปรับสภาพแวดล้อมและนโยบายการทำงาน (Universal Design) เพื่อรองรับพนักงานทุกกลุ่ม รวมถึงผู้พิการทางการเคลื่อนไหว ดึงดูดทักษะที่หลากหลายเข้าสู่องค์กร</p>
-                                    <a href="https://mgronline.com/qol/detail/9690000019440" target="_blank" class="news-read-more" aria-label="อ่านข่าวภาคเอกชนเพิ่มเติม">ดูเพิ่มเติม</a>
-                                </div>
-                            </li>
-                        </ul>
+            <div class="stats-container">
+                <div class="stats-cards-wrapper">
+                    <div class="stat-card platform-stat">
+                        <span class="stat-number" id="total-hired-stat" aria-live="polite">10,000+</span>
+                        <span class="stat-label">ผู้หางานถูกจ้าง</span>
                     </div>
 
-                    <button class="carousel-btn right-btn" aria-label="ข่าวสารถัดไป">
-                        <svg width="20" height="30" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </button>
-                </div>
+                    <div class="stat-card company-stat">
+                        <div class="company-name">บริษัท ซีพี ออลล์ จำกัด (มหาชน)</div>
+                        <div class="top-employer-badge" aria-label="นายจ้างที่จ้างงานเยอะที่สุด">จ้างเยอะที่สุด</div>
 
-                <div class="carousel-nav">
-                    <button class="carousel-indicator current-indicator" aria-label="ไปที่ข่าว 1"></button>
-                    <button class="carousel-indicator" aria-label="ไปที่ข่าว 2"></button>
-                    <button class="carousel-indicator" aria-label="ไปที่ข่าว 3"></button>
+                        <div class="company-stats-inner">
+                            <div class="company-stat-item">
+                                <span class="stat-number" id="company-hired-stat" aria-live="polite">1,000</span>
+                                <span class="stat-label">จ้างผู้หางาน</span>
+                            </div>
+                            <div class="company-stat-item">
+                                <span class="stat-number" id="company-tax-stat" aria-live="polite">20%</span>
+                                <span class="stat-label">ภาษีที่ถูกลดหย่อน</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -158,7 +139,7 @@
 
                 <div class="job-slider-wrapper">
                     <button class="job-nav-btn job-prev-btn" aria-label="เลื่อนดูงานก่อนหน้า">
-                        <svg width="44" height="60" viewBox="0 0 24 24" fill="none" stroke="#363636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#363636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                     </button>
 
                     <div class="job-track-container">
@@ -263,38 +244,57 @@
                     </div>
 
                     <button class="job-nav-btn job-next-btn" aria-label="เลื่อนดูงานเพิ่มเติม">
-                        <svg width="44" height="60" viewBox="0 0 24 24" fill="none" stroke="#363636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#363636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
-                    
+
                 </div>
             </div>
         </section>
 
-        <section class="stats-section" aria-labelledby="stats-title">
-            <h2 class="stats-title" id="stats-title">ยินดีต้อนรับเข้าสู่ JobNble</h2>
-            
-            <div class="stats-container">
-                <div class="stats-cards-wrapper">
-                    <div class="stat-card platform-stat">
-                        <span class="stat-number" id="total-hired-stat" aria-live="polite">10,000+</span>
-                        <span class="stat-label">ผู้หางานถูกจ้าง</span>
+        <section class="news-section" aria-labelledby="news-title">
+            <div class="news-container">
+                <h2 class="news-title" id="news-title">ข่าวสาร</h2>
+
+                <div class="carousel-wrapper" role="region" aria-label="สไลด์ข่าวสาร">
+                    <button class="carousel-btn left-btn" aria-label="ข่าวสารก่อนหน้า">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+
+                    <div class="carousel-track-container">
+                        <ul class="carousel-track" role="list">
+                            <li class="carousel-slide current-slide" role="listitem">
+                                <img src="asset/news1.jpg" alt="ข่าวการจ้างงานผู้พิการ" class="news-image">
+                                <div class="news-info">
+                                    <p class="news-text"><strong>รัฐบาลหนุนสถานประกอบการจ้างงานผู้พิการ:</strong> กระทรวงแรงงานเร่งส่งเสริมนายจ้างปฏิบัติตามกฎหมายจ้างงานผู้พิการ (มาตรา 33) เพื่อสร้างโอกาส ลดความเหลื่อมล้ำ พร้อมเสนอมาตรการลดหย่อนภาษีเพื่อเป็นแรงจูงใจให้องค์กรต่างๆ เปิดรับความหลากหลายมากขึ้น</p>
+                                    <a href="https://www.mol.go.th/" target="_blank" class="news-read-more" aria-label="อ่านข่าวรัฐบาลหนุนสถานประกอบการเพิ่มเติม">ดูเพิ่มเติม</a>
+                                </div>
+                            </li>
+                            <li class="carousel-slide" role="listitem">
+                                <img src="asset/news2.jpg" alt="ข่าว ก.ล.ต." class="news-image">
+                                <div class="news-info">
+                                    <p class="news-text"><strong>ก.ล.ต. ขับเคลื่อนการจ้างงานคนพิการในตลาดทุนไทย:</strong> โครงการนำร่องที่มุ่งสร้างพื้นที่ทำงานที่เปิดกว้าง สนับสนุนบริษัทจดทะเบียนในไทยรับคนพิการเข้าทำงานในสายงานที่เหมาะสมกับศักยภาพ เพื่อมุ่งสู่การเติบโตอย่างยั่งยืนขององค์กร (ESG)</p>
+                                    <a href="https://www.sec.or.th/TH/Pages/Sustainability_Award_for_the_Disabilities.aspx" target="_blank" class="news-read-more" aria-label="อ่านข่าว ก.ล.ต. เพิ่มเติม">ดูเพิ่มเติม</a>
+                                </div>
+                            </li>
+                            <li class="carousel-slide" role="listitem">
+                                <img src="asset/news3.jpg" alt="ข่าวโมเดลบริษัทเอกชน" class="news-image">
+                                <div class="news-info">
+                                    <p class="news-text"><strong>ภาคเอกชนชูโมเดล 'Inclusive Workplace':</strong> หลายองค์กรชั้นนำในไทยเริ่มปรับสภาพแวดล้อมและนโยบายการทำงาน (Universal Design) เพื่อรองรับพนักงานทุกกลุ่ม รวมถึงผู้พิการทางการเคลื่อนไหว ดึงดูดทักษะที่หลากหลายเข้าสู่องค์กร</p>
+                                    <a href="https://mgronline.com/qol/detail/9690000019440" target="_blank" class="news-read-more" aria-label="อ่านข่าวภาคเอกชนเพิ่มเติม">ดูเพิ่มเติม</a>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
 
-                    <div class="stat-card company-stat">
-                        <div class="company-name">บริษัท ซีพี ออลล์ จำกัด (มหาชน)</div>
-                        <div class="top-employer-badge" aria-label="นายจ้างที่จ้างงานเยอะที่สุด">จ้างเยอะที่สุด</div>
-                        
-                        <div class="company-stats-inner">
-                            <div class="company-stat-item">
-                                <span class="stat-number" id="company-hired-stat" aria-live="polite">1,000</span>
-                                <span class="stat-label">จ้างผู้หางาน</span>
-                            </div>
-                            <div class="company-stat-item">
-                                <span class="stat-number" id="company-tax-stat" aria-live="polite">20%</span>
-                                <span class="stat-label">ภาษีที่ถูกลดหย่อน</span>
-                            </div>
-                        </div>
-                    </div>
+                    <button class="carousel-btn right-btn" aria-label="ข่าวสารถัดไป">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+
+                <div class="carousel-nav">
+                    <button class="carousel-indicator current-indicator" aria-label="ไปที่ข่าว 1"></button>
+                    <button class="carousel-indicator" aria-label="ไปที่ข่าว 2"></button>
+                    <button class="carousel-indicator" aria-label="ไปที่ข่าว 3"></button>
                 </div>
             </div>
         </section>
