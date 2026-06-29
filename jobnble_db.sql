@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Jun 27, 2026 at 11:31 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: 127.0.0.1
+-- Generation Time: Jun 29, 2026 at 12:01 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -130,11 +130,11 @@ CREATE TABLE `jobs_post` (
   `status` varchar(50) DEFAULT 'open',
   `expires_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `job_category` varchar(100) DEFAULT '',
-  `work_mode` varchar(50) DEFAULT NULL,
-  `req_education` varchar(100) DEFAULT NULL,
-  `age_min` int(11) DEFAULT NULL,
-  `age_max` int(11) DEFAULT NULL,
+  `job_category` varchar(100) DEFAULT 'ทั่วไป',
+  `work_mode` varchar(50) DEFAULT 'On-site',
+  `req_education` varchar(100) DEFAULT 'ไม่ระบุ',
+  `age_min` int(11) DEFAULT 18,
+  `age_max` int(11) DEFAULT 60,
   `lat` decimal(10,8) DEFAULT NULL,
   `lng` decimal(11,8) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
