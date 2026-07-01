@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matching Score Algorithm — JobNble</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f0f4ff;
+      font-family: 'Segoe UI', 'Helvetica Neue', 'Noto Sans Thai', Arial, sans-serif;
+      padding: 32px 20px 60px;
+      color: #1e293b;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-radius: 20px;
+      padding: 32px 40px;
+      text-align: center;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 32px rgba(37,99,235,0.25);
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: #93c5fd;
+      font-size: 15px;
+    }
+
+    /* ── INPUT FLOW ── */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .input-box {
+      background: white;
+      border: 2px solid #3b82f6;
+      border-radius: 14px;
+      padding: 16px 24px;
+      text-align: center;
+      min-width: 240px;
+    }
+    .input-box .title { font-size: 14px; font-weight: 700; color: #1e40af; margin-bottom: 6px; }
+    .input-box .sub   { font-size: 12px; color: #64748b; line-height: 1.6; }
+    .flow-plus { font-size: 32px; color: #94a3b8; font-weight: 300; }
+    .algo-box {
+      background: #2563eb;
+      color: white;
+      border-radius: 12px;
+      padding: 12px 32px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+    }
+    .arrow-down {
+      text-align: center;
+      font-size: 24px;
+      color: #94a3b8;
+      margin: 6px 0;
+      line-height: 1;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+      margin: 14px 0 20px;
+      letter-spacing: 0.3px;
+    }
+    .divider {
+      border: none;
+      border-top: 1.5px dashed #cbd5e1;
+      margin-bottom: 20px;
+    }
+
+    /* ── CRITERIA GRID ── */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 760px) { .criteria-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border: 1.5px solid #e2e8f0;
+    }
+    .card-header {
+      padding: 14px 20px;
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .card-header p  { font-size: 12px; opacity: 0.8; }
+    .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+    .row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 10px;
+      padding: 9px 14px;
+      gap: 10px;
+    }
+    .row-item .label { font-size: 12.5px; font-weight: 600; flex: 1; }
+    .score-badge {
+      min-width: 54px;
+      text-align: center;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+      white-space: nowrap;
+    }
+    .row-green  { background: #d1fae5; }
+    .row-yellow { background: #fef9c3; }
+    .row-red    { background: #fee2e2; }
+    .row-gray   { background: #f1f5f9; }
+    .row-blue   { background: #eff6ff; }
+    .label-green  { color: #065f46; }
+    .label-yellow { color: #713f12; }
+    .label-red    { color: #991b1b; }
+    .label-gray   { color: #475569; }
+    .label-blue   { color: #1d4ed8; }
+    .badge-green  { background: #10b981; }
+    .badge-yellow { background: #f59e0b; }
+    .badge-red    { background: #ef4444; }
+    .badge-gray   { background: #94a3b8; }
+    .badge-blue   { background: #3b82f6; }
+    .badge-orange { background: #f97316; }
+    .max-note { font-size: 11px; color: #94a3b8; font-style: italic; padding: 0 4px; margin-top: 2px; }
+
+    /* ── CARD COLORS ── */
+    .c1 .card-header { background: #fef3c7; color: #92400e; }
+    .c1 .card-header p { color: #a16207; }
+    .c2 .card-header { background: #ede9fe; color: #4c1d95; }
+    .c2 .card-header p { color: #6d28d9; }
+    .c3 .card-header { background: #e0f2fe; color: #0c4a6e; }
+    .c3 .card-header p { color: #0369a1; }
+    .c4 .card-header { background: #fce7f3; color: #831843; }
+    .c4 .card-header p { color: #9d174d; }
+    .c5 .card-header { background: #ecfdf5; color: #064e3b; }
+    .c5 .card-header p { color: #065f46; }
+    .c6 .card-header { background: #fff7ed; color: #7c2d12; }
+    .c6 .card-header p { color: #9a3412; }
+
+    /* ── SUMMARY ── */
+    .summary {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(30,58,138,0.3);
+    }
+    .summary h2 {
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .pills-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .pill {
+      border-radius: 12px;
+      padding: 12px 18px;
+      text-align: center;
+      min-width: 110px;
+    }
+    .pill .pill-label { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .pill .pill-score { font-size: 28px; font-weight: 900; line-height: 1; }
+    .pill-yellow { background: #fbbf24; color: #1e3a8a; }
+    .pill-purple { background: #a78bfa; color: white; }
+    .pill-sky    { background: #38bdf8; color: white; }
+    .pill-pink   { background: #f472b6; color: white; }
+    .pill-green  { background: #34d399; color: #064e3b; }
+    .pill-orange { background: #fb923c; color: white; }
+
+    /* ── RESULT ── */
+    .result-box {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 24px 32px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    .result-box h2 {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 18px;
+    }
+    .result-pills {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .result-pill {
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 200px;
+      flex: 1;
+    }
+    .result-pill .r-title { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+    .result-pill .r-sub   { font-size: 11.5px; }
+    .rp-yellow { background: #fef9c3; border: 1.5px solid #fbbf24; }
+    .rp-yellow .r-title { color: #713f12; }
+    .rp-yellow .r-sub   { color: #92400e; }
+    .rp-purple { background: #ede9fe; border: 1.5px solid #a78bfa; }
+    .rp-purple .r-title { color: #4c1d95; }
+    .rp-purple .r-sub   { color: #6d28d9; }
+    .rp-green  { background: #ecfdf5; border: 1.5px solid #34d399; }
+    .rp-green  .r-title { color: #064e3b; }
+    .rp-green  .r-sub   { color: #065f46; }
+
+    .max {
+      display: inline-block;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 10.5px;
+      font-style: italic;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🎯 อัลกอริทึมจับคู่งาน (Matching Score)</h1>
+    <p>ระบบคำนวณความเหมาะสมระหว่างผู้หางานกับตำแหน่งงาน &nbsp;|&nbsp; คะแนนรวมสูงสุด 100 คะแนน</p>
+  </div>
+
+  <!-- INPUT FLOW -->
+  <div class="flow-row">
+    <div class="input-box">
+      <div class="title">👤 ข้อมูลผู้หางาน (Resume)</div>
+      <div class="sub">ตำแหน่ง · ทักษะ · การศึกษา<br>จังหวัด · เงินเดือนที่หวัง · ความพิการ</div>
+    </div>
+    <div class="flow-plus">+</div>
+    <div class="input-box">
+      <div class="title">🏢 ข้อมูลประกาศงาน (Job Post)</div>
+      <div class="sub">ชื่อตำแหน่ง · ทักษะที่ต้องการ · เงินเดือน<br>สถานที่ · ประเภทความพิการที่รับ</div>
+    </div>
+  </div>
+  <div class="arrow-down">↓</div>
+  <div class="flow-row"><div class="algo-box">⚙️ คำนวณ Matching Score</div></div>
+  <div class="arrow-down">↓</div>
+  <p class="section-label">วิเคราะห์ใน 6 เกณฑ์ดังนี้</p>
+  <hr class="divider">
+
+  <!-- 6 CRITERIA CARDS -->
+  <div class="criteria-grid">
+
+    <!-- Card 1: Disability -->
+    <div class="card c1">
+      <div class="card-header">
+        <h3>♿ เกณฑ์ที่ 1 : ความพิการ (Disability Match)</h3>
+        <p>เช็กว่าประเภทความพิการผู้สมัครตรงกับที่บริษัทระบุรับไหม</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">✅ บริษัทระบุ "รับทุกประเภท" หรือตรงกับประเภทความพิการ</span>
+          <span class="score-badge badge-green">+20</span>
+        </div>
+        <div class="row-item row-red">
+          <span class="label label-red">❌ ประเภทความพิการไม่ตรงกับที่บริษัทระบุ</span>
+          <span class="score-badge badge-red">0</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 20 คะแนน</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Position -->
+    <div class="card c2">
+      <div class="card-header">
+        <h3>🎯 เกณฑ์ที่ 2 : ตำแหน่งงาน (Position Match)</h3>
+        <p>ตำแหน่งที่ผู้สมัครต้องการ ตรงกับประกาศงานแค่ไหน</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">✅ ชื่อตำแหน่งตรงกับที่บริษัทประกาศ</span>
+          <span class="score-badge badge-green">+20</span>
+        </div>
+        <div class="row-item row-yellow">
+          <span class="label label-yellow">🔄 ตำแหน่งไม่ตรง แต่มีประสบการณ์ทำงานที่ใกล้เคียง</span>
+          <span class="score-badge badge-yellow">+15</span>
+        </div>
+        <div class="row-item row-red">
+          <span class="label label-red">❌ ไม่มีตำแหน่งหรือประสบการณ์ตรง</span>
+          <span class="score-badge badge-red">0</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 20 คะแนน</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Education -->
+    <div class="card c3">
+      <div class="card-header">
+        <h3>🎓 เกณฑ์ที่ 3 : การศึกษา (Education Match)</h3>
+        <p>สาขาวิชาและระดับการศึกษาตรงกับที่บริษัทต้องการไหม</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">✅ สาขาวิชาตรงกับหมวดหมู่งาน / รายละเอียดงาน</span>
+          <span class="score-badge badge-green">+10</span>
+        </div>
+        <div class="row-item row-yellow">
+          <span class="label label-yellow">🔄 ระดับวุฒิการศึกษาตรงกับที่ระบุไว้</span>
+          <span class="score-badge badge-yellow">+8</span>
+        </div>
+        <div class="row-item row-gray">
+          <span class="label label-gray">📄 มีประวัติการศึกษา (สาขาไม่ตรง)</span>
+          <span class="score-badge badge-gray">+5</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 10 คะแนน</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Salary -->
+    <div class="card c4">
+      <div class="card-header">
+        <h3>💰 เกณฑ์ที่ 4 : เงินเดือน (Salary Match)</h3>
+        <p>เงินเดือนที่บริษัทให้ ครอบคลุมที่ผู้สมัครคาดหวังไว้ไหม</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">✅ เงินเดือนบริษัท ≥ ที่ผู้สมัครหวัง</span>
+          <span class="score-badge badge-green">+15</span>
+        </div>
+        <div class="row-item row-yellow">
+          <span class="label label-yellow">🤝 ระบุ "ตามตกลง" หรือผู้สมัครไม่ระบุเงินเดือน</span>
+          <span class="score-badge badge-yellow">+10</span>
+        </div>
+        <div class="row-item row-red">
+          <span class="label label-red">❌ เงินเดือนบริษัทต่ำกว่าที่ผู้สมัครหวัง</span>
+          <span class="score-badge badge-red">+5</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 15 คะแนน</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Location -->
+    <div class="card c5">
+      <div class="card-header">
+        <h3>📍 เกณฑ์ที่ 5 : สถานที่ทำงาน (Location Match)</h3>
+        <p>จังหวัดที่ทำงานตรงกับที่ผู้สมัครอยู่ หรือทำงานจากบ้านได้</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">🏠 เป็นงาน Work From Home (ทำที่ไหนก็ได้)</span>
+          <span class="score-badge badge-green">+15</span>
+        </div>
+        <div class="row-item row-green">
+          <span class="label label-green">📍 จังหวัดที่ทำงานตรงกับจังหวัดของผู้สมัคร</span>
+          <span class="score-badge badge-green">+15</span>
+        </div>
+        <div class="row-item row-red">
+          <span class="label label-red">🚌 สถานที่ทำงานต่างจังหวัด / ต้องเดินทาง</span>
+          <span class="score-badge badge-red">+5</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 15 คะแนน</span>
+      </div>
+    </div>
+
+    <!-- Card 6: Skills -->
+    <div class="card c6">
+      <div class="card-header">
+        <h3>💡 เกณฑ์ที่ 6 : ทักษะ (Skills Match)</h3>
+        <p>ทักษะที่ผู้สมัครมี ตรงกับที่บริษัทต้องการมากแค่ไหน</p>
+      </div>
+      <div class="card-body">
+        <div class="row-item row-green">
+          <span class="label label-green">✅ ตรงทุกทักษะที่บริษัทกำหนด (100%)</span>
+          <span class="score-badge badge-green">+20</span>
+        </div>
+        <div class="row-item row-yellow">
+          <span class="label label-yellow">🔢 ตรงบางส่วน = (ทักษะที่ตรง ÷ ทั้งหมด) × 20</span>
+          <span class="score-badge badge-yellow">1–19</span>
+        </div>
+        <div class="row-item row-blue">
+          <span class="label label-blue">📋 บริษัทไม่ได้ระบุทักษะที่ต้องการ (ได้เต็ม)</span>
+          <span class="score-badge badge-blue">+20</span>
+        </div>
+        <span class="max">* คะแนนสูงสุด 20 คะแนน</span>
+      </div>
+    </div>
+
+  </div><!-- /criteria-grid -->
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <h2>📊 สรุปคะแนนทั้งหมด (รวมสูงสุด 100 คะแนน)</h2>
+    <div class="pills-row">
+      <div class="pill pill-yellow">
+        <div class="pill-label">♿ ความพิการ</div>
+        <div class="pill-score">20</div>
+      </div>
+      <div class="pill pill-purple">
+        <div class="pill-label">🎯 ตำแหน่งงาน</div>
+        <div class="pill-score">20</div>
+      </div>
+      <div class="pill pill-sky">
+        <div class="pill-label">🎓 การศึกษา</div>
+        <div class="pill-score">10</div>
+      </div>
+      <div class="pill pill-pink">
+        <div class="pill-label">💰 เงินเดือน</div>
+        <div class="pill-score">15</div>
+      </div>
+      <div class="pill pill-green">
+        <div class="pill-label">📍 สถานที่</div>
+        <div class="pill-score">15</div>
+      </div>
+      <div class="pill pill-orange">
+        <div class="pill-label">💡 ทักษะ</div>
+        <div class="pill-score">20</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-box">
+    <h2>🏆 ผลลัพธ์ — นำคะแนนไปใช้ทำอะไร?</h2>
+    <div class="result-pills">
+      <div class="result-pill rp-yellow">
+        <div class="r-title">📋 แสดงคะแนนใน Score Card</div>
+        <div class="r-sub">เมื่อ HR คลิกดูใบสมัคร จะเห็นคะแนนรวม<br>พร้อมเหตุผลในแต่ละเกณฑ์</div>
+      </div>
+      <div class="result-pill rp-purple">
+        <div class="r-title">📊 เรียงลำดับใบสมัคร</div>
+        <div class="r-sub">ผู้สมัครที่ได้คะแนนสูงกว่า<br>จะถูกแสดงขึ้นก่อนเสมอ</div>
+      </div>
+      <div class="result-pill rp-green">
+        <div class="r-title">🔔 แสดงใน Notification Bell</div>
+        <div class="r-sub">แจ้งเตือน HR อัตโนมัติ<br>ว่ามีเรซูเม่ที่ตรงกับตำแหน่งงาน</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

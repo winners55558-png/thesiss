@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" width="900" height="1100" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="900" height="1100" fill="#f0f4ff" rx="0"/>
+
+  <!-- Header Banner -->
+  <rect x="0" y="0" width="900" height="110" fill="#1e3a8a" rx="0"/>
+  <rect x="0" y="95" width="900" height="20" fill="#2563eb"/>
+
+  <!-- Header Text -->
+  <text x="450" y="42" text-anchor="middle" fill="white" font-size="26" font-weight="700" letter-spacing="1">🎯  อัลกอริทึมจับคู่งาน (Matching Score)</text>
+  <text x="450" y="72" text-anchor="middle" fill="#93c5fd" font-size="15">ระบบคำนวณความเหมาะสมระหว่างผู้หางานกับตำแหน่งงาน คะแนนรวมสูงสุด 100 คะแนน</text>
+
+  <!-- ===== FLOW INPUT ===== -->
+  <!-- Input Box Left -->
+  <rect x="40" y="132" width="240" height="64" rx="12" fill="white" stroke="#3b82f6" stroke-width="2"/>
+  <text x="160" y="157" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="700">👤  ข้อมูลผู้หางาน (Resume)</text>
+  <text x="160" y="176" text-anchor="middle" fill="#64748b" font-size="11">ตำแหน่ง · ทักษะ · การศึกษา</text>
+  <text x="160" y="190" text-anchor="middle" fill="#64748b" font-size="11">จังหวัด · เงินเดือนที่หวัง · ความพิการ</text>
+
+  <!-- Arrow Center -->
+  <text x="300" y="169" text-anchor="middle" fill="#94a3b8" font-size="28">+</text>
+
+  <!-- Input Box Right -->
+  <rect x="340" y="132" width="240" height="64" rx="12" fill="white" stroke="#2563eb" stroke-width="2"/>
+  <text x="460" y="157" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="700">🏢  ข้อมูลประกาศงาน (Job Post)</text>
+  <text x="460" y="176" text-anchor="middle" fill="#64748b" font-size="11">ชื่อตำแหน่ง · ทักษะที่ต้องการ · เงินเดือน</text>
+  <text x="460" y="190" text-anchor="middle" fill="#64748b" font-size="11">สถานที่ · ประเภทความพิการที่รับ</text>
+
+  <!-- Arrow down to Algorithm -->
+  <line x1="450" y1="196" x2="450" y2="218" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,3"/>
+  <polygon points="450,224 445,214 455,214" fill="#94a3b8"/>
+
+  <!-- Algorithm box -->
+  <rect x="320" y="226" width="260" height="38" rx="10" fill="#2563eb"/>
+  <text x="450" y="250" text-anchor="middle" fill="white" font-size="14" font-weight="700">⚙️  คำนวณ Matching Score</text>
+
+  <!-- Arrow down to 6 criteria -->
+  <line x1="450" y1="264" x2="450" y2="280" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,3"/>
+  <polygon points="450,286 445,276 455,276" fill="#94a3b8"/>
+
+  <!-- ===== Section Label ===== -->
+  <text x="450" y="300" text-anchor="middle" fill="#475569" font-size="13" font-weight="600">วิเคราะห์ใน 6 เกณฑ์ดังนี้</text>
+  <!-- Divider line -->
+  <line x1="60" y1="310" x2="840" y2="310" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+  <!-- ============================================================ -->
+  <!--  ROW 1: Criteria 1 & 2 -->
+  <!-- ============================================================ -->
+
+  <!-- CARD 1 — Disability Match -->
+  <rect x="40" y="322" width="390" height="152" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="322" width="390" height="44" rx="14" fill="#fef3c7"/>
+  <rect x="40" y="348" width="390" height="18" rx="0" fill="#fef3c7"/>
+  <text x="62" y="350" fill="#92400e" font-size="15" font-weight="700">♿  เกณฑ์ที่ 1 : ความพิการ (Disability Match)</text>
+  <text x="62" y="368" fill="#a16207" font-size="12">เช็กว่าประเภทความพิการผู้สมัครตรงกับที่บริษัทระบุรับไหม</text>
+
+  <!-- Row -->
+  <rect x="55" y="378" width="355" height="30" rx="8" fill="#d1fae5"/>
+  <text x="75" y="398" fill="#065f46" font-size="12" font-weight="600">✅  บริษัทระบุ "รับทุกประเภท" หรือตรงกับประเภทความพิการ</text>
+  <rect x="340" y="381" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="369" y="396" text-anchor="middle" fill="white" font-size="13" font-weight="700">+20</text>
+
+  <rect x="55" y="414" width="355" height="30" rx="8" fill="#fee2e2"/>
+  <text x="75" y="434" fill="#991b1b" font-size="12" font-weight="600">❌  ประเภทความพิการไม่ตรงกับที่บริษัทระบุ</text>
+  <rect x="340" y="417" width="58" height="22" rx="6" fill="#ef4444"/>
+  <text x="369" y="432" text-anchor="middle" fill="white" font-size="13" font-weight="700">0</text>
+
+  <text x="55" y="464" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 20 คะแนน</text>
+
+  <!-- CARD 2 — Position Match -->
+  <rect x="470" y="322" width="390" height="152" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="470" y="322" width="390" height="44" rx="14" fill="#ede9fe"/>
+  <rect x="470" y="348" width="390" height="18" rx="0" fill="#ede9fe"/>
+  <text x="492" y="350" fill="#4c1d95" font-size="15" font-weight="700">🎯  เกณฑ์ที่ 2 : ตำแหน่งงาน (Position Match)</text>
+  <text x="492" y="368" fill="#6d28d9" font-size="12">ตำแหน่งที่ผู้สมัครต้องการ ตรงกับประกาศงานแค่ไหน</text>
+
+  <rect x="485" y="378" width="360" height="30" rx="8" fill="#d1fae5"/>
+  <text x="505" y="398" fill="#065f46" font-size="12" font-weight="600">✅  ชื่อตำแหน่งตรงกับที่บริษัทประกาศ</text>
+  <rect x="773" y="381" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="802" y="396" text-anchor="middle" fill="white" font-size="13" font-weight="700">+20</text>
+
+  <rect x="485" y="414" width="360" height="30" rx="8" fill="#fef9c3"/>
+  <text x="505" y="428" fill="#713f12" font-size="12" font-weight="600">🔄  ตำแหน่งไม่ตรง แต่มีประสบการณ์ทำงานที่ใกล้เคียง</text>
+  <rect x="773" y="417" width="58" height="22" rx="6" fill="#f59e0b"/>
+  <text x="802" y="432" text-anchor="middle" fill="white" font-size="13" font-weight="700">+15</text>
+
+  <text x="485" y="464" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 20 คะแนน</text>
+
+  <!-- ============================================================ -->
+  <!--  ROW 2: Criteria 3 & 4 -->
+  <!-- ============================================================ -->
+
+  <!-- CARD 3 — Education Match -->
+  <rect x="40" y="492" width="390" height="166" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="40" y="492" width="390" height="44" rx="14" fill="#e0f2fe"/>
+  <rect x="40" y="518" width="390" height="18" rx="0" fill="#e0f2fe"/>
+  <text x="62" y="520" fill="#0c4a6e" font-size="15" font-weight="700">🎓  เกณฑ์ที่ 3 : การศึกษา (Education Match)</text>
+  <text x="62" y="538" fill="#0369a1" font-size="12">สาขาวิชาและระดับการศึกษาตรงกับที่บริษัทต้องการไหม</text>
+
+  <rect x="55" y="548" width="355" height="30" rx="8" fill="#d1fae5"/>
+  <text x="75" y="568" fill="#065f46" font-size="12" font-weight="600">✅  สาขาวิชาตรงกับหมวดหมู่งาน</text>
+  <rect x="340" y="551" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="369" y="566" text-anchor="middle" fill="white" font-size="13" font-weight="700">+10</text>
+
+  <rect x="55" y="584" width="355" height="30" rx="8" fill="#fef9c3"/>
+  <text x="75" y="599" fill="#713f12" font-size="12" font-weight="600">🔄  ระดับวุฒิการศึกษาตรงกับที่ระบุไว้</text>
+  <rect x="340" y="587" width="58" height="22" rx="6" fill="#f59e0b"/>
+  <text x="369" y="602" text-anchor="middle" fill="white" font-size="13" font-weight="700">+8</text>
+
+  <rect x="55" y="620" width="355" height="28" rx="8" fill="#f1f5f9"/>
+  <text x="75" y="638" fill="#475569" font-size="12" font-weight="600">📄  มีประวัติการศึกษา (สาขาไม่ตรง)</text>
+  <rect x="340" y="623" width="58" height="22" rx="6" fill="#94a3b8"/>
+  <text x="369" y="638" text-anchor="middle" fill="white" font-size="13" font-weight="700">+5</text>
+
+  <text x="55" y="650" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 10 คะแนน</text>
+
+  <!-- CARD 4 — Salary Match -->
+  <rect x="470" y="492" width="390" height="166" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="470" y="492" width="390" height="44" rx="14" fill="#fce7f3"/>
+  <rect x="470" y="518" width="390" height="18" rx="0" fill="#fce7f3"/>
+  <text x="492" y="520" fill="#831843" font-size="15" font-weight="700">💰  เกณฑ์ที่ 4 : เงินเดือน (Salary Match)</text>
+  <text x="492" y="538" fill="#9d174d" font-size="12">เงินเดือนที่บริษัทให้ ครอบคลุมที่ผู้สมัครคาดหวังไว้ไหม</text>
+
+  <rect x="485" y="548" width="360" height="30" rx="8" fill="#d1fae5"/>
+  <text x="505" y="562" fill="#065f46" font-size="12" font-weight="600">✅  เงินเดือนบริษัท ≥ ที่ผู้สมัครหวัง</text>
+  <rect x="773" y="551" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="802" y="566" text-anchor="middle" fill="white" font-size="13" font-weight="700">+15</text>
+
+  <rect x="485" y="584" width="360" height="30" rx="8" fill="#fef9c3"/>
+  <text x="505" y="599" fill="#713f12" font-size="12" font-weight="600">🤝  ระบุ "ตามตกลง" หรือผู้สมัครไม่ระบุเงินเดือน</text>
+  <rect x="773" y="587" width="58" height="22" rx="6" fill="#f59e0b"/>
+  <text x="802" y="602" text-anchor="middle" fill="white" font-size="13" font-weight="700">+10</text>
+
+  <rect x="485" y="620" width="360" height="28" rx="8" fill="#fee2e2"/>
+  <text x="505" y="638" fill="#991b1b" font-size="12" font-weight="600">❌  เงินเดือนบริษัทต่ำกว่าที่ผู้สมัครหวัง</text>
+  <rect x="773" y="623" width="58" height="22" rx="6" fill="#ef4444"/>
+  <text x="802" y="638" text-anchor="middle" fill="white" font-size="13" font-weight="700">+5</text>
+
+  <text x="485" y="650" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 15 คะแนน</text>
+
+  <!-- ============================================================ -->
+  <!--  ROW 3: Criteria 5 & 6 -->
+  <!-- ============================================================ -->
+
+  <!-- CARD 5 — Location Match -->
+  <rect x="40" y="676" width="390" height="166" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="40" y="676" width="390" height="44" rx="14" fill="#ecfdf5"/>
+  <rect x="40" y="702" width="390" height="18" rx="0" fill="#ecfdf5"/>
+  <text x="62" y="704" fill="#064e3b" font-size="15" font-weight="700">📍  เกณฑ์ที่ 5 : สถานที่ทำงาน (Location Match)</text>
+  <text x="62" y="722" fill="#065f46" font-size="12">จังหวัดที่ทำงานตรงกับที่ผู้สมัครอยู่ หรือทำงานจากบ้านได้</text>
+
+  <rect x="55" y="732" width="355" height="30" rx="8" fill="#d1fae5"/>
+  <text x="75" y="751" fill="#065f46" font-size="12" font-weight="600">🏠  เป็นงาน Work From Home (ทำที่ไหนก็ได้)</text>
+  <rect x="340" y="735" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="369" y="750" text-anchor="middle" fill="white" font-size="13" font-weight="700">+15</text>
+
+  <rect x="55" y="768" width="355" height="30" rx="8" fill="#d1fae5"/>
+  <text x="75" y="783" fill="#065f46" font-size="12" font-weight="600">📍  จังหวัดที่ทำงานตรงกับจังหวัดของผู้สมัคร</text>
+  <rect x="340" y="771" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="369" y="786" text-anchor="middle" fill="white" font-size="13" font-weight="700">+15</text>
+
+  <rect x="55" y="804" width="355" height="28" rx="8" fill="#fee2e2"/>
+  <text x="75" y="822" fill="#991b1b" font-size="12" font-weight="600">🚌  สถานที่ทำงานต่างจังหวัด / ต้องเดินทาง</text>
+  <rect x="340" y="807" width="58" height="22" rx="6" fill="#ef4444"/>
+  <text x="369" y="822" text-anchor="middle" fill="white" font-size="13" font-weight="700">+5</text>
+
+  <text x="55" y="836" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 15 คะแนน</text>
+
+  <!-- CARD 6 — Skills Match -->
+  <rect x="470" y="676" width="390" height="166" rx="14" fill="white" stroke="#e2e8f0" stroke-width="1.5"/>
+  <rect x="470" y="676" width="390" height="44" rx="14" fill="#fff7ed"/>
+  <rect x="470" y="702" width="390" height="18" rx="0" fill="#fff7ed"/>
+  <text x="492" y="704" fill="#7c2d12" font-size="15" font-weight="700">💡  เกณฑ์ที่ 6 : ทักษะ (Skills Match)</text>
+  <text x="492" y="722" fill="#9a3412" font-size="12">ทักษะที่ผู้สมัครมี ตรงกับที่บริษัทต้องการมากแค่ไหน</text>
+
+  <rect x="485" y="732" width="360" height="30" rx="8" fill="#d1fae5"/>
+  <text x="505" y="751" fill="#065f46" font-size="12" font-weight="600">✅  ตรงทุกทักษะที่บริษัทกำหนด (100%)</text>
+  <rect x="773" y="735" width="58" height="22" rx="6" fill="#10b981"/>
+  <text x="802" y="750" text-anchor="middle" fill="white" font-size="13" font-weight="700">+20</text>
+
+  <rect x="485" y="768" width="360" height="30" rx="8" fill="#fef9c3"/>
+  <text x="505" y="783" fill="#713f12" font-size="12" font-weight="600">🔢  ตรงบางส่วน = (ทักษะที่ตรง ÷ ทั้งหมด) × 20</text>
+  <rect x="773" y="771" width="58" height="22" rx="6" fill="#f59e0b"/>
+  <text x="802" y="786" text-anchor="middle" fill="white" font-size="13" font-weight="700">1–19</text>
+
+  <rect x="485" y="804" width="360" height="28" rx="8" fill="#eff6ff"/>
+  <text x="505" y="822" fill="#1d4ed8" font-size="12" font-weight="600">📋  บริษัทไม่ได้ระบุทักษะที่ต้องการ</text>
+  <rect x="773" y="807" width="58" height="22" rx="6" fill="#3b82f6"/>
+  <text x="802" y="822" text-anchor="middle" fill="white" font-size="13" font-weight="700">+20</text>
+
+  <text x="485" y="836" fill="#64748b" font-size="11" font-style="italic">* คะแนนสูงสุด 20 คะแนน</text>
+
+  <!-- ===== SUMMARY BAR ===== -->
+  <rect x="40" y="860" width="820" height="110" rx="16" fill="#1e3a8a"/>
+
+  <text x="450" y="888" text-anchor="middle" fill="white" font-size="17" font-weight="700">📊  สรุปคะแนนทั้งหมด (รวมสูงสุด 100 คะแนน)</text>
+
+  <!-- Score pills -->
+  <!-- Disability 20 -->
+  <rect x="55" y="900" width="120" height="52" rx="10" fill="#fbbf24"/>
+  <text x="115" y="921" text-anchor="middle" fill="#1e3a8a" font-size="11" font-weight="700">♿ ความพิการ</text>
+  <text x="115" y="943" text-anchor="middle" fill="#1e3a8a" font-size="20" font-weight="900">20</text>
+
+  <!-- Position 20 -->
+  <rect x="188" y="900" width="120" height="52" rx="10" fill="#a78bfa"/>
+  <text x="248" y="921" text-anchor="middle" fill="white" font-size="11" font-weight="700">🎯 ตำแหน่งงาน</text>
+  <text x="248" y="943" text-anchor="middle" fill="white" font-size="20" font-weight="900">20</text>
+
+  <!-- Education 10 -->
+  <rect x="321" y="900" width="120" height="52" rx="10" fill="#38bdf8"/>
+  <text x="381" y="921" text-anchor="middle" fill="white" font-size="11" font-weight="700">🎓 การศึกษา</text>
+  <text x="381" y="943" text-anchor="middle" fill="white" font-size="20" font-weight="900">10</text>
+
+  <!-- Salary 15 -->
+  <rect x="454" y="900" width="120" height="52" rx="10" fill="#f472b6"/>
+  <text x="514" y="921" text-anchor="middle" fill="white" font-size="11" font-weight="700">💰 เงินเดือน</text>
+  <text x="514" y="943" text-anchor="middle" fill="white" font-size="20" font-weight="900">15</text>
+
+  <!-- Location 15 -->
+  <rect x="587" y="900" width="120" height="52" rx="10" fill="#34d399"/>
+  <text x="647" y="921" text-anchor="middle" fill="#065f46" font-size="11" font-weight="700">📍 สถานที่</text>
+  <text x="647" y="943" text-anchor="middle" fill="#065f46" font-size="20" font-weight="900">15</text>
+
+  <!-- Skills 20 -->
+  <rect x="720" y="900" width="120" height="52" rx="10" fill="#fb923c"/>
+  <text x="780" y="921" text-anchor="middle" fill="white" font-size="11" font-weight="700">💡 ทักษะ</text>
+  <text x="780" y="943" text-anchor="middle" fill="white" font-size="20" font-weight="900">20</text>
+
+  <!-- ===== RESULT ZONE ===== -->
+  <rect x="40" y="986" width="820" height="96" rx="16" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="450" y="1010" text-anchor="middle" fill="#1e3a8a" font-size="16" font-weight="700">🏆  ผลลัพธ์ — นำคะแนนไปใช้ทำอะไร?</text>
+
+  <!-- Result pill 1 -->
+  <rect x="60" y="1022" width="220" height="44" rx="10" fill="#fef9c3" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="170" y="1040" text-anchor="middle" fill="#713f12" font-size="11" font-weight="700">📋  แสดงคะแนนใน Score Card</text>
+  <text x="170" y="1058" text-anchor="middle" fill="#92400e" font-size="10">เมื่อ HR คลิกดูใบสมัคร</text>
+
+  <!-- Result pill 2 -->
+  <rect x="298" y="1022" width="220" height="44" rx="10" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="408" y="1040" text-anchor="middle" fill="#4c1d95" font-size="11" font-weight="700">📊  เรียงลำดับใบสมัคร</text>
+  <text x="408" y="1058" text-anchor="middle" fill="#6d28d9" font-size="10">คะแนนสูงขึ้นก่อนเสมอ</text>
+
+  <!-- Result pill 3 -->
+  <rect x="536" y="1022" width="284" height="44" rx="10" fill="#ecfdf5" stroke="#34d399" stroke-width="1.5"/>
+  <text x="678" y="1040" text-anchor="middle" fill="#064e3b" font-size="11" font-weight="700">🔔  แสดงใน Notification Bell</text>
+  <text x="678" y="1058" text-anchor="middle" fill="#065f46" font-size="10">แจ้งเตือน HR ว่ามีเรซูเม่ที่ตรงกับตำแหน่ง</text>
+
+  <!-- Drop Shadow filter -->
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#94a3b8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+</svg>
