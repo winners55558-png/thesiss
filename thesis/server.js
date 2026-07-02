@@ -23,7 +23,7 @@ const db = mysql.createConnection({
     host: 'mysql-3bf4aa3a-winners55558-146e.k.aivencloud.com',       // เอามาจาก Aiven (เช่น mysql-xxxx.aivencloud.com)
     port: 21516,                   // เปลี่ยนเป็นเลข Port ของ Aiven
     user: 'avnadmin',              // Username จาก Aiven
-    password: 'avnadmin', // Password จาก Aiven
+    password: 'AVNS_J_JXTkSKT23RJu6azsK', // Password จาก Aiven
     database: 'defaultdb',         // เปลี่ยนชื่อ Database เป็น defaultdb 
     ssl: {
         rejectUnauthorized: false  // บรรทัดนี้สำคัญมาก! Aiven บังคับใช้ SSL
