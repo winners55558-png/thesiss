@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Track activity เพื่อนับ Active Users ──
     if (loggedInId && loggedInType) {
-        fetch('http://localhost:3000/api/track-activity', {
+        fetch('/api/track-activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: loggedInId, user_type: loggedInType === 'employer' ? 'employer' : 'seeker' })
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loggedInType === 'employer' && loggedInUser) {
         const empId = sessionStorage.getItem('userId');
         if (empId) {
-            fetch(`http://localhost:3000/api/employer/kyc-status?id=${empId}`)
+            fetch(`/api/employer/kyc-status?id=${empId}`)
                 .then(r => r.json())
                 .then(d => {
                     if (d.verification_status && d.verification_status !== 'approved') {
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loggedInType === 'employer' && loggedInId) {
         const resumeDbNavItem = document.getElementById('nav-resume-db-item');
         if (resumeDbNavItem) {
-            fetch(`http://localhost:3000/api/employer-subscription/${loggedInId}`)
+            fetch(`/api/employer-subscription/${loggedInId}`)
                 .then(r => r.json())
                 .then(sub => {
                     const plan = sub.subscription_plan;
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ── Fetch & init ──
-        fetch(`http://localhost:3000/api/employer-match-notifications/${loggedInId}`)
+        fetch(`/api/employer-match-notifications/${loggedInId}`)
             .then(r => r.json())
             .then(data => {
                 if (!data.allowed) return;
@@ -1159,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let savedJobIdsSearch = new Set();
             if (seekerIdForSearch) {
                 try {
-                    const svRes = await fetch(`http://localhost:3000/api/saved-jobs/${seekerIdForSearch}`);
+                    const svRes = await fetch(`/api/saved-jobs/${seekerIdForSearch}`);
                     const svData = await svRes.json();
                     if (Array.isArray(svData)) svData.forEach(j => savedJobIdsSearch.add(String(j.id)));
                 } catch(_) {}
@@ -1262,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (disLevel) params.set('disability_level', disLevel);
 
             try {
-                const res = await fetch(`http://localhost:3000/api/jobs/search?${params}`);
+                const res = await fetch(`/api/jobs/search?${params}`);
                 const jobs = await res.json();
                 renderSearchResults(jobs, q);
             } catch (err) {
@@ -1370,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 password: document.getElementById('reg-password')?.value || ''
             };
             try {
-                const res = await fetch('http://localhost:3000/api/register/seeker', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const res = await fetch('/api/register/seeker', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 const result = await res.json();
                 if (result.success) {
                     // ✅ Auto-login: บันทึก session แล้วไปหน้า home โดยตรง ไม่ต้อง login ซ้ำ
@@ -1400,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                const res = await fetch('http://localhost:3000/api/login', {
+                const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1485,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 password: document.getElementById('emp-reg-password').value
             };
             try {
-                const res = await fetch('http://localhost:3000/api/register/employer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const res = await fetch('/api/register/employer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 const result = await res.json();
                 if (result.success) {
                     // ✅ Auto-login: บันทึก session แล้วไปหน้า home โดยตรง ไม่ต้อง login ซ้ำ
@@ -1515,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         empLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                const res = await fetch('http://localhost:3000/api/login', {
+                const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1675,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ── ผู้หางาน: ส่ง access_token ไปยังเซิร์ฟเวอร์ ──
         async function handleGoogleSeeker(access_token, btn) {
             try {
-                const res = await fetch('http://localhost:3000/api/auth/google/seeker', {
+                const res = await fetch('/api/auth/google/seeker', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ access_token })
@@ -1703,7 +1703,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ── นายจ้าง: ส่ง access_token ไปยังเซิร์ฟเวอร์ ──
         async function handleGoogleEmployer(access_token, btn) {
             try {
-                const res = await fetch('http://localhost:3000/api/auth/google/employer', {
+                const res = await fetch('/api/auth/google/employer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ access_token })
@@ -1800,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (submitBtn) submitBtn.disabled = true;
             try {
                 const pData = JSON.parse(sessionStorage.getItem('pendingEmployerData') || '{}');
-                const res = await fetch('http://localhost:3000/api/employer/complete-profile', {
+                const res = await fetch('/api/employer/complete-profile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1834,7 +1834,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileArea = document.getElementById('profile-content-area');
     if (profileArea && loggedInId) {
         if (loggedInType === 'seeker') {
-            fetch(`http://localhost:3000/api/get-resume/${loggedInId}`).then(res => res.json()).then(data => {
+            fetch(`/api/get-resume/${loggedInId}`).then(res => res.json()).then(data => {
                 if (data && data.first_name) {
                     const setEl = (id, text) => { if (document.getElementById(id)) document.getElementById(id).textContent = text; };
 
@@ -1974,7 +1974,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     btnConfirmDel.addEventListener('click', async () => {
                                         if (deleteModal) deleteModal.style.display = 'none';
                                         try {
-                                            const res = await fetch(`http://localhost:3000/api/delete-resume/${loggedInId}`, { method: 'DELETE' });
+                                            const res = await fetch(`/api/delete-resume/${loggedInId}`, { method: 'DELETE' });
                                             const result = await res.json();
                                             if (result.success) {
                                                 sessionStorage.removeItem('tempResumeData');
@@ -1997,7 +1997,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).catch(err => console.error("Error loading profile:", err));
 
         } else if (loggedInType === 'employer') {
-            fetch(`http://localhost:3000/api/get-employer/${loggedInId}`).then(res => res.json()).then(data => {
+            fetch(`/api/get-employer/${loggedInId}`).then(res => res.json()).then(data => {
                 if (data && data.company_name) {
                     const setEl = (id, text) => { if (document.getElementById(id)) document.getElementById(id).textContent = text; };
                     setEl('prof-name', data.company_name);
@@ -2018,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ── โหลดข้อมูล Subscription ──
                 if (subDisplay) {
                     try {
-                        const res = await fetch(`http://localhost:3000/api/employer-subscription/${loggedInId}`);
+                        const res = await fetch(`/api/employer-subscription/${loggedInId}`);
                         const data = await res.json();
                         subPlan = data.subscription_plan;
 
@@ -2058,7 +2058,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // ── โหลดรายการโพสต์งาน ──
                 if (empJobsSection && empJobsList) {
-                    fetch('http://localhost:3000/api/jobs/expire-check', { method: 'POST' }).catch(() => { });
+                    fetch('/api/jobs/expire-check', { method: 'POST' }).catch(() => { });
 
                     // ── helper: custom confirm dialog (ใช้ modal ใน profile-em.html) ──
                     const showConfirm = (message) => new Promise(resolve => {
@@ -2082,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     try {
-                        const res = await fetch(`http://localhost:3000/api/get-employer-jobs/${loggedInId}`);
+                        const res = await fetch(`/api/get-employer-jobs/${loggedInId}`);
                         const jobs = await res.json();
 
                         if (jobs.length > 0) {
@@ -2192,7 +2192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const confirmed = await showConfirm('ต้องการปิดรับการสมัครโพสต์นี้ใช่หรือไม่?');
                                     if (!confirmed) return;
                                     try {
-                                        const r = await fetch(`http://localhost:3000/api/jobs/${jobId}/status`, {
+                                        const r = await fetch(`/api/jobs/${jobId}/status`, {
                                             method: 'PATCH',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ status: 'closed' })
@@ -2223,7 +2223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const confirmed = await showConfirm('ต้องการลบโพสต์นี้ใช่หรือไม่?\nการลบไม่สามารถย้อนกลับได้');
                                     if (!confirmed) return;
                                     try {
-                                        const r = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+                                        const r = await fetch(`/api/jobs/${jobId}`, {
                                             method: 'DELETE',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ employer_id: loggedInId })
@@ -2243,7 +2243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const jobId = renewYes.dataset.jobId;
                                     const card = empJobsList.querySelector(`.file-item[data-job-id="${jobId}"]`);
                                     try {
-                                        const r = await fetch(`http://localhost:3000/api/jobs/${jobId}/renew`, {
+                                        const r = await fetch(`/api/jobs/${jobId}/renew`, {
                                             method: 'PATCH',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ employer_id: loggedInId })
@@ -2290,7 +2290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ── อัปเดตตัวเลขแจ้งเตือน (Badge) ──
                 const inboxBadge = document.getElementById('employer-inbox-badge');
                 if (inboxBadge) {
-                    fetch(`http://localhost:3000/api/employer-unread-count/${loggedInId}`)
+                    fetch(`/api/employer-unread-count/${loggedInId}`)
                         .then(r => r.json())
                         .then(data => {
                             if (data.unread_count > 0) { inboxBadge.textContent = data.unread_count; inboxBadge.style.display = 'flex'; }
@@ -2317,7 +2317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!seekerId) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/api/my-applications/${seekerId}`);
+            const res = await fetch(`/api/my-applications/${seekerId}`);
             const apps = await res.json();
 
             if (!Array.isArray(apps) || apps.length === 0) {
@@ -2432,7 +2432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/saved-jobs/${seekerId}`);
+            const res = await fetch(`/api/saved-jobs/${seekerId}`);
             console.log('[SavedJobs] API status:', res.status);
 
             if (!res.ok) {
@@ -2471,7 +2471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 card.querySelector('.btn-unsave').addEventListener('click', async () => {
-                    const delRes = await fetch(`http://localhost:3000/api/saved-jobs/${seekerId}/${job.id}`, { method: 'DELETE' });
+                    const delRes = await fetch(`/api/saved-jobs/${seekerId}/${job.id}`, { method: 'DELETE' });
                     if (delRes.ok) {
                         card.remove();
                         if (savedList.children.length === 0) savedSection.style.display = 'none';
@@ -2497,7 +2497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         targetElement.style.backgroundColor = '#f0f9ff';
 
         try {
-            const res = await fetch('http://localhost:3000/api/get-ai-feedback', {
+            const res = await fetch('/api/get-ai-feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: targetElement.value, section: sectionName })
@@ -2534,7 +2534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isOnResumePage = document.getElementById('resume-builder-form');
     if (isOnResumePage && loggedInId) {
-        fetch(`http://localhost:3000/api/get-resume/${loggedInId}`)
+        fetch(`/api/get-resume/${loggedInId}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.first_name) {
@@ -3229,7 +3229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const resumeData = JSON.parse(tempResumeDataStr);
                     resumeData.selected_template = selectedTheme;
 
-                    const response = await fetch('http://localhost:3000/api/save-resume', {
+                    const response = await fetch('/api/save-resume', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(resumeData)
@@ -3258,7 +3258,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (loggedInId && !tempResumeDataStr) {
                 try {
-                    await fetch('http://localhost:3000/api/update-template', {
+                    await fetch('/api/update-template', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ seeker_id: loggedInId, selected_template: selectedTheme })
@@ -3301,7 +3301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resume3Paper = document.getElementById('resume3-paper');
 
     if (resume3Paper && loggedInId) {
-        fetch(`http://localhost:3000/api/get-resume/${loggedInId}`)
+        fetch(`/api/get-resume/${loggedInId}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.first_name) {
@@ -3615,7 +3615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const svgSize = btn.querySelector('svg')?.getAttribute('width') || '18';
         try {
             if (isSaved) {
-                const res = await fetch(`http://localhost:3000/api/saved-jobs/${sId}/${jobId}`, { method: 'DELETE' });
+                const res = await fetch(`/api/saved-jobs/${sId}/${jobId}`, { method: 'DELETE' });
                 if (!res.ok) { console.error('unsave failed:', res.status); return; }
                 btn.dataset.saved = 'false';
                 btn.style.background = '#fff';
@@ -3624,7 +3624,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.setAttribute('aria-label', 'บันทึกงานนี้');
                 btn.title = 'บันทึกงาน';
             } else {
-                const res = await fetch('http://localhost:3000/api/saved-jobs', {
+                const res = await fetch('/api/saved-jobs', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ seeker_id: sId, job_id: jobId })
@@ -3669,7 +3669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userId = (sessionStorage.getItem('userId') || '').split(':')[0].trim() || loggedInId;
             if (!userId) throw new Error('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
 
-            const res = await fetch(`http://localhost:3000/api/rank-jobs/${userId}`);
+            const res = await fetch(`/api/rank-jobs/${userId}`);
             const ranked = await res.json();
 
             if (ranked.error) throw new Error(ranked.error);
@@ -3703,7 +3703,7 @@ document.addEventListener('DOMContentLoaded', () => {
             (async function loadResume5JobData() {
                 try {
                     // 1. ดึงข้อมูลงาน
-                    const jobRes = await fetch(`http://localhost:3000/api/get-job/${r5JobId}`);
+                    const jobRes = await fetch(`/api/get-job/${r5JobId}`);
                     const job = await jobRes.json();
                     if (!job || !job.job_title) return;
 
@@ -3763,12 +3763,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (aiReasonSection) aiReasonSection.style.display = 'block';
 
                             // ── เรียก API วิเคราะห์ (ใช้ calcMatchScore + cache DB) ──
-                            const analysisRes = await fetch(`http://localhost:3000/api/match-analysis/${loggedInId}/${r5JobId}`);
+                            const analysisRes = await fetch(`/api/match-analysis/${loggedInId}/${r5JobId}`);
                             const analysisData = await analysisRes.json();
 
                             // โหลด resumeData สำหรับใช้ใน popup ด้านล่าง
                             try {
-                                const rRes = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
+                                const rRes = await fetch(`/api/get-resume/${loggedInId}`);
                                 resumeData = await rRes.json();
                             } catch(_) {}
 
@@ -3895,7 +3895,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 // ── ดึงงานแนะนำจาก server ──
                                                 let _recHtml = '';
                                                 try {
-                                                    const pmRes = await fetch(`http://localhost:3000/api/preview-match/${loggedInId}/${r5JobId}`);
+                                                    const pmRes = await fetch(`/api/preview-match/${loggedInId}/${r5JobId}`);
                                                     const pmData = await pmRes.json();
                                                     const pmRec = pmData.recommended_jobs || [];
                                                     if (pmRec.length > 0) {
@@ -3970,7 +3970,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // ตรวจสอบว่ามีเรซูเม่หรือยัง
                 try {
-                    const resResume = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
+                    const resResume = await fetch(`/api/get-resume/${loggedInId}`);
                     const resumeCheck = await resResume.json();
                     if (!resumeCheck || !resumeCheck.seeker_id) {
                         // ยังไม่มีเรซูเม่ → แสดง modal แนะนำไปสร้าง
@@ -4002,7 +4002,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 try {
-                    const res = await fetch('http://localhost:3000/api/apply-job', {
+                    const res = await fetch('/api/apply-job', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -4051,7 +4051,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // ตรวจสอบสถานะที่บันทึกไว้แล้ว
             (async function initR5SaveBtn() {
                 try {
-                    const svRes = await fetch(`http://localhost:3000/api/saved-jobs/${loggedInId}`);
+                    const svRes = await fetch(`/api/saved-jobs/${loggedInId}`);
                     const svData = await svRes.json();
                     const alreadySaved = Array.isArray(svData) && svData.some(j => String(j.id) === String(r5JobId));
                     if (alreadySaved) {
@@ -4120,7 +4120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitBtn) { submitBtn.textContent = 'บันทึกการแก้ไข'; submitBtn.setAttribute('aria-label', 'บันทึกการแก้ไขประกาศงาน'); }
 
         // Pre-fill ข้อมูลเดิม
-        fetch(`http://localhost:3000/api/get-job/${_editJobId}`)
+        fetch(`/api/get-job/${_editJobId}`)
             .then(r => r.json())
             .then(job => {
                 if (!job || !job.job_title) return;
@@ -4266,14 +4266,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 let response;
                 if (_isEditMode) {
                     // ── Edit mode: PATCH ──
-                    response = await fetch(`http://localhost:3000/api/jobs/${_editJobId}`, {
+                    response = await fetch(`/api/jobs/${_editJobId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                 } else {
                     // ── Create mode: POST ──
-                    response = await fetch('http://localhost:3000/api/save-job', {
+                    response = await fetch('/api/save-job', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -4355,7 +4355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const jobId = urlParams.get('jobId');
 
         if (jobId) {
-            fetch(`http://localhost:3000/api/get-job/${jobId}`)
+            fetch(`/api/get-job/${jobId}`)
                 .then(res => res.json())
                 .then(job => {
                     if (job && job.job_title) {
@@ -4508,7 +4508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showState('error');
         } else {
             showState('loading');
-            fetch(`http://localhost:3000/api/get-job/${jobId}`)
+            fetch(`/api/get-job/${jobId}`)
                 .then(res => res.json())
                 .then(job => {
                     if (!job || !job.job_title) { showState('error'); return; }
@@ -4647,7 +4647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     applyBtn.disabled = true;
 
                     // 1. ตรวจสอบเรซูเม่ผู้ใช้งาน
-                    const resResume = await fetch(`http://localhost:3000/api/get-resume/${loggedInId}`);
+                    const resResume = await fetch(`/api/get-resume/${loggedInId}`);
                     const resumeData = await resResume.json();
 
                     if (!resumeData || !resumeData.seeker_id) {
@@ -4679,7 +4679,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // 2. ดึงข้อมูลประกาศงาน
-                    const resJob = await fetch(`http://localhost:3000/api/get-job/${jobId}`);
+                    const resJob = await fetch(`/api/get-job/${jobId}`);
                     const currentJobData = await resJob.json();
 
                     // 3. เรียก AI match พร้อม fallback (timeout 5 วินาที)
@@ -4700,7 +4700,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             inspiration_message: resumeData.summary || ''
                         });
 
-                        const aiPromise = fetch('http://localhost:3000/api/get-ai-match', {
+                        const aiPromise = fetch('/api/get-ai-match', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: aiBody
@@ -4725,7 +4725,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // 4. บันทึกใบสมัครลงฐานข้อมูล (ทำงานได้เสมอ ไม่ขึ้นกับ AI)
-                    const resApply = await fetch('http://localhost:3000/api/apply-job', {
+                    const resApply = await fetch('/api/apply-job', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -4776,7 +4776,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 calcBtn.disabled = true;
 
                 try {
-                    const res = await fetch(`http://localhost:3000/api/preview-match/${loggedInId}/${jobId}`);
+                    const res = await fetch(`/api/preview-match/${loggedInId}/${jobId}`);
                     const data = await res.json();
 
                     if (data.error === 'no_resume') {
@@ -4999,7 +4999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 noDetEl.style.display = 'none';
 
                 try {
-                    const res = await fetch(`http://localhost:3000/api/preview-match/${d.seeker_id}/${d.job_id}`);
+                    const res = await fetch(`/api/preview-match/${d.seeker_id}/${d.job_id}`);
                     const data = await res.json();
                     const freshReasons = (data.reasons || []).filter(r => r && r.trim());
 
@@ -5041,7 +5041,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ── markAsViewed: อัปเดตสถานะแล้วนำทาง ──
         window.markAsViewed = async function (appId, url) {
             try {
-                await fetch('http://localhost:3000/api/mark-application-viewed', {
+                await fetch('/api/mark-application-viewed', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ application_id: appId })
@@ -5051,7 +5051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (applicantsList && loggedInId && loggedInType === 'employer') {
-            fetch(`http://localhost:3000/api/employer-applications/${loggedInId}`)
+            fetch(`/api/employer-applications/${loggedInId}`)
                 .then(r => r.json())
                 .then(data => {
                     // Server returns { subscription_plan, apps }
@@ -5185,7 +5185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     e.preventDefault();
                                     const appId = btn.dataset.appId;
                                     try {
-                                        const res = await fetch(`http://localhost:3000/api/toggle-star/${appId}`, { method: 'POST' });
+                                        const res = await fetch(`/api/toggle-star/${appId}`, { method: 'POST' });
                                         const d2 = await res.json();
                                         if (d2.success) {
                                             const svg = btn.querySelector('svg');
@@ -5286,7 +5286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.preventDefault();
                                 const appId = btn.dataset.appId;
                                 try {
-                                    const res = await fetch(`http://localhost:3000/api/toggle-star/${appId}`, { method: 'POST' });
+                                    const res = await fetch(`/api/toggle-star/${appId}`, { method: 'POST' });
                                     const data = await res.json();
                                     if (data.success) {
                                         const svg = btn.querySelector('svg');
@@ -5379,7 +5379,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── ตรวจสิทธิ์ subscription ──
         if (loggedInId) {
-            fetch(`http://localhost:3000/api/employer-subscription/${loggedInId}`)
+            fetch(`/api/employer-subscription/${loggedInId}`)
                 .then(r => r.json())
                 .then(sub => {
                     const plan = sub.subscription_plan;
@@ -5466,7 +5466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function loadAllResumes() {
-            fetch(`http://localhost:3000/api/all-resumes?employerId=${loggedInId}`)
+            fetch(`/api/all-resumes?employerId=${loggedInId}`)
                 .then(r => r.json())
                 .then(list => {
                     if (!rdbGrid) return;
@@ -5515,7 +5515,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rdbModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
 
-            fetch(`http://localhost:3000/api/get-resume/${seekerId}`)
+            fetch(`/api/get-resume/${seekerId}`)
                 .then(r => r.json())
                 .then(data => {
                     if (!data || !data.first_name) {
@@ -5559,7 +5559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── โหลดเรซูเม่ ──
         if (em3Paper && seekerId) {
-            fetch(`http://localhost:3000/api/get-resume/${seekerId}`)
+            fetch(`/api/get-resume/${seekerId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (!data || !data.first_name) {
@@ -5592,7 +5592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (appId) {
-            fetch(`http://localhost:3000/api/application/${appId}`)
+            fetch(`/api/application/${appId}`)
                 .then(r => r.json())
                 .then(appData => {
                     if (nameEl) nameEl.textContent = `${appData.first_name || ''} ${appData.last_name || ''}`.trim();
@@ -5608,7 +5608,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnPass) btnPass.disabled = true;
             if (btnFail) btnFail.disabled = true;
             try {
-                const res = await fetch(`http://localhost:3000/api/applications/${appId}/result`, {
+                const res = await fetch(`/api/applications/${appId}/result`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ result })
