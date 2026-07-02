@@ -20,10 +20,14 @@ app.use(express.static(__dirname));
 // 1. การเชื่อมต่อ MySQL
 // ==========================================
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '', 
-    database: 'jobnble_db'
+    host: 'mysql-3bf4aa3a-winners55558-146e.k.aivencloud.com',       // เอามาจาก Aiven (เช่น mysql-xxxx.aivencloud.com)
+    port: 21516,                   // เปลี่ยนเป็นเลข Port ของ Aiven
+    user: 'avnadmin',              // Username จาก Aiven
+    password: 'avnadmin', // Password จาก Aiven
+    database: 'defaultdb',         // เปลี่ยนชื่อ Database เป็น defaultdb 
+    ssl: {
+        rejectUnauthorized: false  // บรรทัดนี้สำคัญมาก! Aiven บังคับใช้ SSL
+    }
 });
 
 db.connect(err => {
