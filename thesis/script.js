@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem('tempResumeData');
                 sessionStorage.removeItem('existingProfilePic');
                 announce('ออกจากระบบแล้ว');
-                window.location.href = 'Index.html';
+                window.location.href = '/';
             });
 
             // ── Index.html: แสดง/ซ่อนเมนูตาม userType ──
@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem('tempResumeData');
                 sessionStorage.removeItem('existingProfilePic');
                 announce('ออกจากระบบแล้ว');
-                window.location.href = 'Index.html';
+                window.location.href = '/';
             });
 
             // ── 2) Font size (อยู่หลัง user card) — will be appended after fszSection created below ──
