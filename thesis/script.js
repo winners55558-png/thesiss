@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem('tempResumeData');
                 sessionStorage.removeItem('existingProfilePic');
                 announce('ออกจากระบบแล้ว');
-                window.location.href = 'Index.html';
+                window.location.href = '/';
             });
 
             // ── Index.html: แสดง/ซ่อนเมนูตาม userType ──
