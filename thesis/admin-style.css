@@ -274,7 +274,7 @@ body.admin-dashboard {
 ========================================== */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 🌟 เปลี่ยนเป็น 3 คอลัมน์ รองรับ 6 cards (2 แถว) */
+    grid-template-columns: repeat(3, 1fr); /*  เปลี่ยนเป็น 3 คอลัมน์ รองรับ 6 cards (2 แถว) */
     gap: 18px;
     margin-bottom: 24px;
 }
@@ -306,7 +306,7 @@ body.admin-dashboard {
 .card-blue-mid  { background: linear-gradient(135deg, #3B82F6, #2563EB); }
 .card-blue-dark { background: linear-gradient(135deg, #2563EB, #1D4ED8); }
 .card-navy      { background: linear-gradient(135deg, #1D4ED8, #1E40AF); }
-/* 🌟 เพิ่มใหม่: สำหรับ stat cards ที่เพิ่มมา */
+/*  เพิ่มใหม่: สำหรับ stat cards ที่เพิ่มมา */
 .card-amber     { background: linear-gradient(135deg, #2150d1, #234cbb); }
 .card-green     { background: linear-gradient(135deg, #6eabf5, #538bd1); }
 
@@ -554,13 +554,59 @@ tr:hover td { background: #FAFBFF; }
 
 @media (max-width: 768px) {
     .admin-sidebar { display: none; }
-    .admin-main { padding: 20px 16px 40px; }
+    .admin-main { padding: 20px 12px 40px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .chart-body { flex-direction: column; gap: 16px; }
+
+    /* ── Table → card layout on mobile ── */
+    .table-wrap { overflow: visible !important; }
+    .table-wrap table { display: block !important; width: 100% !important; }
+    .table-wrap thead { display: none !important; }
+    .table-wrap tbody { display: block !important; }
+    .table-wrap tbody tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        margin-bottom: 10px !important;
+        padding: 12px 14px !important;
+        gap: 8px !important;
+    }
+    .table-wrap tbody tr:hover td { background: transparent !important; }
+    .table-wrap td {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+    }
+    .table-wrap td::before {
+        content: attr(data-label);
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .table-wrap td:last-child {
+        display: flex !important;
+        gap: 8px;
+        margin-top: 4px;
+        flex-wrap: wrap;
+    }
+    .btn-approve, .btn-reject-delete {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
 }
 
 /* ==========================================
-   🔒 ADMIN LOGIN PAGE
+    ADMIN LOGIN PAGE
 ========================================== */
 body.login-page {
     background-color: #0f172a;

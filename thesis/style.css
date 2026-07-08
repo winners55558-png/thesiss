@@ -5,7 +5,7 @@
     box-sizing: border-box;
 }
 
-/* 🟢 ล็อกคอทุก Element (ปุ่ม, ช่องกรอก, ข้อความ) ให้ใช้ฟอนต์ที่เรากำหนด ป้องกันฟอนต์ iOS โผล่ 🟢 */
+/*  ล็อกคอทุก Element (ปุ่ม, ช่องกรอก, ข้อความ) ให้ใช้ฟอนต์ที่เรากำหนด ป้องกันฟอนต์ iOS โผล่  */
 body,
 input,
 button,
@@ -340,10 +340,62 @@ ul {
 .search-no-result {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 60px 20px;
-    color: #64748B;
+    padding: 60px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
 }
-.search-no-result h3 { font-size: 20px; margin-bottom: 8px; color: #1E293B; }
+.search-no-result-icon {
+    width: 80px; height: 80px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    font-size: 36px;
+}
+.search-no-result h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1E293B;
+    font-family: 'Inter','Noto Sans Thai',sans-serif;
+}
+.search-no-result p {
+    font-size: 14px;
+    color: #64748b;
+    font-family: 'Inter','Noto Sans Thai',sans-serif;
+    line-height: 1.65;
+    margin-bottom: 24px;
+    max-width: 320px;
+}
+.search-no-result-tips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+.search-no-result-tip {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #475569;
+    font-family: 'Inter','Noto Sans Thai',sans-serif;
+}
+.search-no-result-reset {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 22px;
+    background: #013c58; color: #fff;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 600;
+    font-family: 'Inter','Noto Sans Thai',sans-serif;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.search-no-result-reset:hover { background: #015f8a; }
 
 .logo-container {
     display: flex;
@@ -495,11 +547,11 @@ body.mode-login  .auth-box {
     display: flex;
     align-items: center;
     padding-right: 0;
-    /* 🟢 เอา gap ออกเพราะเราลบชื่อกับลูกศรทิ้งไปแล้ว */
+    /*  เอา gap ออกเพราะเราลบชื่อกับลูกศรทิ้งไปแล้ว */
 }
 
 .user-avatar {
-    width: 56px; /* 🟢 ขยายวงกลมให้ใหญ่ขึ้นสมดุลกับเมนู 28px */
+    width: 56px; /*  ขยายวงกลมให้ใหญ่ขึ้นสมดุลกับเมนู 28px */
     height: 56px;
     flex-shrink: 0;
     background-color: #2563EB; /* สีน้ำเงินสดแบบในเรฟเฟอเรนซ์ */
@@ -508,12 +560,12 @@ body.mode-login  .auth-box {
     justify-content: center;
     align-items: center;
     color: #FFFFFF;
-    font-size: 26px; /* 🟢 ขยายขนาดตัวอักษรย่อข้างในให้ใหญ่ขึ้น */
+    font-size: 26px; /*  ขยายขนาดตัวอักษรย่อข้างในให้ใหญ่ขึ้น */
     font-weight: 700;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* 🟢 เพิ่มเอฟเฟกต์ตอน Hover วงกลมให้ดูมีลูกเล่นนิดนึง */
+/*  เพิ่มเอฟเฟกต์ตอน Hover วงกลมให้ดูมีลูกเล่นนิดนึง */
 .user-profile-btn:hover .user-avatar,
 .nav-item.active .user-avatar {
     transform: scale(1.05);
@@ -560,7 +612,7 @@ body.mode-login  .auth-box {
 
 .footer-socials {
     display: flex;
-    gap: 30px;
+    gap: 56px;
 }
 
 .footer-socials svg {
@@ -636,78 +688,70 @@ body.mode-login  .auth-box {
 ============================================= */
 
 /* ── 1. RESUME BUILDER BANNER ── */
+/* ── Resume Builder Section — Banner Style (all breakpoints) ── */
 .resume-builder-section {
     width: 100%;
-    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 55%, #f8fbff 100%);
     position: relative;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 70px 0 80px;
-    border-bottom: 1px solid #dbeafe;
+    height: 500px;
+    border-bottom: none;
 }
 
-.resume-builder-section::before {
-    content: '';
-    position: absolute;
-    width: 500px; height: 500px;
-    border-radius: 50%;
-    border: 1px solid rgba(1,60,88,0.07);
-    top: -150px; right: -80px;
-    pointer-events: none;
-}
-.resume-builder-section::after {
-    content: '';
-    position: absolute;
-    width: 300px; height: 300px;
-    border-radius: 50%;
-    border: 1px solid rgba(1,60,88,0.05);
-    bottom: -80px; left: -40px;
-    pointer-events: none;
-}
+.resume-builder-section::before,
+.resume-builder-section::after { display: none; }
 
 .resume-container {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    max-width: 1240px;
+    max-width: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 60px;
-    padding: 0 40px;
-    position: relative;
-    z-index: 1;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
 }
 
+/* รูปขยายเต็มเป็น background */
 .resume-image {
-    display: flex;
-    justify-content: flex-start;
-    flex-shrink: 0;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    z-index: 0;
+    display: block;
 }
 
 .resume-pic {
-    width: 520px;
-    height: 310px;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(1,60,88,0.14);
-    border: 3px solid rgba(1,60,88,0.1);
+    object-position: center 30%;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
 }
 
+/* overlay gradient ฝั่งซ้าย */
 .resume-text {
-    max-width: 480px;
+    position: relative;
+    z-index: 1;
+    width: 45%;
+    max-width: 45%;
+    background: linear-gradient(to right, rgba(1,60,88,0.82) 55%, rgba(1,60,88,0) 100%);
+    padding: 0 60px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    justify-content: center;
     gap: 0;
 }
 
 .resume-text p {
-    font-size: 1.05rem;
-    color: #475569;
+    font-size: 1.1rem;
+    color: #ffffff;
     font-family: 'Inter', 'Noto Sans Thai', sans-serif;
-    line-height: 1.85;
-    margin-bottom: 32px;
+    line-height: 1.75;
+    margin-bottom: 28px;
 }
 
 .btn-build-resume {
@@ -723,14 +767,15 @@ body.mode-login  .auth-box {
     border-radius: 10px;
     text-decoration: none;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 20px rgba(1,60,88,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    border: 1.5px solid rgba(255,255,255,0.2);
 }
 
 .btn-build-resume:hover {
     background: #015f8a;
     color: #ffffff;
     transform: translateY(-3px);
-    box-shadow: 0 8px 28px rgba(1,60,88,0.3);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
 }
 
 .job-search-section {
@@ -815,6 +860,68 @@ body.mode-login  .auth-box {
     font-weight: 500;
 }
 
+/* ── Mobile Search Section (ซ่อนบน desktop) ── */
+.mobile-search-section {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-search-section {
+        display: block;
+        padding: 10px 14px;
+        background: #ffffff;
+        border-bottom: 1px solid #E2E8F0;
+        position: relative;
+        z-index: 10;
+    }
+    .mobile-search-bar {
+        display: flex;
+        align-items: center;
+        background: #F1F5F9;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 4px 4px 4px 12px;
+        gap: 4px;
+        transition: border-color 0.2s, background 0.2s;
+    }
+    .mobile-search-bar:focus-within {
+        border-color: #3B82F6;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.12);
+    }
+    .mobile-search-bar .navbar-search-input {
+        font-size: 13px;
+        padding: 0;
+        height: 30px;
+        line-height: 30px;
+    }
+    .mobile-search-bar .navbar-filter-btn {
+        font-size: 11px;
+        padding: 0 8px;
+        border-radius: 6px;
+        height: 30px;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    .mobile-search-bar .navbar-search-submit {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        padding: 0;
+    }
+    .mobile-search-section .navbar-filter-panel {
+        position: relative;
+        top: auto; left: auto;
+        width: 100%;
+        box-shadow: none;
+        border: 1px solid #E2E8F0;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        margin-top: 0;
+    }
+}
+
 .overview-section {
     width: 100%;
     padding: 80px 0 90px;
@@ -841,15 +948,7 @@ body.mode-login  .auth-box {
 }
 
 .overview-section::after {
-    content: '';
-    position: absolute;
-    bottom: -100px;
-    left: -60px;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    background: rgba(1,60,88,0.02);
-    pointer-events: none;
+    display: none;
 }
 
 .overview-container {
@@ -893,7 +992,8 @@ body.mode-login  .auth-box {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 4px;
+    box-shadow: 0 4px 16px rgba(1,60,88,0.08), 0 1px 4px rgba(0,0,0,0.04);
     transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     cursor: default;
 }
@@ -906,11 +1006,11 @@ body.mode-login  .auth-box {
 }
 
 .overview-number {
-    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-size: clamp(1.7rem, 3.5vw, 2.4rem);
     font-weight: 800;
     color: #013c58;
     font-family: 'Inter', 'Noto Sans Thai', sans-serif;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     line-height: 1;
     letter-spacing: -0.02em;
 }
@@ -2193,7 +2293,7 @@ body.mode-login  .auth-box {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative; /* ✅ สำหรับ badge-recommended */
+    position: relative; /*  สำหรับ badge-recommended */
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -2508,7 +2608,7 @@ body.mode-login  .auth-box {
 
     .emp-welcome-title { font-size: 1.3rem; }
     .emp-stat-value { font-size: 2rem; }
-    .emp-stat-box { padding: 24px 20px; }
+    .emp-stat-box { padding: 24px 28px 24px 36px; }
     .emp-company-stats-row { gap: 28px; }
     .emp-image-column { height: 220px; }
 
@@ -3080,18 +3180,17 @@ body.mode-login  .auth-box {
 .resume-theme-content {
     display: none !important;
     width: 100%;
-    min-height: 100%; 
+    min-height: 100%;
     font-family: 'Inter', 'Noto Sans Thai', sans-serif !important;
-    animation: fadeIn 0.4s ease-in-out;
     box-sizing: border-box;
-    word-break: break-word; 
+    word-break: break-word;
 }
 
 .resume-theme-content.active {
     display: flex !important;
 }
 
-/* 🟢 เพิ่ม CSS สำหรับไอคอนรูปคน (User) ให้ช่องรูปภาพ 🟢 */
+/*  เพิ่ม CSS สำหรับไอคอนรูปคน (User) ให้ช่องรูปภาพ  */
 .tpl1-photo, .tpl2-arch-photo, .v-photo, .tpl4-photo-circle {
     display: flex;
     justify-content: center;
@@ -3404,7 +3503,7 @@ body.mode-login  .auth-box {
     font-family: 'Inter', 'Noto Sans Thai', sans-serif !important;
     background: #F4F1EA;
     color: #333333;
-    padding: 80px 70px 60px 70px; /* ✅ เพิ่มขอบบนและล่างให้หนาขึ้นตามความต้องการ */
+    padding: 80px 70px 60px 70px; /*  เพิ่มขอบบนและล่างให้หนาขึ้นตามความต้องการ */
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -3444,10 +3543,10 @@ body.mode-login  .auth-box {
     display: flex;
     gap: 40px;
     align-items: flex-start;
-    margin-bottom: 30px; /* ✅ เพิ่มระยะห่างด้านล่างก่อนขึ้นประวัติโดยย่อ */
+    margin-bottom: 30px; /*  เพิ่มระยะห่างด้านล่างก่อนขึ้นประวัติโดยย่อ */
 }
 
-/* ✅ เตรียม CSS ให้พร้อมรับช่องใส่รูปภาพ (v-photo) ที่แนทจะไปใส่เพิ่ม */
+/*  เตรียม CSS ให้พร้อมรับช่องใส่รูปภาพ (v-photo) ที่แนทจะไปใส่เพิ่ม */
 .v-photo {
     width: 210px;
     height: 210px;
@@ -3455,7 +3554,7 @@ body.mode-login  .auth-box {
     flex-shrink: 0;
     border: 1px solid #ccc;
     border-radius: 4px; /* มุมมนเล็กน้อยให้เข้ากับวินเทจ */
-    /* 🟢 เตรียมแสดงผลรูปโปรไฟล์ 🟢 */
+    /*  เตรียมแสดงผลรูปโปรไฟล์  */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394A3B8'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
@@ -3823,7 +3922,7 @@ body.mode-login  .auth-box {
 /* ===== resume3.html: layout ยืดหยุ่น ขนาดตามจริง ===== */
 #resume3-paper {
     width: 860px;
-    min-height: 1220px !important; /* ✅ ฟิกซ์กระดาษ A4 */
+    min-height: 1220px !important; /*  ฟิกซ์กระดาษ A4 */
     height: auto;
     overflow: hidden; /* ไม่ให้ล้น */
     display: flex;
@@ -3835,7 +3934,7 @@ body.mode-login  .auth-box {
 
 #resume3-paper .resume-theme-content.active {
     display: flex !important;
-    min-height: 1220px; /* ✅ บังคับให้เนื้อหายืดเต็ม A4 */
+    min-height: 1220px; /*  บังคับให้เนื้อหายืดเต็ม A4 */
     align-items: stretch;
 }
 
@@ -3844,12 +3943,12 @@ body.mode-login  .auth-box {
     align-items: stretch;
 }
 
-/* 🟢 ปรับ CSS ข้อมูลฝั่งซ้าย 🟢 */
+/*  ปรับ CSS ข้อมูลฝั่งซ้าย  */
 #resume3-paper #tpl-minimal .tpl1-left {
-    padding: 80px 30px 60px 30px !important; /* ✅ ขอบบน 80px (ห่างเยอะสุด), ซ้ายขวา 30px, ขอบล่าง 60px */
+    padding: 80px 30px 60px 30px !important; /*  ขอบบน 80px (ห่างเยอะสุด), ซ้ายขวา 30px, ขอบล่าง 60px */
     display: flex;
     flex-direction: column;
-    min-height: 1220px; /* ✅ บังคับให้แถบซ้ายสูงเท่ากระดาษ A4 เพื่อให้ margin-top: auto ดัน "ทักษะ / ภาษา" ลงด้านล่างได้ */
+    min-height: 1220px; /*  บังคับให้แถบซ้ายสูงเท่ากระดาษ A4 เพื่อให้ margin-top: auto ดัน "ทักษะ / ภาษา" ลงด้านล่างได้ */
 }
 
 #resume3-paper #tpl-minimal .tpl1-photo {
@@ -3882,7 +3981,7 @@ body.mode-login  .auth-box {
 
 /* ดันหัวข้อ "ข้อมูลติดต่อ" ลงมาให้ห่างจากชื่อ */
 #resume3-paper #tpl-minimal .tpl1-left .tpl1-title:first-of-type {
-    margin-top: 50px !important; /* ✅ กำหนดระยะห่างให้ชัดเจน */
+    margin-top: 50px !important; /*  กำหนดระยะห่างให้ชัดเจน */
 }
 
 /* ให้หัวข้อ "ทักษะ / ภาษา" ห่างจากข้อมูลติดต่อ เท่ากับระยะที่ข้อมูลติดต่อห่างจากชื่อ */
@@ -3896,9 +3995,9 @@ body.mode-login  .auth-box {
     min-height: 60px;
 }
 
-/* 🟢 ปรับฝั่งขวาให้ล้อกัน 🟢 */
+/*  ปรับฝั่งขวาให้ล้อกัน  */
 #resume3-paper #tpl-minimal .tpl1-right {
-    padding: 80px 40px 60px 40px !important; /* ✅ เว้นขอบบนและล่างให้เท่าฝั่งซ้าย */
+    padding: 80px 40px 60px 40px !important; /*  เว้นขอบบนและล่างให้เท่าฝั่งซ้าย */
     gap: 12px;
     display: flex;
     flex-direction: column;
@@ -3906,7 +4005,7 @@ body.mode-login  .auth-box {
 
 #resume3-paper #tpl-minimal .tpl1-right::after {
     content: "";
-    flex-grow: 1; /* ✅ ให้มีพื้นที่เหลือด้านล่างแบบเดียวกับฝั่งซ้าย */
+    flex-grow: 1; /*  ให้มีพื้นที่เหลือด้านล่างแบบเดียวกับฝั่งซ้าย */
     min-height: 60px; 
 }
 
@@ -4068,6 +4167,13 @@ body.mode-login  .auth-box {
     min-height: calc(100vh - 344px);
 }
 
+/* desktop: back-bar ชิดซ้ายใต้ container */
+.ranking-back-bar {
+    width: 100%;
+    max-width: 1345px;
+    margin-bottom: 12px;
+}
+
 .ranking-page-title {
     font-size: 28px;
     font-weight: bold;
@@ -4085,11 +4191,20 @@ body.mode-login  .auth-box {
 }
 
 .ranking-subtitle {
+    display: none; /* ซ่อนทุก breakpoint — JS row แสดงแทน */
     font-size: 26px;
     font-weight: bold;
     color: #1E293B;
     margin-bottom: 20px;
     text-align: left;
+    font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+}
+
+/* ชื่อหมวด "เข้ากันมากที่สุด" ใน row เดียวกับปุ่ม */
+.ranking-row-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1E293B;
     font-family: 'Inter', 'Noto Sans Thai', sans-serif;
 }
 
@@ -4204,6 +4319,21 @@ body.mode-login  .auth-box {
 /* =========================================
    === 12. JOB DETAIL PAGE (resume5.html) ===
 ========================================= */
+
+/* AI score breakdown list — ลด font ให้ข้อมูลแต่ละบรรทัดไม่ตัด
+   ต้องตั้ง font-size บน li โดยตรงด้วย !important
+   เพราะ html.font-lg main li override ค่า inherited จาก ul */
+#render-ai-reasons details ul {
+    padding-left: 14px !important;
+    line-height: 1.4 !important;
+}
+#render-ai-reasons details ul li,
+html.font-sm #render-ai-reasons details ul li,
+html.font-lg #render-ai-reasons details ul li {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 1px !important;
+}
 .job-detail-layout {
     display: flex;
     flex-direction: column;
@@ -4680,6 +4810,33 @@ th {
     padding: 20px 50px;
 }
 
+/* Analytics chips */
+.analytics-stat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 20px;
+    min-width: 100px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.analytics-chip-num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #013c58;
+    font-family: 'Inter', sans-serif;
+    line-height: 1;
+}
+.analytics-chip-label {
+    font-size: 11px;
+    color: #64748b;
+    font-family: 'Inter','Noto Sans Thai', sans-serif;
+    margin-top: 4px;
+    white-space: nowrap;
+}
+
 .file-item {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr auto;
@@ -5135,7 +5292,7 @@ th {
 }
 
 /* ==========================================
-   💳 Expired Job Badge & Job Card State
+    Expired Job Badge & Job Card State
    ========================================== */
 .expired-badge {
     display: inline-flex;
@@ -5792,10 +5949,11 @@ th {
     inset: 0;
     background: rgba(30, 41, 59, 0.65);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 9990;
     padding: 20px;
+    overflow-y: auto;
 }
 .score-modal-box {
     background: #fff;
@@ -5803,9 +5961,12 @@ th {
     padding: 32px 36px 28px;
     width: 100%;
     max-width: 460px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     box-shadow: 0 20px 50px rgba(0,0,0,0.18);
     position: relative;
     animation: fadeIn 0.2s ease-out;
+    margin: auto;
 }
 .score-modal-close-btn {
     position: absolute;
@@ -6178,6 +6339,50 @@ th {
     position: absolute;
 }
 
+/* ==========================================
+   SKELETON LOADING
+========================================== */
+@keyframes skeleton-shine {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 800px 100%;
+    animation: skeleton-shine 1.4s infinite linear;
+    border-radius: 6px;
+}
+.skeleton-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.skeleton-line       { height: 14px; }
+.skeleton-line--sm   { height: 12px; width: 60%; }
+.skeleton-line--lg   { height: 18px; width: 70%; }
+.skeleton-line--full { width: 100%; }
+.skeleton-circle     { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; }
+.skeleton-row        { display: flex; align-items: center; gap: 12px; }
+.skeleton-badge      { height: 24px; width: 80px; border-radius: 20px; }
+
+/* Applicant skeleton card */
+.skeleton-applicant {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+.skeleton-applicant .skeleton-circle { width: 48px; height: 48px; }
+.skeleton-applicant .skeleton-info   { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
 /* ================== PRINT UTILITIES ================== */
 @media print {
     .no-print { display: none !important; }
@@ -6292,6 +6497,25 @@ th {
 }
 .mobile-nav-list > li.sub-open > button {
     background: #eff6ff;
+    color: #2563eb;
+}
+
+/* Direct link (ไม่มี submenu) */
+.mobile-nav-direct-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    text-decoration: none;
+    font-family: 'Noto Sans Thai','Inter',sans-serif;
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
+}
+.mobile-nav-direct-link:hover {
+    background: #f1f5f9;
     color: #2563eb;
 }
 
@@ -6485,7 +6709,8 @@ th {
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
-        pointer-events: none;
+        pointer-events: auto;
+        z-index: 1;
     }
     .logo-container img { max-height: 44px; }
     /* ซ่อน font-size-ctrl desktop — ย้ายเข้า hamburger menu */
@@ -6639,25 +6864,28 @@ th {
     .overview-section { padding: 48px 16px 56px; }
     .overview-title { font-size: 1.4rem; margin-bottom: 32px; }
     .overview-grid { gap: 14px; }
-    .overview-card { min-width: 140px; padding: 28px 16px; border-radius: 16px; }
-    .overview-number { font-size: 2rem; }
+    .overview-card { min-width: 140px; padding: 28px 16px; border-radius: 16px; gap: 4px; }
+    .overview-number { font-size: 1.7rem; }
     .overview-label { font-size: 0.85rem; }
 
     /* =========================================
-       RESUME BUILDER SECTION (home-jobseeker)
+       RESUME BUILDER SECTION — Mobile overrides
     ========================================= */
-    .resume-builder-section { padding: 28px 16px; }
-    .resume-container {
-        flex-direction: column;
-        gap: 16px;
-        padding: 0;
-        align-items: center;
+    .resume-builder-section { height: 240px; }
+    .resume-text {
+        width: 60%;
+        max-width: 60%;
+        padding: 20px 18px;
     }
-    .resume-image { width: 100%; max-width: 320px; }
-    .resume-pic { width: 100%; height: auto; border-radius: 12px; }
-    .resume-text { text-align: center; }
-    .resume-text p { font-size: 14px; }
-    .btn-build-resume { display: inline-block; margin-top: 12px; }
+    .resume-text p {
+        font-size: 11.5px;
+        margin-bottom: 14px;
+        line-height: 1.65;
+    }
+    .btn-build-resume {
+        padding: 10px 16px;
+        font-size: 0.78rem;
+    }
 
     /* =========================================
        EMPLOYER LOGOS SLIDER
@@ -6687,11 +6915,18 @@ th {
     }
     .auth-box {
         width: 100%;
-        padding: 24px 16px;
+        height: auto !important;
+        padding: 28px 20px 32px !important;
         border-radius: 14px;
     }
-    .auth-title { font-size: 22px; }
-    .auth-submit-btn { width: 100%; font-size: 15px; padding: 14px; }
+    .auth-title { font-size: 22px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 14px; margin-bottom: 6px; }
+    .form-input { width: 100% !important; box-sizing: border-box; font-size: 15px; height: 42px; }
+    .password-input-wrapper { width: 100% !important; height: 42px; box-sizing: border-box; }
+    .form-action-row { flex-wrap: nowrap; gap: 10px; margin-top: 20px; }
+    .btn-google { flex: 1; justify-content: center; font-size: 12px; padding: 10px 12px; }
+    .auth-submit-btn { flex: 1; width: auto !important; font-size: 14px; padding: 10px 12px; }
 
     /* =========================================
        RESUME FORM (resume.html)
@@ -6721,10 +6956,11 @@ th {
     .job-detail-layout { padding: 12px 16px; }
     .job-detail-wrapper { padding: 0; }
     .job-detail-card { padding: 20px 14px; border-radius: 12px; }
-    .job-header-info { flex-direction: column; gap: 12px; }
-    .job-logo-large { width: 60px; height: 60px; font-size: 28px; }
-    .job-title-main { font-size: 22px; }
-    .job-company-name { font-size: 16px; }
+    .job-header-info { flex-direction: row !important; align-items: flex-start !important; gap: 12px; }
+    .job-logo-large { width: 48px !important; height: 48px !important; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .job-title-group { justify-content: flex-start; }
+    .job-title-main { font-size: 18px; margin-bottom: 2px; padding-right: 48px; }
+    .job-company-name { font-size: 14px; margin-bottom: 10px; }
     .job-meta-tags { flex-wrap: wrap; gap: 6px; }
     .meta-tag { font-size: 13px; padding: 5px 10px; }
     .job-requirements-grid { grid-template-columns: 1fr; gap: 10px; }
@@ -6753,8 +6989,31 @@ th {
     }
     .filter-row { flex-direction: column; gap: 10px; }
     .filter-group { min-width: 100%; }
+
+    /* ลูกศร select ขยับซ้าย */
+    .mobile-search-section .filter-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 32px;
+    }
+
+    /* ปุ่ม filter actions */
     .filter-actions { flex-direction: row; gap: 8px; }
-    .filter-apply-btn, .filter-reset-btn { flex: 1; }
+    .mobile-search-section .filter-apply-btn {
+        flex: 1;
+        padding: 10px 12px;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .mobile-search-section .filter-reset-btn {
+        flex: 1;
+        padding: 10px 12px;
+        font-size: 14px;
+        white-space: nowrap;
+    }
 
     /* =========================================
        PROFILE PAGES (profile-job / profile-em)
@@ -6763,44 +7022,383 @@ th {
     .profile-page-title { font-size: 24px; margin-bottom: 16px; }
     .profile-container { flex-direction: column; gap: 16px; }
     .profile-box { width: 100%; padding: 16px; }
-    .profile-info-grid { gap: 8px; }
+
+    /* Profile info grid — ลด column label ให้พอดีมือถือ */
+    .profile-info-grid {
+        grid-template-columns: 100px 1fr;
+        gap: 12px 12px;
+    }
     .info-label { font-size: 13px; }
-    .info-value { font-size: 14px; }
+    .info-value { font-size: 13px; }
+
+    /* Resume file section — ลด padding และ font ให้อยู่บรรทัดเดียว */
+    .files-header { padding: 16px; }
+    .files-header h2 { font-size: 18px; }
+    .files-list { padding: 12px 16px; }
+    .file-item { font-size: 13px; gap: 8px; }
+    .employer-item { grid-template-columns: 1fr auto auto; gap: 8px; }
+    .file-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-date { font-size: 12px; white-space: nowrap; }
 
     /* =========================================
        RESUME PREVIEW (profile-job2.html)
     ========================================= */
-    .resume3-layout { padding: 12px 16px; }
-    .preview-paper { width: 100%; overflow-x: auto; border-radius: 8px; }
+    /* =========================================
+       RESUME3 PREVIEW PAGE — Mobile
+    ========================================= */
+    .resume3-layout {
+        padding: 12px 12px 40px;
+        align-items: center;
+    }
+
+    /* ซ่อน back bar + title row บน mobile ให้กระชับ */
+    .resume3-title-row {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .resume-page-title { font-size: 16px; }
+    .btn-back-template { font-size: 13px; padding: 6px 10px; }
+
+    /* Preview paper scale เหมือน resume2 */
+    #resume3-paper {
+        width: calc(100vw - 24px) !important;
+        max-width: 360px !important;
+        min-height: 0 !important;
+        height: calc((100vw - 24px) * 1.419) !important;
+        max-height: calc(360px * 1.419) !important;
+        overflow: hidden !important;
+        margin-bottom: 0 !important;
+        position: relative !important;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.14) !important;
+    }
+    #resume3-paper .resume-theme-content.active {
+        position: absolute !important;
+        top: 0 !important; left: 0 !important;
+        width: 860px !important;
+        min-height: 1220px !important;
+        transform-origin: top left !important;
+    }
+
+    /* back button ไม่มีกรอบ */
+    .btn-back-template {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 4px 0;
+    }
+    .btn-back-template:hover {
+        background: transparent;
+    }
+
+    /* ปุ่ม 3 ปุ่มแนวนอน ขนาดเท่ากันทุกปุ่ม */
+    .resume3-actions {
+        margin-top: 14px !important;
+        gap: 8px !important;
+        padding-bottom: 20px !important;
+        flex-wrap: nowrap !important;
+        width: 100%;
+        justify-content: center !important;
+    }
+    .resume3-actions .btn-action,
+    .resume3-actions a.btn-action {
+        flex: 0 0 95px !important;
+        width: 95px !important;
+        min-width: 95px !important;
+        max-width: 95px !important;
+        height: 36px !important;
+        font-size: 12px !important;
+        border-radius: 8px !important;
+        white-space: nowrap;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
     .form-actions { flex-direction: column; gap: 12px; }
     .form-actions button { width: 100%; }
 
     /* =========================================
-       TEMPLATE SELECTION (resume2.html)
+       TEMPLATE SELECTION (resume2.html) — Mobile Layout
+       ลำดับ: preview A4 → ปุ่มบันทึก → ตัวเลือก 4 แบบแนวนอน
     ========================================= */
     .template-selection-layout {
         flex-direction: column;
-        height: auto; overflow: visible;
+        height: auto;
+        overflow: visible;
     }
+
+    /* ซ่อน sidebar ปกติ — ใช้ strip ด้านล่างแทน */
     .template-sidebar {
-        width: 100%; height: auto;
-        padding: 16px;
+        order: 3;
+        width: 100%;
+        height: auto;
+        padding: 12px 12px 20px;
         border-right: none;
-        border-bottom: 1px solid #E2E8F0;
+        border-top: 1px solid #E2E8F0;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: center;
-        gap: 12px;
+        align-items: center;
+        gap: 10px;
+        overflow-x: auto;
         overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        background: #fff;
     }
-    .sidebar-title { width: 100%; text-align: center; font-size: 18px; margin-bottom: 8px; }
+    .sidebar-title {
+        display: none; /* ซ่อน title ใน strip แนวนอน */
+    }
+    .template-thumb {
+        width: 80px;
+        height: 56px;
+        flex-shrink: 0;
+        border-radius: 6px;
+    }
+    .thumb-label {
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Preview area — order 1 */
+    .template-preview-area {
+        order: 1;
+        padding: 16px 12px 0;
+        overflow-y: visible;
+        height: auto;
+        align-items: center;
+    }
+
+    /* back bar บน mobile */
+    .resume2-back-bar {
+        width: 100%;
+        max-width: 360px;
+        margin-bottom: 8px;
+    }
+    .btn-back-resume {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 4px 0;
+        color: #4B5563;
+    }
+    .btn-back-resume:hover {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Preview paper — scale เนื้อหา 860×1220 ให้พอดีหน้าจอ */
+    .preview-paper {
+        --paper-w: calc(100vw - 24px);
+        --scale: calc((100vw - 24px) / 860);
+        width: var(--paper-w);
+        max-width: 360px;
+        min-height: 0 !important;
+        /* ความสูง = 1220px * scale เพื่อให้เห็นเนื้อหาครบ */
+        height: calc((100vw - 24px) * (1220 / 860));
+        max-height: calc(360px * (1220 / 860));
+        overflow: hidden;
+        margin-bottom: 0;
+        border-radius: 4px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+        position: relative;
+    }
+
+    /* Scale เนื้อหาจาก 860px → ความกว้างหน้าจอ */
+    .preview-paper .resume-theme-content {
+        transform-origin: top left;
+        width: 860px;
+        min-height: 1220px;
+        position: absolute;
+        top: 0; left: 0;
+        transform: scale(calc((100vw - 24px) / 860));
+    }
+
+    /* ปุ่มบันทึก — order 2 */
+    .next-action-wrapper {
+        order: 2;
+        width: 100%;
+        max-width: 360px;
+        justify-content: center;
+        margin: 14px auto 4px;
+    }
+    .btn-next-step {
+        width: 170px;
+        font-size: 13px;
+        height: 44px;
+        border-radius: 10px;
+        white-space: nowrap;
+        padding: 0 12px;
+    }
+
+    /* =========================================
+       RANKING PAGE (resume4.html) — Mobile
+    ========================================= */
+    .ranking-back-bar {
+        width: 100%;
+        max-width: none;
+        margin-bottom: 8px;
+    }
+    .ranking-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4B5563;
+        text-decoration: none;
+        padding: 4px 0;
+        font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+    }
+    .ranking-layout {
+        padding: 16px 12px 60px;
+        align-items: flex-start;
+    }
+    .ranking-page-title {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+        text-align: center !important;
+        width: 100%;
+    }
+    /* ซ่อน subtitle ตำแหน่งเดิม — JS จะ inject ใต้ rematch แทน */
+    .ranking-subtitle {
+        display: none !important;
+    }
+    /* mobile: row-title กลับเป็น font เล็กเหมือนเดิม */
+    .ranking-row-title {
+        font-size: 16px !important;
+        font-weight: 700;
+    }
+    .ranking-container { width: 100%; }
+    .ranking-list { gap: 10px; }
+
+    /* rank card — layout ใหม่บน mobile
+       โครงสร้าง:
+       [num] [LOGO  company_name ......] [score]
+             [ตำแหน่งที่รับ : ...]
+             [ประเภทงาน   : ...]
+    */
+    .rank-card {
+        width: 100% !important;
+        height: auto !important;
+        padding: 12px 10px 12px 12px !important;
+        border-left-width: 5px !important;
+        display: grid !important;
+        grid-template-columns: 24px 40px 1fr 54px !important;
+        grid-template-rows: auto auto auto !important;
+        column-gap: 8px !important;
+        row-gap: 3px !important;
+        align-items: center !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+    }
+
+    /* col1: เลขอันดับ — row 1 เท่านั้น กลางแนวตั้ง */
+    .rank-number {
+        grid-column: 1 !important;
+        grid-row: 1 / 4 !important;
+        width: auto !important;
+        font-size: 16px !important;
+        text-align: center !important;
+        align-self: center !important;
+    }
+
+    /* col2: logo — span ทุก row เพื่อให้อยู่กึ่งกลางแนวตั้ง */
+    .rank-logo-placeholder,
+    .rank-logo {
+        grid-column: 2 !important;
+        grid-row: 1 / 4 !important;
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 11px !important;
+        margin-right: 0 !important;
+        flex-shrink: 0 !important;
+        align-self: center !important;
+        justify-self: center !important;
+    }
+
+    /* col3: company name — row 1 */
+    .rank-company {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        width: auto !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding-right: 0 !important;
+        align-self: center !important;
+    }
+
+    /* col4: score circle — span all rows */
+    .rank-card > div:last-child {
+        grid-column: 4 !important;
+        grid-row: 1 / 4 !important;
+        position: relative !important;
+        right: auto !important; top: auto !important;
+        transform: none !important;
+        width: 50px !important;
+        height: 50px !important;
+        align-self: center !important;
+        justify-self: center !important;
+        margin-left: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    .rank-card > div:last-child > span:first-child {
+        font-size: 14px !important;
+    }
+
+    /* ตำแหน่งที่รับ — row 2 col 3 (ตรงกับชื่อบริษัท) */
+    .rank-position {
+        grid-column: 3 / 4 !important;
+        grid-row: 2 !important;
+        width: auto !important;
+        font-size: 11px !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+        color: #475569;
+    }
+
+    /* ประเภทงาน — row 3 col 3 (ตรงกับชื่อบริษัท) */
+    .rank-type {
+        grid-column: 3 / 4 !important;
+        grid-row: 3 !important;
+        width: auto !important;
+        font-size: 11px !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+        color: #64748b;
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        text-align: left !important;
+        gap: 4px !important;
+        flex: unset !important;
+    }
+
+    .rank-label { color: #94a3b8; }
+    .rank-value { font-weight: 600; color: #334155; }
+
+    /* ปุ่ม Rematch เล็กลง */
+    #btn-rematch {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+    }
+    #btn-rematch svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
 
     /* =========================================
        APP STATUS SECTION
     ========================================= */
-    .app-status-section { padding: 16px; }
-    .app-status-container { padding: 0; }
-    .app-status-title { font-size: 20px; }
+    .app-status-section { padding: 0; }
+    .app-status-container { padding: 20px 16px 16px; width: 100%; box-sizing: border-box; }
+    .app-status-title { font-size: 20px; padding-top: 4px; }
 
     /* =========================================
        FOOTER
@@ -6877,8 +7475,8 @@ th {
 
     /* Overview */
     .overview-grid { gap: 10px; }
-    .overview-card { min-width: 120px; padding: 22px 12px; }
-    .overview-number { font-size: 1.6rem; }
+    .overview-card { min-width: 120px; padding: 22px 12px; gap: 3px; }
+    .overview-number { font-size: 1.4rem; }
     .overview-label { font-size: 0.78rem; }
 
     /* Profile */
@@ -6926,7 +7524,7 @@ th {
 .btn-unsave:hover { background: #fee2e2; }
 
 /* ==========================================
-   🔔 NOTIFICATION BELL — นายจ้าง
+    NOTIFICATION BELL — นายจ้าง
 ========================================== */
 
 /* ── Bell button ใน navbar ── */
@@ -7365,14 +7963,14 @@ th {
 .au-stat-num {
     display: inline-block;
     font-size: 2.8rem;
-    font-weight: 800;
+    font-weight: 700;
     color: #ffffff;
     line-height: 1;
 }
 
 .au-stat-unit {
     font-size: 1.8rem;
-    font-weight: 800;
+    font-weight: 700;
     color: #7dd3fc;
 }
 
@@ -8103,7 +8701,10 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
         max-width: 420px;
         margin: 0 auto;
     }
-    .pricing-card { padding: 24px 20px; }
+    .pricing-card { padding: 0; }
+    .pricing-card__header { padding: 24px 20px 18px; }
+    .pricing-card__features { padding: 18px 20px 0; }
+    .pricing-card__btn { margin: 18px 20px 20px; }
     .pricing-card__price { font-size: 2rem; }
 
     /* ── Complete Profile Form (Google signup) ── */
@@ -8179,27 +8780,72 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
     .emp-stats-column { max-width: 100%; }
     .emp-image-column { display: none; } /* ซ่อน illustration บนมือถือ */
     .emp-company-stats-row {
-        flex-direction: column;
-        gap: 12px;
+        flex-direction: row;
+        gap: 24px;
     }
-    .emp-company-stat-item { width: 100%; }
-    .emp-stat-box { padding: 22px 18px; }
+    .emp-company-stat-item { width: auto; }
+    .emp-stat-box { padding: 22px 28px 22px 36px; }
     .emp-stat-value { font-size: 2rem; }
     .emp-top-company { font-size: 0.95rem; }
 
-    /* ── Saved jobs card — stack on mobile ── */
+    /* ── Saved jobs card — row layout (เหมือน desktop) ── */
     .saved-job-card {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 10px;
-        padding: 14px 14px;
+        padding: 14px;
     }
-    .saved-job-actions { width: 100%; justify-content: flex-end; }
+    .saved-job-actions { width: auto; justify-content: flex-end; flex-shrink: 0; }
+
+    /* ── หัวข้อ งานที่บันทึกไว้ — เพิ่ม padding ด้านบนให้ห่างจากขอบกล่อง ── */
+    #saved-jobs-section .app-status-title { padding-top: 8px; }
+
+    /* ── Application status stepper — fit inside card on mobile ── */
+    .stepper-track {
+        padding: 4px 0;
+        gap: 0;
+    }
+    .stepper-step-item {
+        min-width: 52px;
+        max-width: 64px;
+        gap: 6px;
+    }
+    .stepper-node {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    .stepper-line {
+        margin-top: 14px;
+        min-width: 8px;
+    }
+    .stepper-label {
+        font-size: 10px;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    /* ── ปุ่มใน saved-job-card — เล็กลงบน mobile ── */
+    .btn-view-saved {
+        padding: 5px 10px;
+        font-size: 11.5px;
+    }
+    .btn-unsave {
+        width: 24px;
+        height: 24px;
+    }
+    .btn-unsave svg {
+        width: 13px;
+        height: 13px;
+    }
 
     /* ── About Us (extra mobile padding) ── */
     .au-section { padding: 40px 16px; }
     .au-mission, .au-values, .au-gallery, .au-cta, .au-stats { padding: 40px 16px; }
     .au-stats__inner { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .au-stat-num { font-size: 2rem; }
+    .au-stat-unit { font-size: 1.2rem; }
+    .au-stat-label { font-size: 0.78rem; margin-top: 6px; }
     .au-values__grid { grid-template-columns: 1fr 1fr; }
     .au-hero { padding: 36px 16px; }
 
@@ -8216,7 +8862,7 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
     .preview-toolbar-actions a { flex: 1; justify-content: center; }
 
     /* ── Application status section ── */
-    .app-status-section { padding: 16px; }
+    .app-status-section { padding: 0; }
     .app-status-card { padding: 16px 14px; }
 
     /* ── Core features section (Index) ── */
@@ -8230,6 +8876,47 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
     /* ── Pricing CTA button ── */
     .pricing-card .btn-pricing,
     .pricing-card .auth-submit-btn { width: 100%; }
+
+    /* ── Analytics stat chips (profile-em2) ── */
+    #employer-analytics-bar { margin: 8px 12px !important; border-radius: 10px; border: 1px solid #e2e8f0 !important; border-bottom: 1px solid #e2e8f0 !important; }
+    #employer-analytics-bar > div { justify-content: center; }
+    .analytics-stat-chip { min-width: 80px; padding: 8px 14px; }
+    .analytics-chip-num { font-size: 1.1rem; }
+    .analytics-chip-label { font-size: 10px; }
+
+    /* ── Applicant cards (profile-em2 JS-generated) ── */
+    .appl-card {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto auto !important;
+        grid-template-rows: auto auto !important;
+        column-gap: 6px !important;
+        row-gap: 6px !important;
+        padding: 10px 0 10px 12px !important;
+        align-items: center !important;
+    }
+    .appl-avatar   { grid-column: 1; grid-row: 1; align-self: center;
+                     width: 32px !important; height: 32px !important; font-size: 12px !important; }
+    .appl-name-section { grid-column: 2; grid-row: 1; align-self: center; min-width: 0 !important; }
+    .appl-name     { font-size: 12px !important; }
+    .appl-job-title { font-size: 10px !important; }
+    .appl-score    { grid-column: 3; grid-row: 1; align-self: center; justify-self: end; }
+    .appl-score .score-clickable-badge { min-width: unset !important; padding: 4px 10px !important; font-size: 12px !important; }
+    .appl-score .score-sub-label { display: none !important; }
+    .appl-star     { grid-column: 4; grid-row: 1; align-self: center; justify-self: end; padding-right: 0 !important; }
+    .appl-date     { grid-column: 1 / 5; grid-row: 2; text-align: right !important;
+                     border-left: none !important; padding-left: 0 !important;
+                     padding-right: 12px !important;
+                     min-width: unset !important; align-self: center;
+                     font-size: 10px !important; }
+
+    /* ── Summary stat cards (profile-em2 JS-generated) ── */
+    .em2-summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .em2-summary-card:last-child { grid-column: 1 / -1; justify-self: stretch; }
+    .em2-summary-card { padding: 12px 14px !important; gap: 10px !important; }
+    .em2-summary-icon { width: 36px !important; height: 36px !important; border-radius: 8px !important; flex-shrink: 0 !important; }
+    .em2-summary-icon svg { width: 16px !important; height: 16px !important; }
+    .em2-summary-num { font-size: 20px !important; }
+    .em2-summary-label { font-size: 11px !important; white-space: nowrap !important; }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -8246,7 +8933,10 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
 
     /* ── Pricing ── */
     .pricing-section__title { font-size: 1.3rem; }
-    .pricing-card { padding: 20px 16px; border-radius: 14px; }
+    .pricing-card { padding: 0; border-radius: 14px; overflow: hidden; }
+    .pricing-card__header { padding: 20px 16px 16px; }
+    .pricing-card__features { padding: 16px 16px 0; }
+    .pricing-card__btn { margin: 16px 16px 18px; }
     .pricing-card__price { font-size: 1.7rem; }
 
     /* ── Post Job Form ── */
@@ -8261,7 +8951,7 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
     .emp-stat-value { font-size: 1.7rem; }
     .emp-stat-label { font-size: 0.78rem; }
     .emp-stat-desc { font-size: 0.78rem; }
-    .emp-stat-box { padding: 18px 14px; }
+    .emp-stat-box { padding: 18px 24px 18px 36px; }
     .emp-company-stats-row { gap: 8px; }
 
     /* ── Complete profile ── */
@@ -8295,10 +8985,13 @@ html.font-lg main .stat-number { font-size: 3.2rem; }
     .resume-card { padding: 16px 10px; }
     .resume-card-title { font-size: 15px; }
 
-    .pricing-card { padding: 18px 12px; }
+    .pricing-card { padding: 0; overflow: hidden; }
+    .pricing-card__header { padding: 18px 14px 14px; }
+    .pricing-card__features { padding: 14px 14px 0; }
+    .pricing-card__btn { margin: 14px 14px 16px; }
     .pricing-card__price { font-size: 1.5rem; }
 
-    .emp-stat-box { padding: 16px 12px; }
+    .emp-stat-box { padding: 16px 20px 16px 32px; }
     .emp-stat-value { font-size: 1.5rem; }
 }
 

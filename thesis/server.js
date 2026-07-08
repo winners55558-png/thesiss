@@ -4,6 +4,19 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const nodemailer = require('nodemailer');
+
+// ── Admin server-side sessions ──
+const adminSessions = new Map();
+
+// ── Nodemailer transporter (Gmail) ──
+const mailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS
+    }
+});
 const { OAuth2Client } = require('google-auth-library');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -19,20 +32,31 @@ app.use(express.static(__dirname));
 // ==========================================
 // 1. การเชื่อมต่อ MySQL
 // ==========================================
-const db = mysql.createConnection({
-    host: 'mysql-3bf4aa3a-winners55558-146e.k.aivencloud.com',       // เอามาจาก Aiven (เช่น mysql-xxxx.aivencloud.com)
-    port: 21516,                   // เปลี่ยนเป็นเลข Port ของ Aiven
-    user: 'avnadmin',              // Username จาก Aiven
-    password: 'AVNS_J_JXTkSKT23RJu6azsK', // Password จาก Aiven
-    database: 'defaultdb',         // เปลี่ยนชื่อ Database เป็น defaultdb 
+// 1. การเชื่อมต่อ MySQL (เปลี่ยนมาใช้ createPool แทน createConnection)
+const db = mysql.createPool({
+    host: 'mysql-3bf4aa3a-winners55558-146e.k.aivencloud.com',
+    port: 21516,
+    user: 'avnadmin',
+    password: 'AVNS_J_JXTkSKT23RJu6azsK', // ⚠️ อย่าลืมใส่รหัสผ่านจริงของ Aiven นะครับ
+    database: 'defaultdb',
     ssl: {
-        rejectUnauthorized: false  // บรรทัดนี้สำคัญมาก! Aiven บังคับใช้ SSL
-    }
+        rejectUnauthorized: false
+    },
+    // ตั้งค่าสำหรับ Pool เพื่อให้มันต่ออายุอัตโนมัติเวลาหลุด
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(err => {
-    if (err) throw err;
-    console.log('เชื่อมต่อ MySQL สำเร็จ!');
+// ทดสอบการเชื่อมต่อ
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error('Database connection failed: ' + err.stack);
+        return;
+    }
+    console.log('เชื่อมต่อ MySQL แบบ Pool สำเร็จและพร้อมใช้งาน!');
+    connection.release(); // คืนสถานะกลับสู่ Pool
+});
 
     // ── สร้าง saved_jobs table ทันที (ไม่รอ ensureColumn chain) ──
     db.query(`
@@ -135,7 +159,21 @@ db.connect(err => {
                                                 ensureColumn('match_analysis', 'ai_narrative', 'TEXT DEFAULT NULL', () => {});
                                             }
                                         });
-                                    });
+                                        // ── Auto-create seeker_notifications table ──
+                                        db.query(`CREATE TABLE IF NOT EXISTS seeker_notifications (
+                                            id INT AUTO_INCREMENT PRIMARY KEY,
+                                            seeker_id INT NOT NULL,
+                                            application_id INT NOT NULL,
+                                            job_title VARCHAR(255),
+                                            company_name VARCHAR(255),
+                                            result ENUM('approved','rejected') NOT NULL,
+                                            is_read TINYINT(1) DEFAULT 0,
+                                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                                        )`, (err) => {
+                                            if (err) console.error('seeker_notifications table error:', err.message);
+                                            else console.log(' seeker_notifications table พร้อมใช้งาน');
+                                        });
+                                                                            });
                                 }); // is_starred
                                                 });
                                             });
@@ -1476,6 +1514,9 @@ app.get('/api/application/:appId', (req, res) => {
 // ==========================================
 // 🌟 18c. API อัปเดตผลการเรียกสัมภาษณ์ (approved / rejected)
 // ==========================================
+// ==========================================
+//  18c. API อัปเดตผลการเรียกสัมภาษณ์ (approved / rejected)
+// ==========================================
 app.patch('/api/applications/:appId/result', (req, res) => {
     const { result } = req.body;
     if (!['approved', 'rejected'].includes(result)) {
@@ -1483,17 +1524,57 @@ app.patch('/api/applications/:appId/result', (req, res) => {
     }
     db.query(`UPDATE applications SET status = ? WHERE id = ?`, [result, req.params.appId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        // ดึงข้อมูลติดต่อ seeker เพื่อแสดงใน popup ฝั่ง HR
-        const contactSql = `
-            SELECT s.first_name, s.last_name, s.email, s.phone
-            FROM applications a JOIN job_seekers s ON a.seeker_id = s.id
+
+        // ดึงข้อมูล seeker + job เพื่อบันทึก notification
+        const infoSql = `
+            SELECT s.id AS seeker_id, s.first_name, s.last_name, s.email, s.phone,
+                   j.job_title, e.company_name
+            FROM applications a
+            JOIN job_seekers s ON a.seeker_id = s.id
+            JOIN jobs_post j ON a.job_id = j.id
+            JOIN employers e ON j.employer_id = e.id
             WHERE a.id = ?
         `;
-        db.query(contactSql, [req.params.appId], (err2, rows) => {
-            const contact = (rows && rows.length > 0) ? rows[0] : null;
+        db.query(infoSql, [req.params.appId], (err2, rows) => {
+            const info = (rows && rows.length > 0) ? rows[0] : null;
+            if (info) {
+                // บันทึก notification ให้ seeker
+                db.query(
+                    `INSERT INTO seeker_notifications (seeker_id, application_id, job_title, company_name, result)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [info.seeker_id, req.params.appId, info.job_title, info.company_name, result],
+                    (nErr) => { if (nErr) console.error('seeker_notifications insert error:', nErr.message); }
+                );
+            }
+            const contact = info ? { first_name: info.first_name, last_name: info.last_name, email: info.email, phone: info.phone } : null;
             res.json({ success: true, status: result, contact });
         });
     });
+});
+
+// ── GET /api/seeker-notifications/:seekerId — ดึง notification ของผู้หางาน ──
+app.get('/api/seeker-notifications/:seekerId', (req, res) => {
+    db.query(
+        `SELECT * FROM seeker_notifications WHERE seeker_id = ? ORDER BY created_at DESC LIMIT 30`,
+        [req.params.seekerId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        }
+    );
+});
+
+// ── POST /api/seeker-notifications/mark-read — mark อ่านแล้ว ──
+app.post('/api/seeker-notifications/mark-read', (req, res) => {
+    const { seeker_id } = req.body;
+    db.query(
+        `UPDATE seeker_notifications SET is_read = 1 WHERE seeker_id = ?`,
+        [seeker_id],
+        (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        }
+    );
 });
 
 // ==========================================
@@ -1843,12 +1924,22 @@ app.get('/api/admin/revenue', (req, res) => {
 
 app.get('/api/admin/stats', (req, res) => {
     const queries = {
-        total_seekers:      'SELECT COUNT(*) AS count FROM job_seekers',
-        total_employers:    'SELECT COUNT(*) AS count FROM employers',
-        total_jobs:         'SELECT COUNT(*) AS count FROM jobs_post',
-        total_applications: 'SELECT COUNT(*) AS count FROM applications',
-        total_pending_apps: "SELECT COUNT(*) AS count FROM applications WHERE status = 'pending'",
-        total_hired:        "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'"
+        total_seekers:          'SELECT COUNT(*) AS count FROM job_seekers',
+        total_employers:        'SELECT COUNT(*) AS count FROM employers',
+        total_jobs:             'SELECT COUNT(*) AS count FROM jobs_post',
+        total_applications:     'SELECT COUNT(*) AS count FROM applications',
+        total_pending_apps:     "SELECT COUNT(*) AS count FROM applications WHERE status = 'pending'",
+        total_hired:            "SELECT COUNT(DISTINCT seeker_id) AS count FROM applications WHERE status = 'approved'",
+        // trend: current period (last 0-24h)
+        seekers_today:          'SELECT COUNT(*) AS count FROM job_seekers WHERE created_at >= NOW() - INTERVAL 24 HOUR',
+        employers_today:        'SELECT COUNT(*) AS count FROM employers WHERE created_at >= NOW() - INTERVAL 24 HOUR',
+        jobs_today:             'SELECT COUNT(*) AS count FROM jobs_post WHERE created_at >= NOW() - INTERVAL 24 HOUR',
+        applications_today:     'SELECT COUNT(*) AS count FROM applications WHERE created_at >= NOW() - INTERVAL 24 HOUR',
+        // trend: previous period (last 24-48h)
+        seekers_yesterday:      'SELECT COUNT(*) AS count FROM job_seekers WHERE created_at BETWEEN NOW() - INTERVAL 48 HOUR AND NOW() - INTERVAL 24 HOUR',
+        employers_yesterday:    'SELECT COUNT(*) AS count FROM employers WHERE created_at BETWEEN NOW() - INTERVAL 48 HOUR AND NOW() - INTERVAL 24 HOUR',
+        jobs_yesterday:         'SELECT COUNT(*) AS count FROM jobs_post WHERE created_at BETWEEN NOW() - INTERVAL 48 HOUR AND NOW() - INTERVAL 24 HOUR',
+        applications_yesterday: 'SELECT COUNT(*) AS count FROM applications WHERE created_at BETWEEN NOW() - INTERVAL 48 HOUR AND NOW() - INTERVAL 24 HOUR'
     };
 
     let stats = {};
@@ -1861,7 +1952,27 @@ app.get('/api/admin/stats', (req, res) => {
             stats[key] = results[0].count;
             completed++;
             if (completed === keys.length) {
-                res.json(stats);
+                // Build trend objects
+                function calcTrend(current, previous) {
+                    const diff = current - previous;
+                    const direction = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+                    const pct = previous > 0 ? Math.round(Math.abs(diff) / previous * 100) : (current > 0 ? 100 : 0);
+                    return { current, previous, direction, pct };
+                }
+                res.json({
+                    total_seekers:      stats.total_seekers,
+                    total_employers:    stats.total_employers,
+                    total_jobs:         stats.total_jobs,
+                    total_applications: stats.total_applications,
+                    total_hired:        stats.total_hired,
+                    total_pending_apps: stats.total_pending_apps,
+                    trends: {
+                        seekers:      calcTrend(stats.seekers_today,      stats.seekers_yesterday),
+                        employers:    calcTrend(stats.employers_today,     stats.employers_yesterday),
+                        jobs:         calcTrend(stats.jobs_today,          stats.jobs_yesterday),
+                        applications: calcTrend(stats.applications_today,  stats.applications_yesterday)
+                    }
+                });
             }
         });
     });
@@ -1890,6 +2001,9 @@ app.delete('/api/admin/delete-job/:jobId', (req, res) => {
 // ==========================================
 // 🌟 22.4 API สำหรับตรวจสอบ Login ของ Admin
 // ==========================================
+// ==========================================
+//  22.4 API สำหรับตรวจสอบ Login ของ Admin
+// ==========================================
 require('dotenv').config(); // เรียกใช้ไฟล์ .env
 
 app.post('/api/admin/login', (req, res) => {
@@ -1901,12 +2015,35 @@ app.post('/api/admin/login', (req, res) => {
     const envKey  = process.env.ADMIN_KEY;
 
     if (username === envUser && password === envPass && secret_key === envKey) {
-        // ถ้ารหัสตรงกัน ให้ส่ง success กลับไป
-        res.json({ success: true, message: "เข้าสู่ระบบแอดมินสำเร็จ" });
+        // Generate server-side token and store in Map
+        const token = require('crypto').randomBytes(32).toString('hex');
+        adminSessions.set(token, { created: Date.now() });
+        res.json({ success: true, message: "เข้าสู่ระบบแอดมินสำเร็จ", token });
     } else {
-        // ถ้ารหัสผิด
         res.status(401).json({ success: false, message: "ข้อมูลไม่ถูกต้อง" });
     }
+});
+
+// ── Verify admin session ──
+app.get('/api/admin/verify-session', (req, res) => {
+    const auth = req.headers['authorization'] || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    const session = adminSessions.get(token);
+    if (!session) return res.status(401).json({ valid: false, message: 'Invalid or missing token' });
+    const EIGHT_HOURS = 8 * 60 * 60 * 1000;
+    if (Date.now() - session.created > EIGHT_HOURS) {
+        adminSessions.delete(token);
+        return res.status(401).json({ valid: false, message: 'Session expired' });
+    }
+    res.json({ valid: true });
+});
+
+// ── Admin logout ──
+app.post('/api/admin/logout', (req, res) => {
+    const auth = req.headers['authorization'] || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    adminSessions.delete(token);
+    res.json({ success: true });
 });
 
 // ==========================================
@@ -2070,6 +2207,208 @@ app.post('/api/employer/complete-profile', (req, res) => {
         if (result.affectedRows === 0) return res.status(404).json({ error: 'ไม่พบบัญชีนายจ้าง' });
         res.json({ success: true, message: 'บันทึกข้อมูลบริษัทสำเร็จ!' });
     });
+});
+
+// ==========================================
+// GET /api/employer-analytics/:employerId — สถิติผู้สมัครสำหรับนายจ้าง
+// ==========================================
+app.get('/api/employer-analytics/:employerId', (req, res) => {
+    const { employerId } = req.params;
+
+    const queries = {
+        total_jobs:    `SELECT COUNT(*) AS cnt FROM jobs_post WHERE employer_id = ?`,
+        total_apps:    `SELECT COUNT(*) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ?`,
+        approved:      `SELECT COUNT(*) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? AND a.status = 'approved'`,
+        rejected:      `SELECT COUNT(*) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? AND a.status = 'rejected'`,
+        pending:       `SELECT COUNT(*) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? AND a.status = 'pending'`,
+        avg_score:     `SELECT ROUND(AVG(a.match_score),1) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? AND a.match_score > 0`,
+        top_jobs:      `SELECT j.job_title, COUNT(a.id) AS app_count FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? GROUP BY j.id ORDER BY app_count DESC LIMIT 5`,
+        recent_7days:  `SELECT DATE(a.created_at) AS day, COUNT(*) AS cnt FROM applications a JOIN jobs_post j ON a.job_id = j.id WHERE j.employer_id = ? AND a.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) GROUP BY DATE(a.created_at) ORDER BY day`
+    };
+
+    const result = {};
+    const keys = Object.keys(queries);
+    let done = 0;
+
+    keys.forEach(key => {
+        db.query(queries[key], [employerId], (err, rows) => {
+            if (!err) {
+                if (key === 'top_jobs' || key === 'recent_7days') result[key] = rows;
+                else result[key] = rows[0]?.cnt ?? 0;
+            } else result[key] = key === 'top_jobs' || key === 'recent_7days' ? [] : 0;
+            if (++done === keys.length) res.json(result);
+        });
+    });
+});
+
+// ==========================================
+// POST /api/bulk-update-applications — อัปเดตหลายใบสมัครพร้อมกัน
+// ==========================================
+app.post('/api/bulk-update-applications', (req, res) => {
+    const { app_ids, result } = req.body;
+    if (!Array.isArray(app_ids) || app_ids.length === 0)
+        return res.status(400).json({ error: 'กรุณาระบุ app_ids' });
+    if (!['approved', 'rejected'].includes(result))
+        return res.status(400).json({ error: 'result ต้องเป็น approved หรือ rejected' });
+
+    const placeholders = app_ids.map(() => '?').join(',');
+    db.query(
+        `UPDATE applications SET status = ? WHERE id IN (${placeholders})`,
+        [result, ...app_ids],
+        (err, r) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true, affected: r.affectedRows });
+        }
+    );
+});
+
+// ==========================================
+// POST /api/change-password — เปลี่ยนรหัสผ่าน
+// ==========================================
+app.post('/api/change-password', (req, res) => {
+    const { user_id, user_type, current_password, new_password } = req.body;
+    if (!user_id || !user_type || !current_password || !new_password)
+        return res.status(400).json({ error: 'ข้อมูลไม่ครบถ้วน' });
+    if (new_password.length < 6)
+        return res.status(400).json({ error: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' });
+
+    const table = user_type === 'employer' ? 'employers' : 'job_seekers';
+    db.query(`SELECT password FROM ${table} WHERE id = ?`, [user_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!rows.length) return res.status(404).json({ error: 'ไม่พบบัญชีผู้ใช้' });
+        if (rows[0].password !== current_password)
+            return res.status(401).json({ error: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
+
+        db.query(`UPDATE ${table} SET password = ? WHERE id = ?`, [new_password, user_id], (uErr) => {
+            if (uErr) return res.status(500).json({ error: uErr.message });
+            res.json({ success: true, message: 'เปลี่ยนรหัสผ่านสำเร็จ' });
+        });
+    });
+});
+
+// ==========================================
+// POST /api/feedback — บันทึก feedback จาก footer
+// ==========================================
+app.post('/api/feedback', (req, res) => {
+    const { message, page_url, user_id, user_type } = req.body;
+    if (!message || !message.trim()) return res.status(400).json({ error: 'กรุณากรอกข้อความ' });
+
+    db.query(`CREATE TABLE IF NOT EXISTS feedbacks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        message TEXT NOT NULL,
+        page_url VARCHAR(255),
+        user_id INT DEFAULT NULL,
+        user_type ENUM('seeker','employer','guest') DEFAULT 'guest',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`, () => {
+        db.query(
+            'INSERT INTO feedbacks (message, page_url, user_id, user_type) VALUES (?, ?, ?, ?)',
+            [message.trim(), page_url || '', user_id || null, user_type || 'guest'],
+            (err) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ success: true });
+            }
+        );
+    });
+});
+
+// ==========================================
+// POST /api/forgot-password — รีเซ็ตรหัสผ่านและส่ง Email จริง
+// ==========================================
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'กรุณาระบุอีเมล' });
+
+    // สุ่มรหัสผ่านใหม่ (ตัวอักษร + ตัวเลข 10 ตัว)
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const newPassword = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+    // helper: ส่ง email รหัสผ่านใหม่
+    async function sendResetEmail(toEmail, name) {
+        const mailOptions = {
+            from: `"JobNble" <${process.env.MAIL_USER}>`,
+            to: toEmail,
+            subject: '🔑 รหัสผ่านใหม่ของคุณ — JobNble',
+            html: `
+                <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="background:#013c58;padding:28px 32px;text-align:center;">
+                        <h1 style="color:#fff;font-size:22px;margin:0;letter-spacing:-0.5px;">JobNble</h1>
+                        <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:6px 0 0;">แพลตฟอร์มหางานสำหรับผู้พิการ</p>
+                    </div>
+                    <div style="padding:32px;">
+                        <h2 style="font-size:18px;color:#0f172a;margin:0 0 12px;">สวัสดี ${name || 'คุณ'} 👋</h2>
+                        <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 20px;">
+                            เราได้รับคำขอรีเซ็ตรหัสผ่านสำหรับบัญชี <strong>${toEmail}</strong><br>
+                            รหัสผ่านใหม่ของคุณคือ:
+                        </p>
+                        <div style="background:#f1f5f9;border:1.5px dashed #cbd5e1;border-radius:10px;padding:16px;text-align:center;margin-bottom:24px;">
+                            <span style="font-size:24px;font-weight:800;color:#013c58;letter-spacing:3px;">${newPassword}</span>
+                        </div>
+                        <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 20px;">
+                            ⚠️ กรุณาเปลี่ยนรหัสผ่านหลังจากเข้าสู่ระบบครั้งแรก<br>
+                            หากคุณไม่ได้ขอรีเซ็ตรหัสผ่าน กรุณาเพิกเฉยต่ออีเมลนี้
+                        </p>
+                        <a href="http://localhost:3000/thesis/login-jobseeker.html"
+                           style="display:block;background:#013c58;color:#fff;text-align:center;padding:13px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+                            เข้าสู่ระบบ →
+                        </a>
+                    </div>
+                    <div style="background:#f8fafc;padding:16px;text-align:center;border-top:1px solid #e2e8f0;">
+                        <p style="color:#94a3b8;font-size:12px;margin:0;">© 2026 JobNble — Digital Platform for Inclusive Employment</p>
+                    </div>
+                </div>
+            `
+        };
+        await mailTransporter.sendMail(mailOptions);
+    }
+
+    // ค้นหาใน job_seekers ก่อน
+    db.query('SELECT id, first_name FROM job_seekers WHERE email = ?', [email], async (err, seekerRows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        if (seekerRows.length > 0) {
+            db.query('UPDATE job_seekers SET password = ? WHERE email = ?', [newPassword, email], async (uErr) => {
+                if (uErr) return res.status(500).json({ error: uErr.message });
+                try {
+                    await sendResetEmail(email, seekerRows[0].first_name);
+                    console.log(`✅ Reset + Email sent to seeker: ${email}`);
+                    return res.json({ success: true });
+                } catch (mailErr) {
+                    console.error('Email send error:', mailErr.message);
+                    return res.status(500).json({ error: 'รีเซ็ตรหัสผ่านสำเร็จ แต่ส่งอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ' });
+                }
+            });
+            return;
+        }
+
+        // ค้นหาใน employers
+        db.query('SELECT id, company_name FROM employers WHERE email = ?', [email], async (err2, empRows) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            if (empRows.length === 0) return res.status(404).json({ error: 'ไม่พบอีเมลนี้ในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง' });
+
+            db.query('UPDATE employers SET password = ? WHERE email = ?', [newPassword, email], async (uErr2) => {
+                if (uErr2) return res.status(500).json({ error: uErr2.message });
+                try {
+                    await sendResetEmail(email, empRows[0].company_name);
+                    console.log(`✅ Reset + Email sent to employer: ${email}`);
+                    return res.json({ success: true });
+                } catch (mailErr) {
+                    console.error('Email send error:', mailErr.message);
+                    return res.status(500).json({ error: 'รีเซ็ตรหัสผ่านสำเร็จ แต่ส่งอีเมลไม่ได้ กรุณาติดต่อผู้ดูแลระบบ' });
+                }
+            });
+        });
+    });
+});
+
+// ==========================================
+// 404 Handler — ต้องอยู่ท้ายสุดเสมอ
+// ==========================================
+app.use((req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.status(404).sendFile(__dirname + '/404.html');
 });
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

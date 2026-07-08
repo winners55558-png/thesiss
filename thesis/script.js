@@ -237,11 +237,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Track activity เพื่อนับ Active Users ──
     if (loggedInId && loggedInType) {
-        fetch('/api/track-activity', {
+        const _pingPayload = {
+            user_id: loggedInId,
+            user_type: loggedInType === 'employer' ? 'employer' : 'seeker'
+        };
+        const _pingServer = () => fetch('/api/track-activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: loggedInId, user_type: loggedInType === 'employer' ? 'employer' : 'seeker' })
+            body: JSON.stringify(_pingPayload)
         }).catch(() => {});
+        _pingServer();
     }
 
     // ลิสต์หน้าเว็บของแต่ละฝั่ง
@@ -379,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem('tempResumeData');
                 sessionStorage.removeItem('existingProfilePic');
                 announce('ออกจากระบบแล้ว');
-                window.location.href = '/';
+                window.location.href = 'Index.html';
             });
 
             // ── Index.html: แสดง/ซ่อนเมนูตาม userType ──
@@ -5748,6 +5753,66 @@ document.addEventListener('DOMContentLoaded', () => {
     const aboutLinks = document.querySelectorAll('a[href="aboutus.html"]');
     aboutLinks.forEach(a => a.style.color = '#013c58');
 })();
+
+// ==========================================
+    // --- ระบบส่ง Feedback จาก Footer ---
+    // ==========================================
+    const feedbackInput = document.getElementById('feedback-input');
+    const feedbackBtn   = document.querySelector('.feedback-btn');
+
+    if (feedbackInput && feedbackBtn) {
+        feedbackBtn.addEventListener('click', async () => {
+            const msg = feedbackInput.value.trim();
+            if (!msg) return;
+
+            const origText = feedbackBtn.textContent;
+            feedbackBtn.textContent = 'กำลังส่ง...';
+            feedbackBtn.disabled = true;
+
+            const userId = sessionStorage.getItem('userId') ? sessionStorage.getItem('userId').split(':')[0] : null;
+            const userType = sessionStorage.getItem('userType') || 'guest';
+
+            try {
+                const res  = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message:   msg,
+                        page_url:  window.location.pathname,
+                        user_id:   userId,
+                        user_type: userType
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    feedbackInput.value       = '';
+                    feedbackBtn.textContent   = 'ส่งแล้ว!';
+                    feedbackBtn.style.background = '#16a34a';
+                    setTimeout(() => {
+                        feedbackBtn.textContent      = origText;
+                        feedbackBtn.style.background = '';
+                        feedbackBtn.disabled         = false;
+                    }, 2500);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch {
+                feedbackBtn.textContent = 'ลองใหม่';
+                feedbackBtn.style.background = '#ef4444';
+                setTimeout(() => {
+                    feedbackBtn.textContent      = origText;
+                    feedbackBtn.style.background = '';
+                    feedbackBtn.disabled         = false;
+                }, 2000);
+            }
+        });
+
+        // กด Enter ใน input ส่งได้เลย
+        feedbackInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') feedbackBtn.click();
+        });
+    }
 
 
 
